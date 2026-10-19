@@ -158,6 +158,47 @@ form .full{grid-column:1/-1}
 .hello > div{min-width:0;flex:1}
 .hello h1{font-family:var(--display);font-size:24px;margin:0;letter-spacing:-.02em;text-wrap:balance}
 .demo{background:var(--amber-bg);color:var(--amber);font-size:13px;font-weight:700;padding-block:8px}
+.modal{position:fixed;inset:0;background:rgba(5,15,8,.6);z-index:30;display:flex;padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow-y:auto}
+.mbox{margin:auto;background:var(--surface);color:var(--fg);border-radius:18px;max-width:640px;width:100%;box-shadow:0 30px 80px -20px rgba(0,0,0,.5);overflow:hidden}
+.sheet{padding:0 20px 20px;display:grid;gap:16px}
+.sh-h{display:flex;gap:14px;align-items:center;background:var(--brand);color:var(--on-brand);margin:0 -20px;padding:12px 20px}
+.sh-h img{height:46px;width:auto}.sh-h div{flex:1;min-width:0}.sh-h b{display:block;font-family:var(--display);font-size:17px}.sh-h span{font-size:12.5px;opacity:.8}
+.x{background:rgba(255,255,255,.14);border:0;color:var(--on-brand);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:15px;flex:none}
+.kv{display:grid;grid-template-columns:130px minmax(0,1fr);gap:6px 12px;margin:0;font-size:14px}.kv dt{color:var(--muted);font-weight:600}.kv dd{margin:0;font-weight:600}
+.termo{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13.5px;margin:0}
+.termo ul{margin:6px 0;padding-left:18px;display:grid;gap:4px}
+ul.termo{padding-left:32px;display:grid;gap:4px;font-weight:500;color:var(--fg)}
+.termo p{margin:8px 0 0;font-weight:700}
+.sig{display:flex;gap:14px;align-items:center;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:14px}
+.sig img{background:#fff;border:1px solid var(--line);border-radius:10px;width:220px;max-width:100%;height:90px;object-fit:contain}
+.sig b{display:block}.sig span{display:block;font-size:12.5px;color:var(--muted)}.mono{font-family:var(--mono)}
+.signform{display:grid;gap:12px}
+.signform label{display:grid;gap:5px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.padwrap{position:relative;background:#fff;border:2px dashed #b9c9b5;border-radius:14px;height:180px;touch-action:none}
+.padwrap canvas{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair;border-radius:12px}
+.padhint{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);color:#8a9a8d;font-weight:600;pointer-events:none;font-size:14px;white-space:nowrap}
+.padwrap::after{content:"";position:absolute;left:24px;right:24px;bottom:38px;border-bottom:1px solid #c9d6c5;pointer-events:none}
+.padwrap.has .padhint{display:none}
+.padwrap .clear{position:absolute;right:10px;top:10px;background:#fff;color:#4a5a4d;border-color:#c9d6c5}
+.vrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+.vrow.pend{border-color:var(--amber);background:var(--amber-bg)}
+.vi{flex:1;min-width:160px}.vi b{display:block;font-size:14px}.vi span{font-size:12.5px;color:var(--muted)}
+.btn.sm{padding:8px 12px;font-size:13px}
+button.dl{cursor:pointer;font-family:var(--body)}
+form h3{font-family:var(--display);font-size:15px;margin:6px 0 0;padding-top:14px;border-top:1px solid var(--line);color:var(--fg);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+form h3.first{border-top:0;padding-top:0;margin-top:0}
+label.check{display:flex;align-items:center;gap:10px;flex-wrap:wrap;text-transform:none;letter-spacing:0;font-size:14px;color:var(--fg);font-weight:600}
+.check input[type=checkbox]{width:18px;height:18px;accent-color:var(--brand)}.check .inl{width:auto}
+.radios{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label.rad{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:500;font-size:13.5px}
+.rad input{width:18px;height:18px;margin-top:2px;accent-color:var(--brand);flex:none}
+.rad b{display:block;font-size:14.5px;color:var(--fg)}
+.rad:has(input:checked){border-color:var(--link);background:var(--green-bg)}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.steps span{font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted)}
+.vlink{all:unset;box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;padding:6px 0;border-bottom:1px solid var(--line);width:100%}
+.vlink:last-child{border-bottom:0}.vlink b{font-family:var(--mono);font-size:12.5px}.vlink small{display:block;color:var(--muted);font-size:12px}
+.vlink:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+@media (max-width:560px){.radios{grid-template-columns:1fr}.kv{grid-template-columns:1fr;gap:2px}.kv dt{margin-top:6px}}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:700;z-index:20;box-shadow:var(--shadow)}
 .empty{padding:22px 16px;color:var(--muted);text-align:center}
 
@@ -195,6 +236,7 @@ form .full{grid-column:1/-1}
 
 <div class="demo gut"><div class="wrap">Demonstração com dados fictícios · clientes, CNPJs e documentos são exemplos</div></div>
 <main class="gut"><div class="wrap" id="app"></div></main>
+<div class="modal" id="modal" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -202,6 +244,9 @@ const HOJE = new Date(); HOJE.setHours(0,0,0,0);
 const iso=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
 const EMAIL_FERNANDO = "responsavel.tecnico@exemplo.com";
 const VALIDADE_MESES = {"Desinsetização":12,"Desratização":3,"Higienização de reservatório":6,"Outro":12};
+const TECNICOS = ["Responsável técnico (Eng. Agrônomo)","Técnico de campo"];
+const LOGO = "assets/logo-agrocel.png";
+const SIG = "data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 90"><path d="M15 60 C30 20,45 20,50 55 S70 80,80 45 S100 15,110 50 S130 70,140 40 C150 25,160 60,175 50 S200 35,208 42" fill="none" stroke="#10301a" stroke-width="2.4" stroke-linecap="round"/></svg>');
 
 // Dados de demonstração (fictícios). As datas são relativas a hoje para a demo sempre mostrar os três estados.
 const rel=n=>{const x=new Date(HOJE);x.setDate(x.getDate()+n);return iso(x)};
@@ -218,13 +263,17 @@ const seed = {
     {id:"k2",cli:"c1",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005%",exec:rel(-184),venc:rel(-92),pdf:PDF+"posto-serra-verde-desratizacao.pdf"},
     {id:"k3",cli:"c2",tipo:"Desinsetização",praga:"Baratas e formigas",prod:"Optigard Duo (Lambda-cialotrina + Tiametoxam)",exec:rel(-343),venc:rel(22),pdf:PDF+"mercado-bom-preco-desinsetizacao.pdf"},
     {id:"k4",cli:"c2",tipo:"Higienização de reservatório",praga:"Microbiológico",prod:"Hidróxido de sódio + Ácido peracético",exec:rel(-60),venc:rel(122)},
-    {id:"k5",cli:"c3",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005% (Maki Bloco)",exec:rel(-30),venc:rel(61)},
+    {id:"k5",cli:"c3",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005% (Maki Bloco)",exec:rel(-30),venc:rel(61),visita:"v1"},
     {id:"k6",cli:"c3",tipo:"Desinsetização",praga:"Moscas e baratas",prod:"Advion Barata Gel (Indoxacarbe)",exec:rel(-200),venc:rel(165)},
     {id:"k7",cli:"c4",tipo:"Desinsetização",praga:"Baratas",prod:"Quarteto 400 SC",exec:rel(-382),venc:rel(-17)},
-    {id:"k8",cli:"c4",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005%",exec:rel(-80),venc:rel(10)}
+    {id:"k8",cli:"c4",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005%",exec:rel(-80),venc:rel(10),visita:"v2"}
   ],
   docs:[
     {cli:"c1",nome:"Certificado de execução de serviço",data:rel(-184),pdf:PDF+"posto-serra-verde-execucao.pdf"}
+  ],
+  visitas:[
+    {id:"v1",os:"OS-2026-0001",cli:"c3",tecnico:"Técnico de campo",data:rel(-30)+"T08:40",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005% (Maki Bloco)",areas:"Câmara fria, expedição e perímetro",status:"assinada",assinatura:{nome:"Carla Mendes",img:SIG,em:rel(-30)+"T09:15:00",cod:"7F3A91C2"}},
+    {id:"v2",os:"OS-2026-0002",cli:"c4",tecnico:"Técnico de campo",data:rel(-80)+"T14:00",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005%",areas:"Cozinha e depósito",status:"pendente"}
   ],
   proprios:[
     {nome:"ART do responsável técnico (CREA-SC)",venc:rel(73)},
@@ -233,9 +282,9 @@ const seed = {
   ]
 };
 
-let db; try{db=JSON.parse(localStorage.getItem("agrocel-demo-v1"))}catch(e){}
+let db; try{db=JSON.parse(localStorage.getItem("agrocel-demo-v2"))}catch(e){}
 if(!db||!db.clientes) db=JSON.parse(JSON.stringify(seed));
-const save=()=>{try{localStorage.setItem("agrocel-demo-v1",JSON.stringify(db))}catch(e){}};
+const save=()=>{try{localStorage.setItem("agrocel-demo-v2",JSON.stringify(db))}catch(e){}};
 
 let modo="admin", tab="painel", cliAtual="c1", filtro=null, busca="", abertos=new Set(["c1","c4"]);
 
@@ -264,19 +313,20 @@ function pdfLink(u,t){return u?`<a class="dl" href="${esc(u)}" target="_blank" r
 function certHTML(k){const s=status(k.venc);return `<div class="cert">
   <div class="date s-${s}"><b>${fmt(k.venc)}</b><span>${quando(k.venc)}</span></div>
   <div class="cinfo"><b>${esc(k.tipo)} ${chip(s)}</b><div>${esc(k.praga)}</div><div>${esc(k.prod)} · executado em ${fmt(k.exec)}</div></div>
-  ${pdfLink(k.pdf,"Baixar PDF")}</div>`}
+  ${k.pdf||!k.visita?pdfLink(k.pdf,"Baixar PDF"):`<button class="dl" data-comp="${k.visita}">Ver comprovante</button>`}</div>`}
 function docsHTML(id){const ds=(db.docs||[]).filter(x=>x.cli===id);return ds.length?`<div class="docs"><div class="t">Outros documentos</div>${ds.map(x=>`<div class="drow"><span>${esc(x.nome)} · ${fmt(x.data)}</span>${pdfLink(x.pdf,"Baixar PDF")}</div>`).join("")}</div>`:""}
 
 function render(){
   const T = modo==="admin"
-    ? [["painel","Painel"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"]]
+    ? [["painel","Painel"],["visita","Registrar visita"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"]]
     : [["painel","Meus certificados"]];
   if(!T.find(t=>t[0]===tab)) tab="painel";
   document.getElementById("tabs").innerHTML=T.map(([k,l])=>`<button role="tab" aria-selected="${k===tab}" data-tab="${k}">${l}</button>`).join("");
   const app=document.getElementById("app");
   if(modo==="cliente"){app.innerHTML=viewCliente();return}
-  app.innerHTML = tab==="painel"?viewPainel():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():viewAgrocel();
+  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():viewAgrocel();
   if(tab==="novo") wireNovo();
+  if(tab==="visita") wireVisita();
   if(tab==="painel"){const b=document.getElementById("busca");b.oninput=()=>{busca=b.value;renderLista()}}
 }
 
@@ -312,6 +362,7 @@ function viewPainel(){
         <ul class="tl">${venc.map(k=>{const s=status(k.venc);return `<li><span class="pt" style="background:${COR[s]}"></span>
           <span class="w"><b>${esc(k.tipo)}</b><span>${esc(cli(k.cli).nome.replace(/ \(.*\)/,""))}</span></span>
           <span class="d">${fmt(k.venc)}<br>${dias(k.venc)<0?"vencido":dias(k.venc)+" dias"}</span></li>`}).join("")}</ul></section>
+      ${painelOS()}
       <section class="panel"><div class="ph"><h2>Documentos Agrocel</h2></div>
         <div class="mini">${pros.map(p=>`<div class="r"><span>${esc(p.nome)}</span><span style="color:${COR[status(p.venc)]}">${fmt(p.venc)}</span></div>`).join("")}</div></section>
     </aside>
@@ -330,7 +381,7 @@ function listaHTML(){
       <span class="nm"><b>${esc(c.nome)} ${c.exemplo?'<span class="tag">exemplo</span>':""}</b><small>${esc(c.cnpj)}</small></span>
       <span class="dots">${all.map(k=>`<i style="background:${COR[status(k.venc)]}" title="${esc(k.tipo)}"></i>`).join("")}</span>
       ${p?chip(p):'<span class="chip">Sem certificados</span>'}${IC_CHEV}</button>
-    ${op?`<div class="cbody">${ks.map(certHTML).join("")}${filtro?"":docsHTML(c.id)}</div>`:""}</div>`}).join("");
+    ${op?`<div class="cbody">${ks.map(certHTML).join("")}${filtro?"":visitasHTML(c.id)+docsHTML(c.id)}</div>`:""}</div>`}).join("");
 }
 function renderLista(){const l=document.getElementById("lista");if(l)l.innerHTML=listaHTML()}
 
@@ -341,7 +392,7 @@ function viewCliente(){
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px">${p?chip(p):""}<span class="note">${ok} de ${ks.length} certificados em dia</span></div></div></div>
   <section class="panel">
     <div class="intro"><p class="note">Você vê apenas os certificados emitidos pela Agrocel para o seu estabelecimento. Para renovar ou agendar uma visita, ligue para (48) 3653-1256.</p></div>
-    <div class="cbody" style="padding:16px">${ks.length?ks.map(certHTML).join(""):'<div class="empty">Nenhum certificado cadastrado ainda.</div>'}${docsHTML(c.id)}</div>
+    <div class="cbody" style="padding:16px">${ks.length?ks.map(certHTML).join(""):'<div class="empty">Nenhum certificado cadastrado ainda.</div>'}${visitasHTML(c.id,true)}${docsHTML(c.id)}</div>
   </section>`;
 }
 
@@ -409,11 +460,90 @@ function viewAgrocel(){
     <div class="cinfo"><b>${esc(p.nome)} ${chip(s)}</b><div>Avisos vão apenas para o responsável técnico.</div></div><span></span></div>`}).join("")}</div></section>`;
 }
 
+
+// ---------- Visitas, ordens de serviço e assinatura do cliente ----------
+const TERMO=["Antes da aplicação, o local foi limpo e foram retirados animais, pessoas, alimentos e utensílios.","Não utilizar o espaço tratado por 4 horas após a aplicação.","Não lavar as áreas tratadas por 72 horas.","Manter alimentos e utensílios protegidos.","Seguir as orientações repassadas pelo técnico."];
+const fmtHora=s=>new Date(s).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+const vis=id=>(db.visitas||[]).find(v=>v.id===id);
+function proxOS(){const ano=String(HOJE.getFullYear());const n=(db.visitas||[]).filter(v=>v.os.includes(ano)).length+1;return `OS-${ano}-${String(n).padStart(4,"0")}`}
+function visitasHTML(id,cliente){
+  const vs=(db.visitas||[]).filter(v=>v.cli===id).sort((a,b)=>b.data.localeCompare(a.data));
+  if(!vs.length) return "";
+  return `<div class="docs"><div class="t">Visitas e ordens de serviço</div>${vs.map(v=>{const ok=v.status==="assinada";
+    return `<div class="vrow ${ok?"":"pend"}"><div class="vi"><b>${v.os} · ${esc(v.tipo)}</b><span>${fmtHora(v.data)} · ${esc(v.tecnico)}</span></div>
+    <span class="chip ${ok?"s-g":"s-a"}"><i></i>${ok?"Assinada pelo cliente":"Aguardando assinatura"}</span>
+    ${!ok&&cliente?`<button class="btn sm" data-comp="${v.id}">Confirmar e assinar</button>`:`<button class="dl" data-comp="${v.id}">${ok?"Ver comprovante":"Abrir ordem"}</button>`}</div>`}).join("")}</div>`}
+function painelOS(){
+  const vs=[...(db.visitas||[])].sort((a,b)=>b.data.localeCompare(a.data)).slice(0,5);const pend=(db.visitas||[]).filter(v=>v.status!=="assinada").length;
+  return `<section class="panel"><div class="ph"><h2>Ordens de serviço</h2>${pend?`<span class="chip s-a"><i></i>${pend} aguardando</span>`:""}</div>
+  <div class="mini">${vs.length?vs.map(v=>`<button class="vlink" data-comp="${v.id}"><span><b>${v.os}</b><small>${esc(cli(v.cli).nome.replace(/ \(.*\)/,""))}</small></span>${v.status==="assinada"?'<span class="chip s-g"><i></i>Assinada</span>':'<span class="chip s-a"><i></i>Pendente</span>'}</button>`).join(""):'<span class="note">Nenhuma visita registrada ainda. Use “Registrar visita” no próximo atendimento.</span>'}</div></section>`}
+function compHTML(v){const c=cli(v.cli);const ok=v.status==="assinada";
+  return `<div class="sheet"><div class="sh-h"><img src="${LOGO}" alt="Agrocel"><div><b>Ordem de serviço ${v.os}</b><span>Termo de compromisso e comprovante de execução</span></div><button class="x" data-close aria-label="Fechar">✕</button></div>
+  <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>CNPJ</dt><dd class="mono">${esc(c.cnpj)}</dd><dt>Data e hora</dt><dd>${fmtHora(v.data)}</dd><dt>Técnico</dt><dd>${esc(v.tecnico)}</dd><dt>Serviço</dt><dd>${esc(v.tipo)} · ${esc(v.praga)}</dd><dt>Produtos</dt><dd>${esc(v.prod)}</dd><dt>Áreas tratadas</dt><dd>${esc(v.areas||"-")}</dd></dl>
+  <div class="termo"><b>Orientações e termo de compromisso</b><ul>${TERMO.map(t=>`<li>${t}</li>`).join("")}</ul><p>Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima.</p></div>
+  ${ok?`<div class="sig"><img src="${v.assinatura.img}" alt="Assinatura de ${esc(v.assinatura.nome)}"><div><b>${esc(v.assinatura.nome)}</b><span>Assinado eletronicamente em ${fmtHora(v.assinatura.em)}</span><span class="mono">Código de verificação ${v.assinatura.cod}</span></div></div>`
+  :`<div class="signform"><label>Nome de quem assina<input id="sNome" autocomplete="name"></label><div class="padwrap"><canvas id="pad" aria-label="Quadro de assinatura"></canvas><span class="padhint">Assine aqui com o dedo</span><button type="button" class="clear" id="padClear">Limpar</button></div><button class="btn" id="sOk">Confirmar e assinar</button></div>`}
+  </div>`}
+function makePad(cv){const ctx=cv.getContext("2d");let drawing=false,empty=true,last=[0,0];const wrap=cv.parentElement;
+  function reset(){const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cv.width=Math.max(1,r.width*dpr);cv.height=Math.max(1,r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.lineWidth=2.4;ctx.lineCap="round";ctx.lineJoin="round";ctx.strokeStyle=ctx.fillStyle="#10301a";empty=true;wrap.classList.remove("has")}
+  reset();
+  const pt=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};
+  cv.onpointerdown=e=>{e.preventDefault();drawing=true;last=pt(e);try{cv.setPointerCapture(e.pointerId)}catch(_){};ctx.beginPath();ctx.arc(last[0],last[1],1.2,0,7);ctx.fill();empty=false;wrap.classList.add("has")};
+  cv.onpointermove=e=>{if(!drawing)return;const p=pt(e);ctx.beginPath();ctx.moveTo(last[0],last[1]);ctx.lineTo(p[0],p[1]);ctx.stroke();last=p};
+  cv.onpointerup=cv.onpointercancel=()=>drawing=false;
+  return {clear:reset,isEmpty:()=>empty,data:()=>cv.toDataURL("image/png")}}
+function assinar(v,nome,img){v.status="assinada";v.assinatura={nome,img,em:new Date().toISOString(),cod:Math.random().toString(16).slice(2,10).toUpperCase().padEnd(8,"0")}}
+function openComp(id){const v=vis(id);if(!v)return;const m=document.getElementById("modal");
+  m.innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-label="Ordem de serviço ${v.os}">${compHTML(v)}</div>`;m.hidden=false;document.body.style.overflow="hidden";
+  if(v.status!=="assinada"){const pad=makePad(document.getElementById("pad"));document.getElementById("padClear").onclick=pad.clear;
+    document.getElementById("sOk").onclick=()=>{const nome=document.getElementById("sNome").value.trim();
+      if(!nome)return toast("Escreva o nome de quem está assinando.");if(pad.isEmpty())return toast("Faça a assinatura no quadro.");
+      assinar(v,nome,pad.data());save();closeModal();render();toast(`${v.os} assinada`)}}}
+function closeModal(){const m=document.getElementById("modal");m.hidden=true;m.innerHTML="";document.body.style.overflow=""}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+function viewVisita(){const a=new Date();a.setSeconds(0,0);const local=new Date(a-a.getTimezoneOffset()*6e4).toISOString().slice(0,16);
+  return `<div class="card"><div class="steps"><span>1 · Serviço realizado</span><span>2 · Orientações</span><span>3 · Assinatura do cliente</span></div>
+  <form id="fVis">
+    <h3 class="full first">Dados da visita <span class="note mono">${proxOS()}</span></h3>
+    <label class="full">Cliente<select id="vCliente">${db.clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select></label>
+    <label>Técnico responsável<select id="vTec">${TECNICOS.map(t=>`<option>${esc(t)}</option>`).join("")}</select></label>
+    <label>Data e hora da visita<input id="vData" type="datetime-local" value="${local}"></label>
+    <label>Tipo de serviço<select id="vTipo">${Object.keys(VALIDADE_MESES).map(t=>`<option>${t}</option>`).join("")}</select></label>
+    <label>Praga-alvo<input id="vPraga" placeholder="Ex.: baratas e formigas"></label>
+    <label class="full">Produtos usados<input id="vProd" placeholder="Ex.: Optigard Duo (Lambda-cialotrina + Tiametoxam)"></label>
+    <label class="full">Áreas tratadas<input id="vAreas" placeholder="Ex.: cozinha, depósito, perímetro externo"></label>
+    <label class="check full"><input type="checkbox" id="vCert" checked> Gerar certificado válido até <input type="date" id="vVenc" class="inl" aria-label="Validade do certificado"></label>
+    <h3 class="full">Orientações ao cliente</h3>
+    <ul class="termo full">${TERMO.map(t=>`<li>${t}</li>`).join("")}</ul>
+    <h3 class="full">Confirmação do cliente</h3>
+    <div class="full radios">
+      <label class="rad"><input type="radio" name="vModo" value="agora" checked><span><b>Assinar agora</b>O responsável assina com o dedo na tela deste celular ou tablet</span></label>
+      <label class="rad"><input type="radio" name="vModo" value="depois"><span><b>Cliente confirma depois</b>A ordem fica pendente na área do cliente até ele assinar</span></label>
+    </div>
+    <div class="full signform" id="vSign"><label>Nome do responsável no local<input id="vNome" autocomplete="name"></label><div class="padwrap"><canvas id="pad" aria-label="Quadro de assinatura"></canvas><span class="padhint">Assine aqui com o dedo</span><button type="button" class="clear" id="padClear">Limpar</button></div></div>
+    <button class="btn" type="submit">Concluir visita</button>
+  </form></div>`}
+function wireVisita(){const $=id=>document.getElementById(id);let pad=makePad($("pad"));$("padClear").onclick=()=>pad.clear();
+  const modo_=()=>document.querySelector('[name=vModo]:checked').value;
+  const sug=()=>{$("vVenc").value=addMeses(($("vData").value||iso(HOJE)).slice(0,10),VALIDADE_MESES[$("vTipo").value])};sug();$("vTipo").onchange=sug;$("vData").onchange=sug;
+  document.querySelectorAll('[name=vModo]').forEach(r=>r.onchange=()=>{const ag=modo_()==="agora";$("vSign").hidden=!ag;if(ag)pad=makePad($("pad"))});
+  $("fVis").onsubmit=e=>{e.preventDefault();const ag=modo_()==="agora";
+    if(!$("vData").value)return toast("Informe a data da visita.");
+    if(ag&&!$("vNome").value.trim())return toast("Escreva o nome de quem está assinando.");
+    if(ag&&pad.isEmpty())return toast("Peça para o cliente assinar no quadro.");
+    const id="v"+Date.now();const v={id,os:proxOS(),cli:$("vCliente").value,tecnico:$("vTec").value,data:$("vData").value,tipo:$("vTipo").value,praga:$("vPraga").value||"-",prod:$("vProd").value||"-",areas:$("vAreas").value,status:"pendente"};
+    if(ag) assinar(v,$("vNome").value.trim(),pad.data());
+    (db.visitas=db.visitas||[]).push(v);
+    if($("vCert").checked&&$("vVenc").value) db.certs.push({id:"k"+Date.now(),cli:v.cli,tipo:v.tipo,praga:v.praga,prod:v.prod,exec:v.data.slice(0,10),venc:$("vVenc").value,pdf:"",visita:id});
+    abertos.add(v.cli);save();tab="painel";filtro=null;render();toast(ag?`${v.os} concluída e assinada`:`${v.os} registrada, aguardando o cliente`)}}
+
 function toast(t){const el=document.getElementById("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2400)}
 
 document.addEventListener("click",e=>{
   const t=e.target.closest("[data-tab]"); if(t){tab=t.dataset.tab;render();return}
   const f=e.target.closest("[data-f]"); if(f){filtro=filtro===f.dataset.f?null:f.dataset.f;render();return}
+  const cp=e.target.closest("[data-comp]"); if(cp){openComp(cp.dataset.comp);return}
+  if(e.target.closest("[data-close]")||e.target.id==="modal"){closeModal();return}
   const o=e.target.closest("[data-open]"); if(o){const id=o.dataset.open;abertos.has(id)?abertos.delete(id):abertos.add(id);renderLista()}
 });
 const pick=document.getElementById("cliPick");

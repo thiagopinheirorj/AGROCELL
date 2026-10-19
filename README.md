@@ -6,6 +6,8 @@ O app acompanha a validade de cada certificado emitido (desinsetização, desrat
 
 ![Painel administrativo](docs/painel.png)
 
+![Registro de visita com assinatura do cliente](docs/registrar-visita.png)
+
 > **Demonstração com dados fictícios.** Os clientes, CNPJs e PDFs deste repositório são exemplos e não representam clientes reais.
 
 ## Funcionalidades
@@ -28,6 +30,17 @@ O app acompanha a validade de cada certificado emitido (desinsetização, desrat
 **Cadastro de certificados**
 - Validade sugerida pelo tipo de serviço: desinsetização 12 meses, desratização 3 meses, higienização de reservatório 6 meses
 - Anexo do PDF assinado
+
+**Registro de visita técnica (ordem de serviço)**
+- O técnico registra no local: cliente, data e hora, serviço, praga-alvo, produtos e áreas tratadas
+- Cada visita gera uma ordem de serviço numerada (OS-2026-0001, OS-2026-0002…)
+- Orientações pós-aplicação e termo de compromisso exibidos ao cliente
+- Opção de gerar o certificado com a validade já calculada
+
+**Assinatura do cliente na tela**
+- Substitui o termo de compromisso em papel
+- O responsável assina com o dedo no celular ou tablet do técnico, ou confirma depois na própria área do cliente
+- O comprovante registra nome, data, hora e um código de verificação
 
 **Avisos por e-mail**
 - Dois avisos por certificado: 30 e 15 dias antes do vencimento
@@ -56,7 +69,8 @@ docs/painel.png            captura de tela
 - [ ] Banco de dados no servidor da Agrocel
 - [ ] Envio automático dos e-mails de aviso
 - [ ] Avisos por WhatsApp
-- [ ] Geração do certificado em PDF direto pelo app
+- [ ] Geração do certificado e da ordem de serviço em PDF direto pelo app
+- [ ] Versão para várias empresas de controle de pragas
 
 ## Autor
 
