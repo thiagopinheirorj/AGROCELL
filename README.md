@@ -10,6 +10,8 @@ O app acompanha a validade de cada certificado emitido (desinsetização, desrat
 
 ![Cobranças e NFS-e](docs/cobrancas.png)
 
+![Cadastro de clientes](docs/cadastro-cliente.png)
+
 > **Demonstração com dados fictícios.** Os clientes, CNPJs e PDFs deste repositório são exemplos e não representam clientes reais.
 
 ## Funcionalidades
@@ -28,6 +30,14 @@ O app acompanha a validade de cada certificado emitido (desinsetização, desrat
 | 🔴 Vencido | data de validade já passou |
 | 🟡 Vence em breve | vence nos próximos 30 dias |
 | 🟢 Em dia | vence em mais de 30 dias |
+
+**Cadastro de clientes**
+- Ficha completa: razão social, nome fantasia, segmento, CNPJ e inscrição municipal
+- Endereço com CEP, rua, número, complemento, bairro, cidade e UF
+- Contato: responsável no local, telefone/WhatsApp e e-mail que recebe os avisos
+- Anotações do técnico (acesso ao local, horários, cuidados)
+- Máscara automática de CNPJ, CEP e telefone, com validação dos dígitos do CNPJ e aviso de CNPJ repetido
+- Edição da ficha pelo painel ou pela lista de clientes
 
 **Cadastro de certificados**
 - Validade sugerida pelo tipo de serviço: desinsetização 12 meses, desratização 3 meses, higienização de reservatório 6 meses

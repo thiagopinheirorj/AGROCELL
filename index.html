@@ -235,6 +235,19 @@ label.rad{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--
 .btn.ghost{background:var(--surface);color:var(--link);border:1.5px solid var(--line);box-shadow:none}
 .btn.ghost:hover{background:var(--surface-2)}
 @media (max-width:560px){.crow{grid-template-columns:minmax(0,1fr) auto}.crow .chip{grid-column:1/-1;justify-self:start}.nf .tot{grid-template-columns:1fr 1fr}.nf .tot div:nth-child(2){border-right:0}}
+form label .note{text-transform:none;letter-spacing:.01em;font-weight:500;font-size:11.5px}
+form h3 .note{font-weight:500}
+.cap{display:block}
+.cap .note{margin-left:4px}
+.hint-err{color:var(--red);font-weight:700}
+.clist{display:grid;gap:0}
+.cl{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.cl:last-child{border-bottom:0}
+.cl .nm small{font-family:var(--mono)}
+.cl .meta{font-size:12.5px;color:var(--muted);display:block}
+.topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.topbar .btn{margin-left:auto}
+@media (max-width:560px){.cl{grid-template-columns:auto minmax(0,1fr)}.cl .dl{grid-column:1/-1;justify-self:start}.topbar .btn{margin-left:0;width:100%;justify-self:stretch;text-align:center}}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:700;z-index:20;box-shadow:var(--shadow)}
 .empty{padding:22px 16px;color:var(--muted);text-align:center}
 
@@ -296,10 +309,10 @@ const rel=n=>{const x=new Date(HOJE);x.setDate(x.getDate()+n);return iso(x)};
 const PDF="assets/exemplos/";
 const seed = {
   clientes:[
-    {id:"c1",nome:"Posto Serra Verde Combustíveis Ltda",cnpj:"11.222.333/0001-44",end:"Rua das Palmeiras, 120, Centro, Garopaba/SC",email:"gerencia@postoserraverde.exemplo"},
-    {id:"c2",nome:"Mercado Bom Preço Ltda",cnpj:"22.333.444/0001-55",end:"Av. Central, 455, Rio Fortuna/SC",email:"compras@bompreco.exemplo"},
-    {id:"c3",nome:"Laticínio Vale Verde",cnpj:"33.444.555/0001-66",end:"Estrada Geral, km 8, Braço do Norte/SC",email:"qualidade@valeverde.exemplo"},
-    {id:"c4",nome:"Restaurante Sabor da Serra",cnpj:"44.555.666/0001-77",end:"Rua XV de Novembro, 32, Imbituba/SC",email:""}
+    {id:"c1",nome:"Posto Serra Verde Combustíveis Ltda",cnpj:"11.222.333/0001-81",end:"Rua das Palmeiras, 120, Centro, Garopaba/SC",email:"gerencia@postoserraverde.exemplo"},
+    {id:"c2",nome:"Mercado Bom Preço Ltda",cnpj:"22.333.444/0001-81",end:"Av. Central, 455, Rio Fortuna/SC",email:"compras@bompreco.exemplo"},
+    {id:"c3",nome:"Laticínio Vale Verde",cnpj:"33.444.555/0001-81",end:"Estrada Geral, km 8, Braço do Norte/SC",email:"qualidade@valeverde.exemplo"},
+    {id:"c4",nome:"Restaurante Sabor da Serra",cnpj:"44.555.666/0001-81",end:"Rua XV de Novembro, 32, Imbituba/SC",email:""}
   ],
   certs:[
     {id:"k1",cli:"c1",tipo:"Desinsetização",praga:"Moscas, aranhas, baratas e formigas",prod:"Lambda-cialotrina, Bifentrina, Tiametoxam",exec:rel(-184),venc:rel(181),pdf:PDF+"posto-serra-verde-desinsetizacao.pdf"},
@@ -368,15 +381,16 @@ function docsHTML(id){const ds=(db.docs||[]).filter(x=>x.cli===id);return ds.len
 
 function render(){
   const T = modo==="admin"
-    ? [["painel","Painel"],["visita","Registrar visita"],["cobrancas","Cobranças"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"]]
+    ? [["painel","Painel"],["visita","Registrar visita"],["cobrancas","Cobranças"],["clientes","Clientes"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"]]
     : [["painel","Meus certificados"]];
   if(!T.find(t=>t[0]===tab)) tab="painel";
   document.getElementById("tabs").innerHTML=T.map(([k,l])=>`<button role="tab" aria-selected="${k===tab}" data-tab="${k}">${l}</button>`).join("");
   const app=document.getElementById("app");
   if(modo==="cliente"){app.innerHTML=viewCliente();return}
-  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="cobrancas"?viewCobrancas():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():viewAgrocel();
+  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="cobrancas"?viewCobrancas():tab==="clientes"?viewClientes():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():viewAgrocel();
   if(tab==="novo") wireNovo();
   if(tab==="visita") wireVisita();
+  if(tab==="clientes") wireClientes();
   if(tab==="painel"){const b=document.getElementById("busca");b.oninput=()=>{busca=b.value;renderLista()}}
 }
 
@@ -400,7 +414,7 @@ function viewPainel(){
   </section>
   <div class="grid">
     <section class="panel">
-      <div class="ph"><h2>Clientes</h2><button class="dl" data-export>Exportar dados</button>
+      <div class="ph"><h2>Clientes</h2><button class="dl" data-novocli>Novo cliente</button><button class="dl" data-export>Exportar dados</button>
         <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
         <input id="busca" type="search" placeholder="Buscar por nome ou CNPJ" value="${esc(busca)}" aria-label="Buscar cliente"></div>
         ${filtro?`<button class="clear" data-f="${filtro}">Filtro: ${LABEL[filtro]} ✕</button>`:""}
@@ -431,6 +445,7 @@ function listaHTML(){
       <span class="nm"><b>${esc(c.nome)} ${c.exemplo?'<span class="tag">exemplo</span>':""}</b><small>${esc(c.cnpj)}</small></span>
       <span class="dots">${all.map(k=>`<i style="background:${COR[status(k.venc)]}" title="${esc(k.tipo)}"></i>`).join("")}</span>
       ${p?chip(p):'<span class="chip">Sem certificados</span>'}${IC_CHEV}</button>
+    ${op?`<div style="padding:0 16px 10px 68px"><button class="dl" data-edit="${c.id}">Editar cadastro</button></div>`:""}
     ${op?`<div class="cbody">${ks.map(certHTML).join("")}${filtro?"":visitasHTML(c.id)+docsHTML(c.id)}</div>`:""}</div>`}).join("");
 }
 function renderLista(){const l=document.getElementById("lista");if(l)l.innerHTML=listaHTML()}
@@ -449,13 +464,7 @@ function viewCliente(){
 function viewNovo(){
   return `<div class="card"><h2 style="font-size:20px;margin-bottom:16px">Registrar serviço</h2>
   <form id="fCert">
-    <label class="full">Cliente<select id="fCli">${db.clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join("")}<option value="__novo">+ Cadastrar novo cliente</option></select></label>
-    <div class="full sub-grid" id="novoCli" hidden>
-      <label class="full">Nome / razão social<input id="nNome"></label>
-      <label>CNPJ<input id="nCnpj" inputmode="numeric"></label>
-      <label>E-mail do cliente (recebe os avisos)<input id="nEmail" type="email"></label>
-      <label class="full">Endereço<input id="nEnd"></label>
-    </div>
+    <label class="full">Cliente<select id="fCli">${db.clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select></label>
     <label>Tipo de serviço<select id="fTipo">${Object.keys(VALIDADE_MESES).map(t=>`<option>${t}</option>`).join("")}</select></label>
     <label>Praga-alvo<input id="fPraga" placeholder="Ex.: baratas e formigas"></label>
     <label class="full">Produtos usados<input id="fProd" placeholder="Ex.: Optigard Duo (Lambda-cialotrina + Tiametoxam)"></label>
@@ -472,14 +481,11 @@ function wireNovo(){
   const hoje=iso(HOJE); $("fExec").value=hoje;
   const sug=()=>{const m=VALIDADE_MESES[$("fTipo").value];$("fVenc").value=addMeses($("fExec").value||hoje,m);$("fHint").textContent=`Validade sugerida: ${m} meses para ${$("fTipo").value.toLowerCase()}. Pode ajustar.`};
   sug(); $("fTipo").onchange=sug; $("fExec").onchange=sug;
-  $("fCli").onchange=()=>{$("novoCli").hidden=$("fCli").value!=="__novo"};
   $("fCert").onsubmit=async e=>{e.preventDefault();
-    let id=$("fCli").value;
-    if(id==="__novo"&&!$("nNome").value.trim()) return toast("Preencha o nome do cliente.");
+    const id=$("fCli").value;
     if(!$("fVenc").value) return toast("Informe a data de validade.");
     let pdf="";const f=$("fPdf").files[0];
     if(f){pdf=URL.createObjectURL(f);toast("PDF anexado (na demonstração, fica só nesta sessão)")}
-    if(id==="__novo"){id="c"+Date.now();db.clientes.push({id,nome:$("nNome").value.trim(),cnpj:$("nCnpj").value,end:$("nEnd").value,email:$("nEmail").value})}
     db.certs.push({id:"k"+Date.now(),pdf,cli:id,tipo:$("fTipo").value,praga:$("fPraga").value||"-",prod:$("fProd").value||"-",exec:$("fExec").value,venc:$("fVenc").value});
     abertos.add(id); save(); tab="painel"; filtro=null; render(); toast("Certificado salvo");
   };
@@ -529,7 +535,7 @@ function painelOS(){
   <div class="mini">${vs.length?vs.map(v=>`<button class="vlink" data-comp="${v.id}"><span><b>${v.os}</b><small>${esc(cli(v.cli).nome.replace(/ \(.*\)/,""))}</small></span>${v.status==="assinada"?'<span class="chip s-g"><i></i>Assinada</span>':'<span class="chip s-a"><i></i>Pendente</span>'}</button>`).join(""):'<span class="note">Nenhuma visita registrada ainda. Use “Registrar visita” no próximo atendimento.</span>'}</div></section>`}
 function compHTML(v){const c=cli(v.cli);const ok=v.status==="assinada";
   return `<div class="sheet"><div class="sh-h"><img src="${LOGO}" alt="Agrocel"><div><b>Ordem de serviço ${v.os}</b><span>Termo de compromisso e comprovante de execução</span></div><button class="x" data-close aria-label="Fechar">✕</button></div>
-  <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>CNPJ</dt><dd class="mono">${esc(c.cnpj)}</dd><dt>Data e hora</dt><dd>${fmtHora(v.data)}</dd><dt>Técnico</dt><dd>${esc(v.tecnico)}</dd><dt>Serviço</dt><dd>${esc(v.tipo)} · ${esc(v.praga)}</dd><dt>Produtos</dt><dd>${esc(v.prod)}</dd><dt>Áreas tratadas</dt><dd>${esc(v.areas||"-")}</dd></dl>
+  <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>CNPJ</dt><dd class="mono">${esc(c.cnpj)}</dd><dt>Data e hora</dt><dd>${fmtHora(v.data)}</dd><dt>Técnico</dt><dd>${esc(v.tecnico)}</dd><dt>Serviço</dt><dd>${esc(v.tipo)} · ${esc(v.praga)}</dd><dt>Produtos</dt><dd>${esc(v.prod)}</dd><dt>Contato</dt><dd>${esc(c.resp||"-")}${c.tel?" · "+esc(c.tel):""}</dd><dt>Áreas tratadas</dt><dd>${esc(v.areas||"-")}</dd></dl>
   <div class="termo"><b>Orientações e termo de compromisso</b><ul>${TERMO.map(t=>`<li>${t}</li>`).join("")}</ul><p>Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima.</p></div>
   ${ok?`<div class="sig"><img src="${v.assinatura.img}" alt="Assinatura de ${esc(v.assinatura.nome)}"><div><b>${esc(v.assinatura.nome)}</b><span>Assinado eletronicamente em ${fmtHora(v.assinatura.em)}</span><span class="mono">Código de verificação ${v.assinatura.cod}</span></div></div>${docBtns("os",v.id)}`
   :`<div class="signform"><label>Nome de quem assina<input id="sNome" autocomplete="name"></label><div class="padwrap"><canvas id="pad" aria-label="Quadro de assinatura"></canvas><span class="padhint">Assine aqui com o dedo</span><button type="button" class="clear" id="padClear">Limpar</button></div><button class="btn" id="sOk">Confirmar e assinar</button></div>`}
@@ -595,6 +601,73 @@ function wireVisita(){const $=id=>document.getElementById(id);let pad=makePad($(
     if(valor>0&&!$("vForma").value.startsWith("Não")){const b={id:"b"+Date.now(),visita:id,cli:v.cli,desc:`${v.tipo} · ${v.os}`,valor,venc:$("vVencCob").value||iso(HOJE),forma:$("vForma").value,status:"aberta"};if($("vGerar").checked)gerarCodigos(b);(db.cobrancas=db.cobrancas||[]).push(b)}
     abertos.add(v.cli);save();tab="painel";filtro=null;render();toast(ag?`${v.os} concluída e assinada`:`${v.os} registrada, aguardando o cliente`)}}
 
+// ---------- Cadastro de clientes ----------
+let editando=null;
+const SEGMENTOS=["Posto de combustível","Mercado e padaria","Restaurante e lanchonete","Laticínio e frigorífico","Indústria","Hotel e pousada","Escola e creche","Clínica e hospital","Condomínio e residência","Outro"];
+const UFS=["SC","RS","PR","SP","RJ","MG","ES","BA","GO","MT","MS","DF","Outro"];
+const soNum=t=>String(t||"").replace(/\D/g,"");
+function maskCNPJ(t){const d=soNum(t).slice(0,14);return d.replace(/^(\d{2})(\d)/,"$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1/$2").replace(/(\d{4})(\d)/,"$1-$2")}
+function maskCEP(t){const d=soNum(t).slice(0,8);return d.length>5?d.slice(0,5)+"-"+d.slice(5):d}
+function maskTel(t){const d=soNum(t).slice(0,11);if(d.length<3)return d;
+  return d.length<=10?`(${d.slice(0,2)}) ${d.slice(2,6)}${d.length>6?"-"+d.slice(6):""}`:`(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`}
+function cnpjOK(t){const d=soNum(t);if(d.length!==14||/^(\d)\1+$/.test(d))return false;
+  const calc=n=>{let p=n===12?5:6,s=0;for(let i=0;i<n;i++){s+=+d[i]*p;p=p===2?9:p-1}const r=s%11;return r<2?0:11-r};
+  return calc(12)===+d[12]&&calc(13)===+d[13]}
+const compEnd=o=>[[o.rua,o.num].filter(Boolean).join(", "),o.bairro,o.cidade?[o.cidade,o.uf].filter(Boolean).join("/"):""].filter(Boolean).join(" · ");
+function viewClientes(){
+  const c=editando?cli(editando):null;const novo=!c;
+  const o=c||{};
+  const opt=(arr,v)=>arr.map(x=>`<option${x===v?" selected":""}>${esc(x)}</option>`).join("");
+  return `<div class="topbar"><h2 style="font-size:20px">${novo?"Novo cliente":"Editar cliente"}</h2>
+    ${novo?"":`<button class="dl" data-edit="">Cancelar edição</button>`}</div>
+  <div class="card cliform"><form id="fCad">
+    <h3 class="full first">Identificação</h3>
+    <label class="full"><span class="cap">Razão social <span class="note">obrigatório</span></span><input id="qNome" value="${esc(o.nome||"")}" autocomplete="organization"></label>
+    <label>Nome fantasia<input id="qFant" value="${esc(o.fantasia||"")}" placeholder="Como o cliente é conhecido"></label>
+    <label>Segmento<select id="qSeg">${opt(SEGMENTOS,o.seg)}</select></label>
+    <label><span class="cap">CNPJ <span class="note">obrigatório</span></span><input id="qCnpj" inputmode="numeric" value="${esc(o.cnpj||"")}" placeholder="00.000.000/0000-00"></label>
+    <label>Inscrição municipal<input id="qIm" value="${esc(o.im||"")}" placeholder="Para a NFS-e"></label>
+    <h3 class="full">Endereço do estabelecimento</h3>
+    <label>CEP<input id="qCep" inputmode="numeric" value="${esc(o.cep||"")}" placeholder="00000-000"></label>
+    <label>Bairro<input id="qBairro" value="${esc(o.bairro||"")}"></label>
+    <label class="full">Rua<input id="qRua" value="${esc(o.rua||(o.rua?"":o.end||""))}"></label>
+    <label>Número<input id="qNum" value="${esc(o.num||"")}"></label>
+    <label>Complemento<input id="qComp" value="${esc(o.comp||"")}"></label>
+    <label>Cidade<input id="qCidade" value="${esc(o.cidade||"")}"></label>
+    <label>UF<select id="qUf">${opt(UFS,o.uf||"SC")}</select></label>
+    <h3 class="full">Contato</h3>
+    <label>Responsável no local<input id="qResp" value="${esc(o.resp||"")}" placeholder="Quem recebe o técnico"></label>
+    <label>Telefone / WhatsApp<input id="qTel" inputmode="numeric" value="${esc(o.tel||"")}" placeholder="(48) 90000-0000"></label>
+    <label class="full"><span class="cap">E-mail <span class="note">recebe os avisos de vencimento</span></span><input id="qEmail" type="email" value="${esc(o.email||"")}"></label>
+    <h3 class="full">Observações</h3>
+    <label class="full">Anotações do técnico<input id="qObs" value="${esc(o.obs||"")}" placeholder="Ex.: entrar pelos fundos, cachorro solto, atender só de manhã"></label>
+    <p class="note full" id="qMsg"></p>
+    <button class="btn" type="submit">${novo?"Cadastrar cliente":"Salvar alterações"}</button>
+  </form></div>
+  <section class="panel" style="margin-top:20px"><div class="ph"><h2>Clientes cadastrados</h2><span class="note">${db.clientes.length} empresa${db.clientes.length===1?"":"s"}</span></div>
+  <div class="clist">${db.clientes.map(x=>{const p=piorStatus(x.id);return `<div class="cl"><span class="av">${iniciais(x.nome)}</span>
+    <span class="nm"><b>${esc(x.fantasia||x.nome)}</b><small>${esc(x.cnpj)}</small><span class="meta">${esc(x.end||"-")}${x.tel?" · "+esc(x.tel):""}</span></span>
+    <button class="dl" data-edit="${x.id}">Editar</button></div>`}).join("")}</div></section>`}
+function wireClientes(){
+  const $=id=>document.getElementById(id);
+  $("qCnpj").oninput=e=>e.target.value=maskCNPJ(e.target.value);
+  $("qCep").oninput=e=>e.target.value=maskCEP(e.target.value);
+  $("qTel").oninput=e=>e.target.value=maskTel(e.target.value);
+  $("fCad").onsubmit=e=>{e.preventDefault();const msg=$("qMsg");msg.className="note full";
+    const nome=$("qNome").value.trim();
+    if(!nome){msg.className="note full hint-err";msg.textContent="Preencha a razão social.";return $("qNome").focus()}
+    const cnpj=$("qCnpj").value.trim();
+    if(!cnpjOK(cnpj)){msg.className="note full hint-err";msg.textContent="CNPJ inválido. Confira os números.";return $("qCnpj").focus()}
+    const dup=db.clientes.find(c=>soNum(c.cnpj)===soNum(cnpj)&&c.id!==editando);
+    if(dup){msg.className="note full hint-err";msg.textContent=`Este CNPJ já está cadastrado para ${dup.nome}.`;return $("qCnpj").focus()}
+    const o={nome,fantasia:$("qFant").value.trim(),seg:$("qSeg").value,cnpj:maskCNPJ(cnpj),im:$("qIm").value.trim(),
+      cep:$("qCep").value.trim(),rua:$("qRua").value.trim(),num:$("qNum").value.trim(),comp:$("qComp").value.trim(),
+      bairro:$("qBairro").value.trim(),cidade:$("qCidade").value.trim(),uf:$("qUf").value,
+      resp:$("qResp").value.trim(),tel:$("qTel").value.trim(),email:$("qEmail").value.trim(),obs:$("qObs").value.trim()};
+    o.end=compEnd(o)||(editando&&cli(editando).end)||"-";
+    if(editando){Object.assign(cli(editando),o);save();const n=o.fantasia||o.nome;editando=null;tab="painel";render();toast(`${n} atualizado`)}
+    else{const id="c"+Date.now();db.clientes.push({id,...o});save();abertos.add(id);tab="painel";render();toast(`${o.fantasia||nome} cadastrado`)}}}
+
 // ---------- Imprimir e salvar em PDF ----------
 const PODE_IMPRIMIR = !(window.claude && typeof window.claude.use === "function");
 function docBtns(tipo,id){return `<div class="docbtns"><button class="btn" data-pdf="${tipo}" data-id="${id}">Salvar em PDF</button>${PODE_IMPRIMIR?`<button class="btn ghost" data-print="${tipo}" data-id="${id}">Imprimir</button>`:""}</div>`}
@@ -608,7 +681,7 @@ function logoPNG(){if(_logo!==null)return Promise.resolve(_logo);
 function docDados(tipo,id){
   if(tipo==="os"){const v=vis(id);if(!v)return null;const c=cli(v.cli);
     return {arq:`ordem-servico-${v.os}.pdf`,titulo:`Ordem de serviço ${v.os}`,sub:"Termo de compromisso e comprovante de execução",
-      linhas:[["Cliente",c.nome],["CNPJ",c.cnpj],["Endereço",c.end],["Data e hora",fmtHora(v.data)],["Técnico",v.tecnico],["Serviço",`${v.tipo} · ${v.praga}`],["Produtos",v.prod],["Áreas tratadas",v.areas||"-"]],
+      linhas:[["Cliente",c.nome],["CNPJ",c.cnpj],["Endereço",c.end],["Data e hora",fmtHora(v.data)],["Técnico",v.tecnico],["Serviço",`${v.tipo} · ${v.praga}`],["Produtos",v.prod],["Contato no local",(c.resp||"-")+(c.tel?" · "+c.tel:"")],["Áreas tratadas",v.areas||"-"]],
       lista:{t:"Orientações e termo de compromisso",itens:TERMO,obs:"Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima."},
       assinatura:v.assinatura||null};}
   const b=cob(id);if(!b)return null;const c=cli(b.cli);
@@ -756,7 +829,7 @@ const DATASETS=[["clientes","Empresas (clientes)","Nome, CNPJ, endereço, e-mail
 function tabelas(){const sit=id=>{const p=piorStatus(id);return p?LABEL[p]:"Sem certificados"};
   return {
   clientes:db.clientes.map(c=>{const ks=db.certs.filter(k=>k.cli===c.id).sort((a,b)=>a.venc.localeCompare(b.venc));const prox=ks.find(k=>dias(k.venc)>=0);
-    return {"Empresa":c.nome,"CNPJ":c.cnpj,"Endereço":c.end,"E-mail":c.email||"","Situação":sit(c.id),"Certificados":ks.length,"Próximo vencimento":prox?fmt(prox.venc):"","Valor em aberto (R$)":(db.cobrancas||[]).filter(b=>b.cli===c.id&&b.status!=="paga").reduce((t,b)=>t+b.valor,0)}}),
+    return {"Empresa":c.nome,"Nome fantasia":c.fantasia||"","CNPJ":c.cnpj,"Inscrição municipal":c.im||"","Endereço":c.end,"Cidade":c.cidade||"","UF":c.uf||"","CEP":c.cep||"","Responsável":c.resp||"","Telefone":c.tel||"","E-mail":c.email||"","Segmento":c.seg||"","Observações":c.obs||"","Situação":sit(c.id),"Certificados":ks.length,"Próximo vencimento":prox?fmt(prox.venc):"","Valor em aberto (R$)":(db.cobrancas||[]).filter(b=>b.cli===c.id&&b.status!=="paga").reduce((t,b)=>t+b.valor,0)}}),
   certificados:db.certs.map(k=>({"Empresa":cli(k.cli).nome,"CNPJ":cli(k.cli).cnpj,"Serviço":k.tipo,"Praga-alvo":k.praga,"Produtos":k.prod,"Execução":fmt(k.exec),"Validade":fmt(k.venc),"Situação":LABEL[status(k.venc)],"Dias para vencer":dias(k.venc)})),
   visitas:(db.visitas||[]).map(v=>({"OS":v.os,"Empresa":cli(v.cli).nome,"Data e hora":fmtHora(v.data),"Técnico":v.tecnico,"Serviço":v.tipo,"Praga-alvo":v.praga,"Produtos":v.prod,"Áreas tratadas":v.areas||"","Assinatura":v.status==="assinada"?"Assinada":"Pendente","Assinado por":v.assinatura?.nome||"","Assinado em":v.assinatura?fmtHora(v.assinatura.em):"","Código":v.assinatura?.cod||""})),
   cobrancas:(db.cobrancas||[]).map(b=>({"Empresa":cli(b.cli).nome,"CNPJ":cli(b.cli).cnpj,"Descrição":b.desc,"Valor (R$)":b.valor,"Vencimento":fmt(b.venc),"Forma":b.forma,"Situação":LCOB[stCob(b)],"Pago em":b.pagoEm?fmt(b.pagoEm):"","NFS-e":b.nfse?.numero||""})),
@@ -788,6 +861,8 @@ document.addEventListener("click",e=>{
   const pr=e.target.closest("[data-print]"); if(pr){imprimirPDF(pr.dataset.print,pr.dataset.id);return}
   const ac=e.target.closest("[data-act]"); if(ac){acaoCob(ac.dataset.act,ac.dataset.id);return}
   if(e.target.closest("[data-export]")){openExport();return}
+  if(e.target.closest("[data-novocli]")){tab="clientes";editando=null;render();return}
+  const ed=e.target.closest("[data-edit]"); if(ed){tab="clientes";editando=ed.dataset.edit;render();window.scrollTo({top:0,behavior:"smooth"});return}
   const cy=e.target.closest("[data-copy]"); if(cy){copiar(cy);return}
   const fb=e.target.closest("[data-fcob]"); if(fb){filtroCob=fb.dataset.fcob;render();return}
   const cp=e.target.closest("[data-comp]"); if(cp){openComp(cp.dataset.comp);return}
