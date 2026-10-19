@@ -8,6 +8,8 @@ O app acompanha a validade de cada certificado emitido (desinsetização, desrat
 
 ![Registro de visita com assinatura do cliente](docs/registrar-visita.png)
 
+![Cobranças e NFS-e](docs/cobrancas.png)
+
 > **Demonstração com dados fictícios.** Os clientes, CNPJs e PDFs deste repositório são exemplos e não representam clientes reais.
 
 ## Funcionalidades
@@ -42,6 +44,22 @@ O app acompanha a validade de cada certificado emitido (desinsetização, desrat
 - O responsável assina com o dedo no celular ou tablet do técnico, ou confirma depois na própria área do cliente
 - O comprovante registra nome, data, hora e um código de verificação
 
+**Cobranças (boleto e Pix)** · *simulação*
+- Valor e forma de pagamento definidos ao registrar a visita
+- Geração de boleto (linha digitável) e Pix (QR Code e copia e cola)
+- Situação de cada cobrança: a gerar, aguardando pagamento, em atraso ou pago
+- Totais a receber, em atraso e recebidos no mês
+
+**NFS-e** · *simulação*
+- Emissão a partir da cobrança, com serviço do item 7.13 da LC 116/2003
+- Cálculo do ISS pela alíquota informada
+- Nota com prestador, tomador, valores e código de verificação
+
+**Exportação de dados**
+- Planilha Excel com uma aba para empresas, certificados, visitas, cobranças e notas fiscais
+- CSV das empresas, pronto para abrir no Excel
+- Backup completo em JSON
+
 **Avisos por e-mail**
 - Dois avisos por certificado: 30 e 15 dias antes do vencimento
 - Enviados ao responsável técnico e ao cliente
@@ -69,6 +87,8 @@ docs/painel.png            captura de tela
 - [ ] Banco de dados no servidor da Agrocel
 - [ ] Envio automático dos e-mails de aviso
 - [ ] Avisos por WhatsApp
+- [ ] Integração real de boleto/Pix com o banco ou plataforma de cobrança
+- [ ] Emissão real de NFS-e (prefeitura ou API de notas)
 - [ ] Geração do certificado e da ordem de serviço em PDF direto pelo app
 - [ ] Versão para várias empresas de controle de pragas
 

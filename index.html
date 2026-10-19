@@ -199,6 +199,41 @@ label.rad{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--
 .vlink:last-child{border-bottom:0}.vlink b{font-family:var(--mono);font-size:12.5px}.vlink small{display:block;color:var(--muted);font-size:12px}
 .vlink:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
 @media (max-width:560px){.radios{grid-template-columns:1fr}.kv{grid-template-columns:1fr;gap:2px}.kv dt{margin-top:6px}}
+.s-n{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.kpi.static{cursor:default}
+.kpi .money{font-family:var(--display);font-weight:700;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.crow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px 16px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.crow:last-child{border-bottom:0}
+.crow.atraso{background:linear-gradient(90deg,var(--red-bg),transparent 60%)}
+.crow .ci b{display:block}.crow .ci span{display:block;font-size:12.5px;color:var(--muted)}
+.crow .cv{text-align:right}.crow .cv b{display:block;font-family:var(--display);font-size:18px;font-variant-numeric:tabular-nums}.crow .cv span{font-size:12px;color:var(--muted);font-family:var(--mono)}
+.acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);font:700 12px var(--body);padding:5px 11px;border-radius:99px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.simu{background:var(--amber-bg);color:var(--amber);border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700}
+.copyrow{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+.copyrow code{flex:1;min-width:0;font-family:var(--mono);font-size:13px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;overflow-wrap:anywhere;user-select:all}
+.pixbox{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.pixbox svg{background:#fff;border-radius:10px;padding:8px;border:1px solid var(--line);flex:none}
+.pixbox > div{flex:1;min-width:200px;display:grid;gap:8px}
+.sec-t{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.nf{border:1.5px solid var(--fg);border-radius:12px;overflow:hidden;font-size:13.5px}
+.nf .nfh{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border-bottom:1.5px solid var(--fg);background:var(--surface-2)}
+.nf .nfh b{font-family:var(--display);font-size:15px;display:block}
+.nf .blk{padding:10px 14px;border-bottom:1px solid var(--line);display:grid;gap:2px}
+.nf .blk:last-child{border-bottom:0}
+.nf .lbl{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.nf .tot{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.nf .tot div{padding:10px 14px;border-right:1px solid var(--line)}.nf .tot div:last-child{border-right:0}
+.nf .tot b{font-variant-numeric:tabular-nums}
+.exp{display:grid;gap:8px}
+.exp label.check{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface-2)}
+.exp label.check small{display:block;width:100%;color:var(--muted);font-weight:500;font-size:12.5px;margin-left:28px;margin-top:-6px}
+.expbtns{display:flex;gap:8px;flex-wrap:wrap}
+.btn.ghost{background:var(--surface);color:var(--link);border:1.5px solid var(--line);box-shadow:none}
+.btn.ghost:hover{background:var(--surface-2)}
+@media (max-width:560px){.crow{grid-template-columns:minmax(0,1fr) auto}.crow .chip{grid-column:1/-1;justify-self:start}.nf .tot{grid-template-columns:1fr 1fr}.nf .tot div:nth-child(2){border-right:0}}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:700;z-index:20;box-shadow:var(--shadow)}
 .empty{padding:22px 16px;color:var(--muted);text-align:center}
 
@@ -239,11 +274,13 @@ label.rad{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--
 <div class="modal" id="modal" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const HOJE = new Date(); HOJE.setHours(0,0,0,0);
 const iso=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
 const EMAIL_FERNANDO = "responsavel.tecnico@exemplo.com";
 const VALIDADE_MESES = {"Desinsetização":12,"Desratização":3,"Higienização de reservatório":6,"Outro":12};
+const EMPRESA = {nome:"Agrocel Soluções Ambientais (exemplo)",cnpj:"00.000.000/0001-00",cidade:"Rio Fortuna/SC"};
 const TECNICOS = ["Responsável técnico (Eng. Agrônomo)","Técnico de campo"];
 const LOGO = "assets/logo-agrocel.png";
 const SIG = "data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 90"><path d="M15 60 C30 20,45 20,50 55 S70 80,80 45 S100 15,110 50 S130 70,140 40 C150 25,160 60,175 50 S200 35,208 42" fill="none" stroke="#10301a" stroke-width="2.4" stroke-linecap="round"/></svg>');
@@ -275,6 +312,13 @@ const seed = {
     {id:"v1",os:"OS-2026-0001",cli:"c3",tecnico:"Técnico de campo",data:rel(-30)+"T08:40",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005% (Maki Bloco)",areas:"Câmara fria, expedição e perímetro",status:"assinada",assinatura:{nome:"Carla Mendes",img:SIG,em:rel(-30)+"T09:15:00",cod:"7F3A91C2"}},
     {id:"v2",os:"OS-2026-0002",cli:"c4",tecnico:"Técnico de campo",data:rel(-80)+"T14:00",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005%",areas:"Cozinha e depósito",status:"pendente"}
   ],
+  cobrancas:[
+    {id:"b1",visita:"v1",cli:"c3",desc:"Desratização · OS-2026-0001",valor:650,venc:rel(-20),forma:"Boleto + Pix",status:"paga",geradaEm:rel(-30)+"T09:20:00",pagoEm:rel(-22),nfse:{numero:"000041",emitidaEm:rel(-22)+"T10:05:00",aliquota:3,cod:"A1B2-C3D4"}},
+    {id:"b2",visita:"v2",cli:"c4",desc:"Desratização · OS-2026-0002",valor:220,venc:rel(-70),forma:"Boleto",status:"aberta",geradaEm:rel(-80)+"T14:30:00"},
+    {id:"b3",cli:"c2",desc:"Desinsetização · contrato mensal",valor:480,venc:rel(8),forma:"Pix",status:"aberta",geradaEm:rel(-2)+"T08:00:00"},
+    {id:"b4",cli:"c1",desc:"Desratização · renovação",valor:350,venc:rel(15),forma:"Boleto + Pix",status:"aberta"},
+    {id:"b5",cli:"c3",desc:"Manutenção mensal · perímetro",valor:650,venc:rel(-1),forma:"Boleto + Pix",status:"paga",geradaEm:rel(-9)+"T09:00:00",pagoEm:rel(-3)}
+  ],
   proprios:[
     {nome:"ART do responsável técnico (CREA-SC)",venc:rel(73)},
     {nome:"Alvará de Funcionamento",venc:rel(104)},
@@ -282,9 +326,9 @@ const seed = {
   ]
 };
 
-let db; try{db=JSON.parse(localStorage.getItem("agrocel-demo-v2"))}catch(e){}
+let db; try{db=JSON.parse(localStorage.getItem("agrocel-demo-v3"))}catch(e){}
 if(!db||!db.clientes) db=JSON.parse(JSON.stringify(seed));
-const save=()=>{try{localStorage.setItem("agrocel-demo-v2",JSON.stringify(db))}catch(e){}};
+const save=()=>{try{localStorage.setItem("agrocel-demo-v3",JSON.stringify(db))}catch(e){}};
 
 let modo="admin", tab="painel", cliAtual="c1", filtro=null, busca="", abertos=new Set(["c1","c4"]);
 
@@ -318,13 +362,13 @@ function docsHTML(id){const ds=(db.docs||[]).filter(x=>x.cli===id);return ds.len
 
 function render(){
   const T = modo==="admin"
-    ? [["painel","Painel"],["visita","Registrar visita"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"]]
+    ? [["painel","Painel"],["visita","Registrar visita"],["cobrancas","Cobranças"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"]]
     : [["painel","Meus certificados"]];
   if(!T.find(t=>t[0]===tab)) tab="painel";
   document.getElementById("tabs").innerHTML=T.map(([k,l])=>`<button role="tab" aria-selected="${k===tab}" data-tab="${k}">${l}</button>`).join("");
   const app=document.getElementById("app");
   if(modo==="cliente"){app.innerHTML=viewCliente();return}
-  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():viewAgrocel();
+  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="cobrancas"?viewCobrancas():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():viewAgrocel();
   if(tab==="novo") wireNovo();
   if(tab==="visita") wireVisita();
   if(tab==="painel"){const b=document.getElementById("busca");b.oninput=()=>{busca=b.value;renderLista()}}
@@ -350,7 +394,7 @@ function viewPainel(){
   </section>
   <div class="grid">
     <section class="panel">
-      <div class="ph"><h2>Clientes</h2>
+      <div class="ph"><h2>Clientes</h2><button class="dl" data-export>Exportar dados</button>
         <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
         <input id="busca" type="search" placeholder="Buscar por nome ou CNPJ" value="${esc(busca)}" aria-label="Buscar cliente"></div>
         ${filtro?`<button class="clear" data-f="${filtro}">Filtro: ${LABEL[filtro]} ✕</button>`:""}
@@ -392,7 +436,7 @@ function viewCliente(){
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px">${p?chip(p):""}<span class="note">${ok} de ${ks.length} certificados em dia</span></div></div></div>
   <section class="panel">
     <div class="intro"><p class="note">Você vê apenas os certificados emitidos pela Agrocel para o seu estabelecimento. Para renovar ou agendar uma visita, ligue para (48) 3653-1256.</p></div>
-    <div class="cbody" style="padding:16px">${ks.length?ks.map(certHTML).join(""):'<div class="empty">Nenhum certificado cadastrado ainda.</div>'}${visitasHTML(c.id,true)}${docsHTML(c.id)}</div>
+    <div class="cbody" style="padding:16px">${ks.length?ks.map(certHTML).join(""):'<div class="empty">Nenhum certificado cadastrado ainda.</div>'}${visitasHTML(c.id,true)}${financeiroCliente(c.id)}${docsHTML(c.id)}</div>
   </section>`;
 }
 
@@ -502,7 +546,7 @@ function openComp(id){const v=vis(id);if(!v)return;const m=document.getElementBy
 function closeModal(){const m=document.getElementById("modal");m.hidden=true;m.innerHTML="";document.body.style.overflow=""}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 function viewVisita(){const a=new Date();a.setSeconds(0,0);const local=new Date(a-a.getTimezoneOffset()*6e4).toISOString().slice(0,16);
-  return `<div class="card"><div class="steps"><span>1 · Serviço realizado</span><span>2 · Orientações</span><span>3 · Assinatura do cliente</span></div>
+  return `<div class="card"><div class="steps"><span>1 · Serviço e cobrança</span><span>2 · Orientações</span><span>3 · Assinatura do cliente</span></div>
   <form id="fVis">
     <h3 class="full first">Dados da visita <span class="note mono">${proxOS()}</span></h3>
     <label class="full">Cliente<select id="vCliente">${db.clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select></label>
@@ -513,6 +557,11 @@ function viewVisita(){const a=new Date();a.setSeconds(0,0);const local=new Date(
     <label class="full">Produtos usados<input id="vProd" placeholder="Ex.: Optigard Duo (Lambda-cialotrina + Tiametoxam)"></label>
     <label class="full">Áreas tratadas<input id="vAreas" placeholder="Ex.: cozinha, depósito, perímetro externo"></label>
     <label class="check full"><input type="checkbox" id="vCert" checked> Gerar certificado válido até <input type="date" id="vVenc" class="inl" aria-label="Validade do certificado"></label>
+    <h3 class="full">Cobrança</h3>
+    <label>Valor do serviço (R$)<input id="vValor" inputmode="decimal" placeholder="0,00"></label>
+    <label>Vencimento<input id="vVencCob" type="date"></label>
+    <label class="full">Forma de pagamento<select id="vForma"><option>Boleto + Pix</option><option>Boleto</option><option>Pix</option><option>Não cobrar (contrato ou garantia)</option></select></label>
+    <label class="check full"><input type="checkbox" id="vGerar" checked> Gerar boleto/Pix ao concluir a visita</label>
     <h3 class="full">Orientações ao cliente</h3>
     <ul class="termo full">${TERMO.map(t=>`<li>${t}</li>`).join("")}</ul>
     <h3 class="full">Confirmação do cliente</h3>
@@ -526,6 +575,7 @@ function viewVisita(){const a=new Date();a.setSeconds(0,0);const local=new Date(
 function wireVisita(){const $=id=>document.getElementById(id);let pad=makePad($("pad"));$("padClear").onclick=()=>pad.clear();
   const modo_=()=>document.querySelector('[name=vModo]:checked').value;
   const sug=()=>{$("vVenc").value=addMeses(($("vData").value||iso(HOJE)).slice(0,10),VALIDADE_MESES[$("vTipo").value])};sug();$("vTipo").onchange=sug;$("vData").onchange=sug;
+  {const x=new Date(HOJE);x.setDate(x.getDate()+10);$("vVencCob").value=iso(x)}
   document.querySelectorAll('[name=vModo]').forEach(r=>r.onchange=()=>{const ag=modo_()==="agora";$("vSign").hidden=!ag;if(ag)pad=makePad($("pad"))});
   $("fVis").onsubmit=e=>{e.preventDefault();const ag=modo_()==="agora";
     if(!$("vData").value)return toast("Informe a data da visita.");
@@ -535,13 +585,133 @@ function wireVisita(){const $=id=>document.getElementById(id);let pad=makePad($(
     if(ag) assinar(v,$("vNome").value.trim(),pad.data());
     (db.visitas=db.visitas||[]).push(v);
     if($("vCert").checked&&$("vVenc").value) db.certs.push({id:"k"+Date.now(),cli:v.cli,tipo:v.tipo,praga:v.praga,prod:v.prod,exec:v.data.slice(0,10),venc:$("vVenc").value,pdf:"",visita:id});
+    const valor=parseValor($("vValor").value);
+    if(valor>0&&!$("vForma").value.startsWith("Não")){const b={id:"b"+Date.now(),visita:id,cli:v.cli,desc:`${v.tipo} · ${v.os}`,valor,venc:$("vVencCob").value||iso(HOJE),forma:$("vForma").value,status:"aberta"};if($("vGerar").checked)gerarCodigos(b);(db.cobrancas=db.cobrancas||[]).push(b)}
     abertos.add(v.cli);save();tab="painel";filtro=null;render();toast(ag?`${v.os} concluída e assinada`:`${v.os} registrada, aguardando o cliente`)}}
+
+// ---------- Cobranças (boleto/Pix), NFS-e e exportação — simulação ----------
+let filtroCob="todas";
+const BRL=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const parseValor=t=>{const n=parseFloat(String(t||"").replace(/[^\d,.-]/g,"").replace(/\.(?=\d{3}(\D|$))/g,"").replace(",","."));return isNaN(n)?0:Math.round(n*100)/100};
+const cob=id=>(db.cobrancas||[]).find(b=>b.id===id);
+function stCob(b){if(b.status==="paga")return "g";if(!b.geradaEm)return "n";return dias(b.venc)<0?"r":"a"}
+const LCOB={g:"Pago",a:"Aguardando pagamento",r:"Em atraso",n:"A gerar"};
+const chipCob=b=>{const s=stCob(b);return `<span class="chip ${s==="n"?"s-n":"s-"+s}"><i></i>${LCOB[s]}</span>`};
+const rnd=n=>Array.from({length:n},()=>Math.floor(Math.random()*10)).join("");
+function gerarCodigos(b){const d=rnd(47);b.linha=`${d.slice(0,5)}.${d.slice(5,10)} ${d.slice(10,15)}.${d.slice(15,21)} ${d.slice(21,26)}.${d.slice(26,32)} ${d[32]} ${d.slice(33)}`;
+  b.pix=`00020126580014BR.GOV.BCB.PIX0136SIMULACAO-${b.id}-${rnd(8)}5204000053039865406${b.valor.toFixed(2)}5802BR6304${rnd(4)}`;b.geradaEm=new Date().toISOString()}
+function qrSVG(seed){let h=0;for(const c of seed)h=(h*31+c.charCodeAt(0))>>>0;const r=()=>{h^=h<<13;h^=h>>>17;h^=h<<5;return (h>>>0)/4294967296};
+  const N=25,s=5;let p="";const fin=(x,y)=>p+=`<rect x="${x*s}" y="${y*s}" width="${7*s}" height="${7*s}" fill="#10301a"/><rect x="${(x+1)*s}" y="${(y+1)*s}" width="${5*s}" height="${5*s}" fill="#fff"/><rect x="${(x+2)*s}" y="${(y+2)*s}" width="${3*s}" height="${3*s}" fill="#10301a"/>`;
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const inF=(x<8&&y<8)||(x>N-9&&y<8)||(x<8&&y>N-9);if(!inF&&r()>.5)p+=`<rect x="${x*s}" y="${y*s}" width="${s}" height="${s}" fill="#10301a"/>`}
+  fin(0,0);fin(N-7,0);fin(0,N-7);return `<svg width="140" height="140" viewBox="0 0 ${N*s} ${N*s}" role="img" aria-label="QR Code Pix de simulação">${p}</svg>`}
+function linhaCob(b,cliente){const s=stCob(b);const c=cli(b.cli);
+  const acts=[];
+  if(s==="n") acts.push(`<button class="btn sm" data-act="gerar" data-id="${b.id}">Gerar boleto/Pix</button>`);
+  else acts.push(`<button class="dl" data-act="boleto" data-id="${b.id}">${s==="g"?"Ver cobrança":"Ver boleto/Pix"}</button>`);
+  if(!cliente&&(s==="a"||s==="r")) acts.push(`<button class="dl" data-act="pagar" data-id="${b.id}">Marcar como pago</button>`);
+  if(b.nfse) acts.push(`<button class="dl" data-act="vernf" data-id="${b.id}">NFS-e nº ${b.nfse.numero}</button>`);
+  else if(!cliente) acts.push(`<button class="dl" data-act="nfse" data-id="${b.id}">Emitir NFS-e</button>`);
+  if(cliente&&s==="n") acts.length=0;
+  return `<div class="crow ${s==="r"?"atraso":""}"><div class="ci"><b>${cliente?esc(b.desc):esc(c.nome)}</b><span>${cliente?esc(b.forma):esc(b.desc)+" · "+esc(b.forma)}</span></div>
+  <div class="cv"><b>${BRL(b.valor)}</b><span>${s==="g"&&b.pagoEm?"pago em "+fmt(b.pagoEm):"vence "+fmt(b.venc)}</span></div>${chipCob(b)}
+  ${acts.length?`<div class="acts">${acts.join("")}</div>`:""}</div>`}
+function viewCobrancas(){const bs=db.cobrancas||[];const mes=iso(HOJE).slice(0,7);
+  const aberto=bs.filter(b=>b.status!=="paga").reduce((t,b)=>t+b.valor,0);
+  const atraso=bs.filter(b=>stCob(b)==="r");const rec=bs.filter(b=>b.status==="paga"&&(b.pagoEm||"").startsWith(mes)).reduce((t,b)=>t+b.valor,0);
+  const nfs=bs.filter(b=>b.nfse&&b.nfse.emitidaEm.startsWith(mes)).length;
+  const ord={r:0,a:1,n:2,g:3};let lista=[...bs].sort((a,b)=>ord[stCob(a)]-ord[stCob(b)]||a.venc.localeCompare(b.venc));
+  if(filtroCob!=="todas")lista=lista.filter(b=>stCob(b)===filtroCob);
+  const F=[["todas","Todas"],["r","Em atraso"],["a","Aguardando"],["n","A gerar"],["g","Pagas"]];
+  return `<section class="kpis">
+    <div class="kpi static"><span class="lbl"><i style="background:var(--amber)"></i>A receber</span><span class="money">${BRL(aberto)}</span><span class="hint">${bs.filter(b=>b.status!=="paga").length} cobranças em aberto</span></div>
+    <div class="kpi static k-r"><span class="lbl"><i style="background:var(--red)"></i>Em atraso</span><span class="money" style="color:var(--red)">${BRL(atraso.reduce((t,b)=>t+b.valor,0))}</span><span class="hint">${atraso.length} cobrança${atraso.length===1?"":"s"} vencida${atraso.length===1?"":"s"}</span></div>
+    <div class="kpi static"><span class="lbl"><i style="background:var(--green)"></i>Recebido no mês</span><span class="money" style="color:var(--green)">${BRL(rec)}</span><span class="hint">${HOJE.toLocaleDateString("pt-BR",{month:"long",year:"numeric"})}</span></div>
+    <div class="kpi static"><span class="lbl"><i style="background:var(--lime)"></i>NFS-e no mês</span><span class="money">${nfs}</span><span class="hint">notas emitidas</span></div>
+  </section>
+  <section class="panel"><div class="ph"><h2>Cobranças</h2><div class="filters">${F.map(([k,l])=>`<button data-fcob="${k}" aria-pressed="${filtroCob===k}">${l}</button>`).join("")}</div><button class="dl" data-export>Exportar dados</button></div>
+  <div class="intro"><p class="note">Simulação. Na versão real, o boleto e o Pix são emitidos pelo banco ou pela plataforma de cobrança da Agrocel, o pagamento é baixado automaticamente e a NFS-e é transmitida à prefeitura.</p></div>
+  ${lista.length?lista.map(b=>linhaCob(b,false)).join(""):'<div class="empty">Nenhuma cobrança neste filtro. Cobranças são criadas ao registrar uma visita com valor.</div>'}</section>`}
+function financeiroCliente(id){const bs=(db.cobrancas||[]).filter(b=>b.cli===id).sort((a,b)=>b.venc.localeCompare(a.venc));
+  if(!bs.length)return "";return `<div class="docs"><div class="t">Financeiro</div><div class="panel" style="box-shadow:none">${bs.map(b=>linhaCob(b,true)).join("")}</div></div>`}
+function modal(html){const m=document.getElementById("modal");m.innerHTML=`<div class="mbox" role="dialog" aria-modal="true">${html}</div>`;m.hidden=false;document.body.style.overflow="hidden"}
+const cab=(t,sub)=>`<div class="sh-h"><img src="${LOGO}" alt="Agrocel"><div><b>${t}</b><span>${sub}</span></div><button class="x" data-close aria-label="Fechar">✕</button></div>`;
+function boletoHTML(b){const c=cli(b.cli);const temB=b.forma.includes("Boleto"),temP=b.forma.includes("Pix");
+  return `<div class="sheet">${cab("Cobrança "+BRL(b.valor),esc(b.desc))}
+  <div class="simu">Simulação: estes códigos não são pagáveis.</div>
+  <dl class="kv"><dt>Pagador</dt><dd>${esc(c.nome)}</dd><dt>CNPJ</dt><dd class="mono">${esc(c.cnpj)}</dd><dt>Beneficiário</dt><dd>${esc(EMPRESA.nome)}</dd><dt>Valor</dt><dd>${BRL(b.valor)}</dd><dt>Vencimento</dt><dd>${fmt(b.venc)}</dd><dt>Situação</dt><dd>${chipCob(b)}</dd></dl>
+  ${temB?`<div class="sec-t">Boleto · linha digitável</div><div class="copyrow"><code id="cLinha">${b.linha}</code><button class="dl" data-copy="cLinha">Copiar</button></div>`:""}
+  ${temP?`<div class="sec-t">Pix</div><div class="pixbox">${qrSVG(b.pix)}<div><span class="note">Aponte a câmera do app do banco ou use o Pix copia e cola.</span><div class="copyrow"><code id="cPix">${b.pix}</code><button class="dl" data-copy="cPix">Copiar</button></div></div></div>`:""}
+  </div>`}
+function nfseFormHTML(b){const c=cli(b.cli);return `<div class="sheet">${cab("Emitir NFS-e",esc(c.nome))}
+  <div class="simu">Simulação: a emissão real é feita no sistema da prefeitura ou por uma API de notas.</div>
+  <form id="fNf" style="grid-template-columns:1fr 1fr">
+    <label class="full">Serviço (LC 116/2003)<input value="7.13 · Dedetização, desinfecção, desinsetização, imunização, higienização, desratização, pulverização e congêneres" readonly></label>
+    <label class="full">Discriminação<input id="nfDesc" value="${esc(b.desc)}"></label>
+    <label>Valor do serviço<input value="${BRL(b.valor)}" readonly></label>
+    <label>Alíquota de ISS (%)<input id="nfAliq" inputmode="decimal" value="3"></label>
+    <p class="note full" id="nfCalc"></p>
+    <p class="note full">Confirme a alíquota de ISS de ${esc(EMPRESA.cidade)} com o contador.</p>
+    <button class="btn" type="submit">Emitir NFS-e</button>
+  </form></div>`}
+function nfseHTML(b){const c=cli(b.cli),n=b.nfse,iss=b.valor*n.aliquota/100;return `<div class="sheet">${cab("NFS-e nº "+n.numero,"Nota Fiscal de Serviço Eletrônica")}
+  <div class="simu">Simulação: documento sem validade fiscal.</div>
+  <div class="nf"><div class="nfh"><div><b>NFS-e nº ${n.numero}</b><span class="note">Emitida em ${fmtHora(n.emitidaEm)}</span></div><div><span class="lbl">Código de verificação</span><br><b class="mono" style="font-size:14px">${n.cod}</b></div></div>
+  <div class="blk"><span class="lbl">Prestador</span><b>${esc(EMPRESA.nome)}</b><span>CNPJ ${esc(EMPRESA.cnpj)} · ${esc(EMPRESA.cidade)}</span></div>
+  <div class="blk"><span class="lbl">Tomador</span><b>${esc(c.nome)}</b><span>CNPJ ${esc(c.cnpj)} · ${esc(c.end)}</span></div>
+  <div class="blk"><span class="lbl">Serviço · item 7.13 da LC 116/2003</span><span>${esc(n.desc||b.desc)}</span></div>
+  <div class="tot"><div><span class="lbl">Valor</span><br><b>${BRL(b.valor)}</b></div><div><span class="lbl">Alíquota ISS</span><br><b>${String(n.aliquota).replace(".",",")}%</b></div><div><span class="lbl">ISS</span><br><b>${BRL(iss)}</b></div><div><span class="lbl">Valor líquido</span><br><b>${BRL(b.valor)}</b></div></div></div>
+  </div>`}
+function acaoCob(act,id){const b=cob(id);if(!b)return;
+  if(act==="gerar"){gerarCodigos(b);save();render();modal(boletoHTML(b));toast("Boleto/Pix gerado");return}
+  if(act==="boleto"){modal(boletoHTML(b));return}
+  if(act==="pagar"){b.status="paga";b.pagoEm=iso(HOJE);save();render();toast(`Pagamento de ${BRL(b.valor)} registrado`);return}
+  if(act==="vernf"){modal(nfseHTML(b));return}
+  if(act==="nfse"){modal(nfseFormHTML(b));const a=document.getElementById("nfAliq"),out=document.getElementById("nfCalc");
+    const calc=()=>{const p=parseValor(a.value);out.textContent=`ISS calculado: ${BRL(b.valor*p/100)}`};calc();a.oninput=calc;
+    document.getElementById("fNf").onsubmit=e=>{e.preventDefault();const p=parseValor(a.value);if(p<=0||p>5)return toast("A alíquota de ISS fica entre 2% e 5%.");
+      const num=String(Math.max(0,...(db.cobrancas||[]).filter(x=>x.nfse).map(x=>+x.nfse.numero))+1).padStart(6,"0");
+      b.nfse={numero:num,emitidaEm:new Date().toISOString(),aliquota:p,desc:document.getElementById("nfDesc").value,cod:(rnd(4)+"-"+Math.random().toString(16).slice(2,6)).toUpperCase()};
+      save();render();modal(nfseHTML(b));toast(`NFS-e nº ${num} emitida`)}}}
+async function copiar(btn){const el=document.getElementById(btn.dataset.copy);const t=el.textContent;
+  try{await navigator.clipboard.writeText(t);toast("Copiado")}catch(_){const r=document.createRange();r.selectNodeContents(el);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);toast("Texto selecionado. Use copiar do aparelho.")}}
+
+// ---------- Exportação ----------
+const DATASETS=[["clientes","Empresas (clientes)","Nome, CNPJ, endereço, e-mail, situação e valores em aberto"],["certificados","Certificados","Serviço, validade e situação de cada certificado"],["visitas","Visitas e ordens de serviço","Técnico, data, áreas e assinatura do cliente"],["cobrancas","Cobranças","Valor, vencimento, forma e situação"],["nfse","Notas fiscais (NFS-e)","Número, tomador, valor e ISS"]];
+function tabelas(){const sit=id=>{const p=piorStatus(id);return p?LABEL[p]:"Sem certificados"};
+  return {
+  clientes:db.clientes.map(c=>{const ks=db.certs.filter(k=>k.cli===c.id).sort((a,b)=>a.venc.localeCompare(b.venc));const prox=ks.find(k=>dias(k.venc)>=0);
+    return {"Empresa":c.nome,"CNPJ":c.cnpj,"Endereço":c.end,"E-mail":c.email||"","Situação":sit(c.id),"Certificados":ks.length,"Próximo vencimento":prox?fmt(prox.venc):"","Valor em aberto (R$)":(db.cobrancas||[]).filter(b=>b.cli===c.id&&b.status!=="paga").reduce((t,b)=>t+b.valor,0)}}),
+  certificados:db.certs.map(k=>({"Empresa":cli(k.cli).nome,"CNPJ":cli(k.cli).cnpj,"Serviço":k.tipo,"Praga-alvo":k.praga,"Produtos":k.prod,"Execução":fmt(k.exec),"Validade":fmt(k.venc),"Situação":LABEL[status(k.venc)],"Dias para vencer":dias(k.venc)})),
+  visitas:(db.visitas||[]).map(v=>({"OS":v.os,"Empresa":cli(v.cli).nome,"Data e hora":fmtHora(v.data),"Técnico":v.tecnico,"Serviço":v.tipo,"Praga-alvo":v.praga,"Produtos":v.prod,"Áreas tratadas":v.areas||"","Assinatura":v.status==="assinada"?"Assinada":"Pendente","Assinado por":v.assinatura?.nome||"","Assinado em":v.assinatura?fmtHora(v.assinatura.em):"","Código":v.assinatura?.cod||""})),
+  cobrancas:(db.cobrancas||[]).map(b=>({"Empresa":cli(b.cli).nome,"CNPJ":cli(b.cli).cnpj,"Descrição":b.desc,"Valor (R$)":b.valor,"Vencimento":fmt(b.venc),"Forma":b.forma,"Situação":LCOB[stCob(b)],"Pago em":b.pagoEm?fmt(b.pagoEm):"","NFS-e":b.nfse?.numero||""})),
+  nfse:(db.cobrancas||[]).filter(b=>b.nfse).map(b=>({"Número":b.nfse.numero,"Emissão":fmtHora(b.nfse.emitidaEm),"Tomador":cli(b.cli).nome,"CNPJ":cli(b.cli).cnpj,"Discriminação":b.nfse.desc||b.desc,"Valor (R$)":b.valor,"Alíquota ISS (%)":b.nfse.aliquota,"ISS (R$)":Math.round(b.valor*b.nfse.aliquota)/100,"Código de verificação":b.nfse.cod}))}}
+function openExport(){modal(`<div class="sheet">${cab("Exportar dados","Escolha o que vai na planilha")}
+  <div class="exp">${DATASETS.map(([k,l,d])=>`<label class="check"><input type="checkbox" data-ds="${k}" checked> ${l}<small>${d}</small></label>`).join("")}</div>
+  <div class="expbtns"><button class="btn" id="exXlsx">Planilha Excel (.xlsx)</button><button class="btn ghost" id="exCsv">CSV das empresas</button><button class="btn ghost" id="exJson">Backup completo (.json)</button></div>
+  <p class="note">A planilha traz uma aba para cada item marcado. O backup guarda tudo e serve para migrar para a versão definitiva.</p></div>`);
+  const sel=()=>[...document.querySelectorAll("[data-ds]:checked")].map(i=>i.dataset.ds);const dt=iso(HOJE);
+  document.getElementById("exXlsx").onclick=()=>{if(typeof XLSX==="undefined")return toast("Não foi possível carregar o gerador de planilhas. Tente o CSV.");
+    const ks=sel();if(!ks.length)return toast("Marque pelo menos um item.");const T=tabelas(),wb=XLSX.utils.book_new();
+    ks.forEach(k=>{const rows=T[k];const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{"Sem registros":""}]);const cols=Object.keys(rows[0]||{"Sem registros":""});ws["!cols"]=cols.map(h=>({wch:Math.min(48,Math.max(h.length,...rows.map(r=>String(r[h]??"").length))+2)}));XLSX.utils.book_append_sheet(wb,ws,DATASETS.find(d=>d[0]===k)[1].slice(0,31))});
+    const out=XLSX.write(wb,{bookType:"xlsx",type:"array"});salvar(`agrocel-dados-${dt}.xlsx`,new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}))};
+  document.getElementById("exCsv").onclick=()=>{const rows=tabelas().clientes;const cols=Object.keys(rows[0]||{});const q=v=>{const t=String(v??"");return /[;"\n]/.test(t)?`"${t.replace(/"/g,'""')}"`:t};
+    const csv="﻿"+[cols.join(";"),...rows.map(r=>cols.map(c=>q(typeof r[c]==="number"?String(r[c]).replace(".",","):r[c])).join(";"))].join("\r\n");salvar(`agrocel-empresas-${dt}.csv`,new Blob([csv],{type:"text/csv"}))};
+  document.getElementById("exJson").onclick=()=>salvar(`agrocel-backup-${dt}.json`,new Blob([JSON.stringify({exportadoEm:new Date().toISOString(),...db},null,2)],{type:"application/json"}))}
+async function salvar(nome,blob){
+  if(window.claude&&typeof window.claude.use==="function"){const dl=await window.claude.use("downloads").catch(()=>null);
+    if(dl){try{await dl.save({filename:nome,data:blob});toast("Arquivo salvo")}catch(e){if(e&&e.code!=="declined")toast("Não foi possível salvar o arquivo nesta tela.")}return}
+    return toast("Download indisponível nesta tela.")}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=nome;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Download iniciado")}
 
 function toast(t){const el=document.getElementById("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2400)}
 
 document.addEventListener("click",e=>{
   const t=e.target.closest("[data-tab]"); if(t){tab=t.dataset.tab;render();return}
   const f=e.target.closest("[data-f]"); if(f){filtro=filtro===f.dataset.f?null:f.dataset.f;render();return}
+  const ac=e.target.closest("[data-act]"); if(ac){acaoCob(ac.dataset.act,ac.dataset.id);return}
+  if(e.target.closest("[data-export]")){openExport();return}
+  const cy=e.target.closest("[data-copy]"); if(cy){copiar(cy);return}
+  const fb=e.target.closest("[data-fcob]"); if(fb){filtroCob=fb.dataset.fcob;render();return}
   const cp=e.target.closest("[data-comp]"); if(cp){openComp(cp.dataset.comp);return}
   if(e.target.closest("[data-close]")||e.target.id==="modal"){closeModal();return}
   const o=e.target.closest("[data-open]"); if(o){const id=o.dataset.open;abertos.has(id)?abertos.delete(id):abertos.add(id);renderLista()}
