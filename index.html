@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Sistema de gestão de certificados de controle de pragas da Agrocel: validade, avisos de vencimento e área do cliente.">
+<meta name="theme-color" content="#004107">
+<title>Agrocel Certificados</title>
+<link rel="icon" href="assets/logo-agrocel.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+/* Layout: faixa da marca (verde do logo) com o logo à esquerda; painel em grade 2 colunas no desktop (conteúdo + lateral de vencimentos), 1 coluna no celular */
+:root{
+  --brand:#004107; --brand-hi:#0a5a14; --lime:#8bc34a; --orange:#e8762c; --on-brand:#f2f8ee;
+  --bg:#eef3ec; --surface:#ffffff; --surface-2:#f6f9f4; --fg:#122016; --muted:#5a6b5e; --line:#dbe4d7;
+  --red:#d32f2f; --red-bg:#fdeaea; --amber:#b26a00; --amber-bg:#fff3d6; --green:#2e7d32; --green-bg:#e4f3e3;
+  --link:#004107; --shadow:0 1px 2px rgba(0,40,8,.06),0 8px 24px -12px rgba(0,40,8,.18);
+  --display:"Sora", "Segoe UI", system-ui, sans-serif; --body:"Manrope", system-ui, sans-serif; --mono:"JetBrains Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --brand:#004107; --brand-hi:#0a5a14; --lime:#9ccf5c; --orange:#f08a45; --on-brand:#f2f8ee;
+  --bg:#0a120c; --surface:#121c14; --surface-2:#18241a; --fg:#e4ede2; --muted:#93a596; --line:#243427;
+  --red:#ff7b74; --red-bg:#3a1716; --amber:#ffc35c; --amber-bg:#352710; --green:#7fd184; --green-bg:#143019;
+  --link:#9ccf5c; --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --brand:#004107; --brand-hi:#0a5a14; --lime:#9ccf5c; --orange:#f08a45; --on-brand:#f2f8ee;
+  --bg:#0a120c; --surface:#121c14; --surface-2:#18241a; --fg:#e4ede2; --muted:#93a596; --line:#243427;
+  --red:#ff7b74; --red-bg:#3a1716; --amber:#ffc35c; --amber-bg:#352710; --green:#7fd184; --green-bg:#143019;
+  --link:#9ccf5c; --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--brand)}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1120px;margin:0 auto}
+
+header{background:radial-gradient(900px 260px at 85% -40%,rgba(139,195,74,.28),transparent 70%),var(--brand);color:var(--on-brand);position:relative;overflow:hidden}
+header::after{content:"";position:absolute;inset:auto 0 0 0;height:3px;background:linear-gradient(90deg,var(--lime),var(--orange) 60%,transparent)}
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:14px 6px}
+.logo{height:68px;width:auto;display:block}
+.sys{border-left:1px solid rgba(255,255,255,.18);padding-left:16px}
+.sys b{font-family:var(--display);font-weight:600;font-size:17px;display:block;letter-spacing:-.01em}
+.sys span{font-size:12px;opacity:.7;letter-spacing:.06em;text-transform:uppercase}
+.live{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);padding:6px 11px;border-radius:99px;font-variant-numeric:tabular-nums}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 0 rgba(139,195,74,.6);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(139,195,74,0)}100%{box-shadow:0 0 0 0 rgba(139,195,74,0)}}
+.bar{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;justify-content:space-between;padding-block:8px 0}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.tabs button{background:none;border:0;color:var(--on-brand);opacity:.65;font:600 14px var(--body);padding:12px 14px 14px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;position:relative;z-index:1}
+.tabs button:hover{opacity:.9}
+.tabs button[aria-selected="true"]{opacity:1;border-color:var(--lime)}
+.role{display:flex;gap:8px;align-items:center;padding-bottom:10px;flex-wrap:wrap;min-width:0}
+.seg{display:flex;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:3px}
+.seg button{background:none;border:0;color:var(--on-brand);font:700 13px var(--body);padding:6px 12px;border-radius:7px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--lime);color:#0b2a0f}
+header select{background:rgba(0,0,0,.25);color:var(--on-brand);border:1px solid rgba(255,255,255,.18);max-width:260px}
+header select option{color:#122016;background:#fff}
+
+select,input{font:15px var(--body);padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);width:100%}
+input:focus,select:focus{outline:2px solid var(--lime);outline-offset:1px}
+button:focus-visible,a:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+main{padding-block:22px 56px}
+
+.kpis{display:grid;grid-template-columns:1.25fr 1fr 1fr 1fr;gap:12px;margin-bottom:22px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow);text-align:left;font:inherit;color:inherit;display:flex;flex-direction:column;gap:6px;min-width:0}
+button.kpi{cursor:pointer;transition:transform .15s,border-color .15s}
+button.kpi:hover{transform:translateY(-2px)}
+button.kpi[aria-pressed="true"]{border-color:var(--fg)}
+.kpi .lbl{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:7px}
+.kpi .lbl i{width:9px;height:9px;border-radius:3px}
+.kpi .num{font-family:var(--display);font-weight:700;font-size:40px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.kpi .hint{font-size:13px;color:var(--muted)}
+.meter{height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-top:auto}
+.meter b{display:block;height:100%;border-radius:99px}
+.k-r .num{color:var(--red)}.k-a .num{color:var(--amber)}.k-g .num{color:var(--green)}
+.score{flex-direction:row;align-items:center;gap:16px;background:linear-gradient(135deg,var(--brand),var(--brand-hi));color:var(--on-brand);border-color:transparent}
+.score .lbl{color:rgba(242,248,238,.75)}
+.score .hint{color:rgba(242,248,238,.85)}
+.ring{flex:none}
+.ring text{font-family:var(--display);font-weight:700}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.ph{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+h2{font-family:var(--display);font-size:16px;font-weight:600;margin:0;letter-spacing:-.01em}
+.search{position:relative;flex:1;min-width:180px;max-width:300px}
+.search input{padding-left:34px;background:var(--surface-2)}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);stroke:var(--muted)}
+.chip{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.chip i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.s-r{background:var(--red-bg);color:var(--red)}.s-a{background:var(--amber-bg);color:var(--amber)}.s-g{background:var(--green-bg);color:var(--green)}
+.clear{background:none;border:1px solid var(--line);color:var(--muted);font:600 12px var(--body);padding:4px 10px;border-radius:99px;cursor:pointer}
+
+.client{border-bottom:1px solid var(--line)}
+.client:last-child{border-bottom:0}
+.client.vencido{background:linear-gradient(90deg,var(--red-bg),transparent 55%)}
+.chead{display:flex;gap:12px;align-items:center;padding:14px 16px;width:100%;background:none;border:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.av{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:15px;flex:none;background:var(--surface-2);color:var(--fg);border:1px solid var(--line)}
+.client.vencido .av{background:var(--red);color:#fff;border-color:transparent}
+.nm{min-width:0;flex:1}
+.nm b{display:block;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.client.vencido .nm b{color:var(--red)}
+.nm small{display:block;color:var(--muted);font-size:12.5px;font-family:var(--mono)}
+.dots{display:flex;gap:4px}
+.dots i{width:10px;height:10px;border-radius:3px}
+.chev{transition:transform .2s;stroke:var(--muted);flex:none}
+.client.open .chev{transform:rotate(180deg)}
+.cbody{padding:0 16px 14px 68px;display:grid;gap:10px}
+.cert{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.date{border-radius:10px;padding:8px 10px;text-align:center;min-width:104px;font-variant-numeric:tabular-nums}
+.date b{display:block;font-family:var(--mono);font-size:14px}
+.date span{font-size:11.5px;font-weight:600}
+.cinfo{min-width:0}
+.cinfo b{font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cinfo div{color:var(--muted);font-size:13px}
+.dl{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--link);text-decoration:none;border:1px solid var(--line);background:var(--surface);padding:7px 11px;border-radius:9px;font-size:13px;white-space:nowrap}
+.dl:hover{border-color:var(--link)}
+.dl svg{stroke:currentColor}
+.nopdf{font-size:12px;color:var(--muted)}
+.docs{display:grid;gap:8px;padding-top:4px}
+.docs .t{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.drow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;background:var(--surface-2);border:1px dashed var(--line);border-radius:10px;padding:8px 10px}
+.tag{font-size:10.5px;color:var(--muted);border:1px dashed var(--line);padding:1px 6px;border-radius:6px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;vertical-align:middle}
+
+aside{display:grid;gap:20px;min-width:0}
+.tl{list-style:none;margin:0;padding:8px 16px 14px}
+.tl li{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:10px;align-items:start;padding:9px 0;position:relative}
+.tl li::before{content:"";position:absolute;left:6px;top:24px;bottom:-9px;width:2px;background:var(--line)}
+.tl li:last-child::before{display:none}
+.tl .pt{width:14px;height:14px;border-radius:50%;margin-top:3px;border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line)}
+.tl .w{font-size:13.5px;min-width:0}
+.tl .w b{display:block;font-size:13.5px}
+.tl .w span{color:var(--muted);font-size:12.5px}
+.tl .d{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
+.mini{padding:14px 16px;display:grid;gap:10px;font-size:13.5px}
+.mini .r{display:flex;justify-content:space-between;gap:10px}
+.mini .r span:last-child{font-weight:700;font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
+form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+form label{display:grid;gap:5px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+form .full{grid-column:1/-1}
+.sub-grid{display:grid;gap:14px;grid-template-columns:1fr 1fr;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px}
+.btn{background:var(--brand);color:var(--on-brand);border:0;font:700 15px var(--body);padding:12px 20px;border-radius:11px;cursor:pointer;justify-self:start;box-shadow:0 6px 16px -8px rgba(0,65,7,.7)}
+.btn:hover{background:var(--brand-hi)}
+.mail{border-bottom:1px solid var(--line);padding:14px 16px}
+.mail:last-child{border-bottom:0}
+.mail .h{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.mail .meta{font-size:13px;color:var(--muted);margin-top:4px}
+.mail pre{white-space:pre-wrap;font:13.5px/1.55 var(--body);margin:10px 0 0;background:var(--surface-2);border:1px solid var(--line);padding:12px;border-radius:10px}
+.note{font-size:13.5px;color:var(--muted);margin:0}
+.intro{padding:14px 16px;border-bottom:1px solid var(--line)}
+.hello{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.hello > div{min-width:0;flex:1}
+.hello h1{font-family:var(--display);font-size:24px;margin:0;letter-spacing:-.02em;text-wrap:balance}
+.demo{background:var(--amber-bg);color:var(--amber);font-size:13px;font-weight:700;padding-block:8px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:700;z-index:20;box-shadow:var(--shadow)}
+.empty{padding:22px 16px;color:var(--muted);text-align:center}
+
+@media (max-width:960px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.score{grid-column:1/-1}}
+@media (max-width:560px){
+  .logo{height:52px}.sys{display:none}
+  .kpi .num{font-size:32px}.kpis{gap:10px}
+  form,.sub-grid{grid-template-columns:1fr}
+  .cbody{padding-left:16px}
+  .cert{grid-template-columns:auto minmax(0,1fr)}.cert .dl,.cert .nopdf{grid-column:1/-1;justify-self:start}
+  .dots{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="gut"><div class="wrap">
+  <div class="top">
+    <img class="logo" src="assets/logo-agrocel.png" alt="Agrocel – Soluções no campo e na cidade">
+    <div class="sys"><span>Sistema de gestão</span><b>Certificados e conformidade sanitária</b></div>
+    <div class="live" id="live"><i></i><span></span></div>
+  </div>
+  <div class="bar">
+    <nav class="tabs" id="tabs" role="tablist"></nav>
+    <div class="role">
+      <div class="seg" role="group" aria-label="Entrar como">
+        <button id="vAdmin" aria-pressed="true">Admin</button>
+        <button id="vCli" aria-pressed="false">Cliente</button>
+      </div>
+      <select id="cliPick" aria-label="Cliente" hidden></select>
+    </div>
+  </div>
+</div></header>
+
+<div class="demo gut"><div class="wrap">Demonstração com dados fictícios · clientes, CNPJs e documentos são exemplos</div></div>
+<main class="gut"><div class="wrap" id="app"></div></main>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const HOJE = new Date(); HOJE.setHours(0,0,0,0);
+const iso=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
+const EMAIL_FERNANDO = "responsavel.tecnico@exemplo.com";
+const VALIDADE_MESES = {"Desinsetização":12,"Desratização":3,"Higienização de reservatório":6,"Outro":12};
+
+// Dados de demonstração (fictícios). As datas são relativas a hoje para a demo sempre mostrar os três estados.
+const rel=n=>{const x=new Date(HOJE);x.setDate(x.getDate()+n);return iso(x)};
+const PDF="assets/exemplos/";
+const seed = {
+  clientes:[
+    {id:"c1",nome:"Posto Serra Verde Combustíveis Ltda",cnpj:"11.222.333/0001-44",end:"Rua das Palmeiras, 120, Centro, Garopaba/SC",email:"gerencia@postoserraverde.exemplo"},
+    {id:"c2",nome:"Mercado Bom Preço Ltda",cnpj:"22.333.444/0001-55",end:"Av. Central, 455, Rio Fortuna/SC",email:"compras@bompreco.exemplo"},
+    {id:"c3",nome:"Laticínio Vale Verde",cnpj:"33.444.555/0001-66",end:"Estrada Geral, km 8, Braço do Norte/SC",email:"qualidade@valeverde.exemplo"},
+    {id:"c4",nome:"Restaurante Sabor da Serra",cnpj:"44.555.666/0001-77",end:"Rua XV de Novembro, 32, Imbituba/SC",email:""}
+  ],
+  certs:[
+    {id:"k1",cli:"c1",tipo:"Desinsetização",praga:"Moscas, aranhas, baratas e formigas",prod:"Lambda-cialotrina, Bifentrina, Tiametoxam",exec:rel(-184),venc:rel(181),pdf:PDF+"posto-serra-verde-desinsetizacao.pdf"},
+    {id:"k2",cli:"c1",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005%",exec:rel(-184),venc:rel(-92),pdf:PDF+"posto-serra-verde-desratizacao.pdf"},
+    {id:"k3",cli:"c2",tipo:"Desinsetização",praga:"Baratas e formigas",prod:"Optigard Duo (Lambda-cialotrina + Tiametoxam)",exec:rel(-343),venc:rel(22),pdf:PDF+"mercado-bom-preco-desinsetizacao.pdf"},
+    {id:"k4",cli:"c2",tipo:"Higienização de reservatório",praga:"Microbiológico",prod:"Hidróxido de sódio + Ácido peracético",exec:rel(-60),venc:rel(122)},
+    {id:"k5",cli:"c3",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005% (Maki Bloco)",exec:rel(-30),venc:rel(61)},
+    {id:"k6",cli:"c3",tipo:"Desinsetização",praga:"Moscas e baratas",prod:"Advion Barata Gel (Indoxacarbe)",exec:rel(-200),venc:rel(165)},
+    {id:"k7",cli:"c4",tipo:"Desinsetização",praga:"Baratas",prod:"Quarteto 400 SC",exec:rel(-382),venc:rel(-17)},
+    {id:"k8",cli:"c4",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005%",exec:rel(-80),venc:rel(10)}
+  ],
+  docs:[
+    {cli:"c1",nome:"Certificado de execução de serviço",data:rel(-184),pdf:PDF+"posto-serra-verde-execucao.pdf"}
+  ],
+  proprios:[
+    {nome:"ART do responsável técnico (CREA-SC)",venc:rel(73)},
+    {nome:"Alvará de Funcionamento",venc:rel(104)},
+    {nome:"Alvará Sanitário",venc:rel(172)}
+  ]
+};
+
+let db; try{db=JSON.parse(localStorage.getItem("agrocel-demo-v1"))}catch(e){}
+if(!db||!db.clientes) db=JSON.parse(JSON.stringify(seed));
+const save=()=>{try{localStorage.setItem("agrocel-demo-v1",JSON.stringify(db))}catch(e){}};
+
+let modo="admin", tab="painel", cliAtual="c1", filtro=null, busca="", abertos=new Set(["c1","c4"]);
+
+const d=s=>{const [y,m,dd]=s.split("-").map(Number);return new Date(y,m-1,dd)};
+const fmt=s=>d(s).toLocaleDateString("pt-BR");
+const dias=s=>Math.round((d(s)-HOJE)/864e5);
+const status=s=>{const n=dias(s);return n<0?"r":n<=30?"a":"g"};
+const LABEL={r:"Vencido",a:"Vence em breve",g:"Em dia"};
+const COR={r:"var(--red)",a:"var(--amber)",g:"var(--green)"};
+function quando(s){const n=dias(s);if(n<0)return `vencido há ${-n} dia${n===-1?"":"s"}`;if(n===0)return "vence hoje";return `faltam ${n} dia${n===1?"":"s"}`}
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const cli=id=>db.clientes.find(c=>c.id===id);
+const iniciais=n=>n.replace(/\(.*\)/,"").split(/\s+/).filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+function piorStatus(id){const ss=db.certs.filter(k=>k.cli===id).map(k=>status(k.venc));return ss.includes("r")?"r":ss.includes("a")?"a":ss.length?"g":null}
+const chip=s=>`<span class="chip s-${s}"><i></i>${LABEL[s]}</span>`;
+const IC_DL='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>';
+const IC_CHEV='<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
+
+function ring(pct,size=92,light=true){const r=size/2-8,c=2*Math.PI*r,off=c*(1-pct/100);
+  return `<svg class="ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="${pct}% em dia">
+  <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${light?"rgba(255,255,255,.15)":"var(--line)"}" stroke-width="9"/>
+  <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--lime)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 ${size/2} ${size/2})"/>
+  <text x="50%" y="53%" text-anchor="middle" dominant-baseline="middle" font-size="${size/4.4}" fill="${light?"#f2f8ee":"var(--fg)"}">${pct}%</text></svg>`}
+
+function pdfLink(u,t){return u?`<a class="dl" href="${esc(u)}" target="_blank" rel="noopener">${IC_DL}${t}</a>`:`<span class="nopdf">PDF ainda não anexado</span>`}
+function certHTML(k){const s=status(k.venc);return `<div class="cert">
+  <div class="date s-${s}"><b>${fmt(k.venc)}</b><span>${quando(k.venc)}</span></div>
+  <div class="cinfo"><b>${esc(k.tipo)} ${chip(s)}</b><div>${esc(k.praga)}</div><div>${esc(k.prod)} · executado em ${fmt(k.exec)}</div></div>
+  ${pdfLink(k.pdf,"Baixar PDF")}</div>`}
+function docsHTML(id){const ds=(db.docs||[]).filter(x=>x.cli===id);return ds.length?`<div class="docs"><div class="t">Outros documentos</div>${ds.map(x=>`<div class="drow"><span>${esc(x.nome)} · ${fmt(x.data)}</span>${pdfLink(x.pdf,"Baixar PDF")}</div>`).join("")}</div>`:""}
+
+function render(){
+  const T = modo==="admin"
+    ? [["painel","Painel"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"]]
+    : [["painel","Meus certificados"]];
+  if(!T.find(t=>t[0]===tab)) tab="painel";
+  document.getElementById("tabs").innerHTML=T.map(([k,l])=>`<button role="tab" aria-selected="${k===tab}" data-tab="${k}">${l}</button>`).join("");
+  const app=document.getElementById("app");
+  if(modo==="cliente"){app.innerHTML=viewCliente();return}
+  app.innerHTML = tab==="painel"?viewPainel():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():viewAgrocel();
+  if(tab==="novo") wireNovo();
+  if(tab==="painel"){const b=document.getElementById("busca");b.oninput=()=>{busca=b.value;renderLista()}}
+}
+
+function viewPainel(){
+  const ss=db.certs.map(k=>status(k.venc)),tot=ss.length||1;
+  const n=x=>ss.filter(s=>s===x).length;
+  const pct=Math.round(n("g")/tot*100);
+  const prox=[...db.certs].filter(k=>dias(k.venc)>=0).sort((a,b)=>d(a.venc)-d(b.venc))[0];
+  const kpi=(k,t,h)=>`<button class="kpi k-${k}" data-f="${k}" aria-pressed="${filtro===k}">
+    <span class="lbl"><i style="background:${COR[k]}"></i>${t}</span><span class="num">${n(k)}</span><span class="hint">${h}</span>
+    <span class="meter"><b style="width:${n(k)/tot*100}%;background:${COR[k]}"></b></span></button>`;
+  const venc=[...db.certs].sort((a,b)=>d(a.venc)-d(b.venc)).slice(0,6);
+  const pros=[...db.proprios].sort((a,b)=>d(a.venc)-d(b.venc));
+  return `<section class="kpis">
+    <div class="kpi score">${ring(pct)}<div><span class="lbl">Índice de conformidade</span>
+      <div class="hint" style="margin-top:4px">${n("g")} de ${ss.length} certificados em dia, em ${db.clientes.length} clientes</div>
+      ${prox?`<div class="hint" style="margin-top:6px">Próximo vencimento: <b>${fmt(prox.venc)}</b></div>`:""}</div></div>
+    ${kpi("r","Vencidos","Renovar imediatamente")}
+    ${kpi("a","Vencem em 30 dias","Avisos já programados")}
+    ${kpi("g","Em dia","Sem pendências")}
+  </section>
+  <div class="grid">
+    <section class="panel">
+      <div class="ph"><h2>Clientes</h2>
+        <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="busca" type="search" placeholder="Buscar por nome ou CNPJ" value="${esc(busca)}" aria-label="Buscar cliente"></div>
+        ${filtro?`<button class="clear" data-f="${filtro}">Filtro: ${LABEL[filtro]} ✕</button>`:""}
+      </div>
+      <div id="lista">${listaHTML()}</div>
+    </section>
+    <aside>
+      <section class="panel"><div class="ph"><h2>Linha do tempo</h2><span class="note">próximos vencimentos</span></div>
+        <ul class="tl">${venc.map(k=>{const s=status(k.venc);return `<li><span class="pt" style="background:${COR[s]}"></span>
+          <span class="w"><b>${esc(k.tipo)}</b><span>${esc(cli(k.cli).nome.replace(/ \(.*\)/,""))}</span></span>
+          <span class="d">${fmt(k.venc)}<br>${dias(k.venc)<0?"vencido":dias(k.venc)+" dias"}</span></li>`}).join("")}</ul></section>
+      <section class="panel"><div class="ph"><h2>Documentos Agrocel</h2></div>
+        <div class="mini">${pros.map(p=>`<div class="r"><span>${esc(p.nome)}</span><span style="color:${COR[status(p.venc)]}">${fmt(p.venc)}</span></div>`).join("")}</div></section>
+    </aside>
+  </div>`;
+}
+function listaHTML(){
+  const order={r:0,a:1,g:2,null:3};const q=busca.trim().toLowerCase();
+  let cls=[...db.clientes].sort((a,b)=>order[piorStatus(a.id)]-order[piorStatus(b.id)]);
+  if(filtro) cls=cls.filter(c=>db.certs.some(k=>k.cli===c.id&&status(k.venc)===filtro));
+  if(q) cls=cls.filter(c=>(c.nome+" "+c.cnpj).toLowerCase().includes(q));
+  if(!cls.length) return `<div class="empty">Nenhum cliente encontrado.</div>`;
+  return cls.map(c=>{const p=piorStatus(c.id);const all=db.certs.filter(k=>k.cli===c.id);
+    const ks=all.filter(k=>!filtro||status(k.venc)===filtro).sort((a,b)=>d(a.venc)-d(b.venc));const op=abertos.has(c.id)||!!filtro||!!q;
+    return `<div class="client ${p==="r"?"vencido":""} ${op?"open":""}">
+    <button class="chead" data-open="${c.id}" aria-expanded="${op}"><span class="av">${iniciais(c.nome)}</span>
+      <span class="nm"><b>${esc(c.nome)} ${c.exemplo?'<span class="tag">exemplo</span>':""}</b><small>${esc(c.cnpj)}</small></span>
+      <span class="dots">${all.map(k=>`<i style="background:${COR[status(k.venc)]}" title="${esc(k.tipo)}"></i>`).join("")}</span>
+      ${p?chip(p):'<span class="chip">Sem certificados</span>'}${IC_CHEV}</button>
+    ${op?`<div class="cbody">${ks.map(certHTML).join("")}${filtro?"":docsHTML(c.id)}</div>`:""}</div>`}).join("");
+}
+function renderLista(){const l=document.getElementById("lista");if(l)l.innerHTML=listaHTML()}
+
+function viewCliente(){
+  const c=cli(cliAtual);const ks=db.certs.filter(k=>k.cli===c.id).sort((a,b)=>d(a.venc)-d(b.venc));
+  const ok=ks.filter(k=>status(k.venc)==="g").length;const pct=ks.length?Math.round(ok/ks.length*100):0;const p=piorStatus(c.id);
+  return `<div class="hello">${ring(pct,84,false)}<div><span class="note">Área do cliente</span><h1>${esc(c.nome)}</h1>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px">${p?chip(p):""}<span class="note">${ok} de ${ks.length} certificados em dia</span></div></div></div>
+  <section class="panel">
+    <div class="intro"><p class="note">Você vê apenas os certificados emitidos pela Agrocel para o seu estabelecimento. Para renovar ou agendar uma visita, ligue para (48) 3653-1256.</p></div>
+    <div class="cbody" style="padding:16px">${ks.length?ks.map(certHTML).join(""):'<div class="empty">Nenhum certificado cadastrado ainda.</div>'}${docsHTML(c.id)}</div>
+  </section>`;
+}
+
+function viewNovo(){
+  return `<div class="card"><h2 style="font-size:20px;margin-bottom:16px">Registrar serviço</h2>
+  <form id="fCert">
+    <label class="full">Cliente<select id="fCli">${db.clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join("")}<option value="__novo">+ Cadastrar novo cliente</option></select></label>
+    <div class="full sub-grid" id="novoCli" hidden>
+      <label class="full">Nome / razão social<input id="nNome"></label>
+      <label>CNPJ<input id="nCnpj" inputmode="numeric"></label>
+      <label>E-mail do cliente (recebe os avisos)<input id="nEmail" type="email"></label>
+      <label class="full">Endereço<input id="nEnd"></label>
+    </div>
+    <label>Tipo de serviço<select id="fTipo">${Object.keys(VALIDADE_MESES).map(t=>`<option>${t}</option>`).join("")}</select></label>
+    <label>Praga-alvo<input id="fPraga" placeholder="Ex.: baratas e formigas"></label>
+    <label class="full">Produtos usados<input id="fProd" placeholder="Ex.: Optigard Duo (Lambda-cialotrina + Tiametoxam)"></label>
+    <label>Data da execução<input id="fExec" type="date"></label>
+    <label>Válido até<input id="fVenc" type="date"></label>
+    <label class="full">PDF do certificado assinado<input id="fPdf" type="file" accept="application/pdf"></label>
+    <p class="note full" id="fHint"></p>
+    <button class="btn" type="submit">Salvar certificado</button>
+  </form></div>`;
+}
+function addMeses(s,m){const x=d(s);x.setMonth(x.getMonth()+m);return iso(x)}
+function wireNovo(){
+  const $=id=>document.getElementById(id);
+  const hoje=iso(HOJE); $("fExec").value=hoje;
+  const sug=()=>{const m=VALIDADE_MESES[$("fTipo").value];$("fVenc").value=addMeses($("fExec").value||hoje,m);$("fHint").textContent=`Validade sugerida: ${m} meses para ${$("fTipo").value.toLowerCase()}. Pode ajustar.`};
+  sug(); $("fTipo").onchange=sug; $("fExec").onchange=sug;
+  $("fCli").onchange=()=>{$("novoCli").hidden=$("fCli").value!=="__novo"};
+  $("fCert").onsubmit=async e=>{e.preventDefault();
+    let id=$("fCli").value;
+    if(id==="__novo"&&!$("nNome").value.trim()) return toast("Preencha o nome do cliente.");
+    if(!$("fVenc").value) return toast("Informe a data de validade.");
+    let pdf="";const f=$("fPdf").files[0];
+    if(f){pdf=URL.createObjectURL(f);toast("PDF anexado (na demonstração, fica só nesta sessão)")}
+    if(id==="__novo"){id="c"+Date.now();db.clientes.push({id,nome:$("nNome").value.trim(),cnpj:$("nCnpj").value,end:$("nEnd").value,email:$("nEmail").value})}
+    db.certs.push({id:"k"+Date.now(),pdf,cli:id,tipo:$("fTipo").value,praga:$("fPraga").value||"-",prod:$("fProd").value||"-",exec:$("fExec").value,venc:$("fVenc").value});
+    abertos.add(id); save(); tab="painel"; filtro=null; render(); toast("Certificado salvo");
+  };
+}
+
+function viewAvisos(){
+  const lista=[];
+  db.certs.forEach(k=>[30,15].forEach(n=>{const x=d(k.venc);x.setDate(x.getDate()-n);const s=iso(x),dd=dias(s);if(dd>=-1&&dd<=90)lista.push({k,n,s,dd})}));
+  lista.sort((a,b)=>a.dd-b.dd);
+  return `<section class="panel"><div class="ph"><h2>Avisos programados · próximos 90 dias</h2><span class="chip s-g"><i></i>${lista.length} na fila</span></div>
+  <div class="intro"><p class="note">Cada certificado gera dois e-mails, 30 e 15 dias antes de vencer, para o responsável técnico (${EMAIL_FERNANDO}) e para o cliente. Nesta demonstração eles aparecem só aqui; o envio real é feito pelo servidor.</p></div>
+  ${lista.length?lista.map(({k,n,s})=>{const c=cli(k.cli);return `<div class="mail">
+    <div class="h"><b style="font-family:var(--mono)">${fmt(s)}</b><span class="chip s-a"><i></i>aviso de ${n} dias</span><b>${esc(k.tipo)}</b></div>
+    <div class="meta">Para: ${EMAIL_FERNANDO}${c.email?", "+esc(c.email):' · <span style="color:var(--amber);font-weight:700">cliente sem e-mail cadastrado</span>'}</div>
+    <pre>Assunto: Seu certificado de ${k.tipo.toLowerCase()} vence em ${n} dias
+
+Olá, ${esc(c.nome)}.
+O certificado de ${k.tipo.toLowerCase()} emitido pela Agrocel vence em ${fmt(k.venc)}.
+Para manter seu estabelecimento regular junto à Vigilância Sanitária, agende a renovação pelo (48) 3653-1256.
+
+Agrocel – Soluções no campo e na cidade</pre></div>`}).join(""):'<div class="empty">Nenhum aviso previsto para os próximos 90 dias.</div>'}</section>`;
+}
+
+function viewAgrocel(){
+  return `<section class="panel"><div class="ph"><h2>Documentos da Agrocel</h2><span class="note">visível só para o admin</span></div>
+  <div class="cbody" style="padding:16px">${[...db.proprios].sort((a,b)=>d(a.venc)-d(b.venc)).map(p=>{const s=status(p.venc);return `<div class="cert">
+    <div class="date s-${s}"><b>${fmt(p.venc)}</b><span>${quando(p.venc)}</span></div>
+    <div class="cinfo"><b>${esc(p.nome)} ${chip(s)}</b><div>Avisos vão apenas para o responsável técnico.</div></div><span></span></div>`}).join("")}</div></section>`;
+}
+
+function toast(t){const el=document.getElementById("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2400)}
+
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-tab]"); if(t){tab=t.dataset.tab;render();return}
+  const f=e.target.closest("[data-f]"); if(f){filtro=filtro===f.dataset.f?null:f.dataset.f;render();return}
+  const o=e.target.closest("[data-open]"); if(o){const id=o.dataset.open;abertos.has(id)?abertos.delete(id):abertos.add(id);renderLista()}
+});
+const pick=document.getElementById("cliPick");
+function fillPick(){pick.innerHTML=db.clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join("");pick.value=cliAtual}
+function setModo(m){modo=m;document.getElementById("vAdmin").setAttribute("aria-pressed",m==="admin");document.getElementById("vCli").setAttribute("aria-pressed",m==="cliente");pick.hidden=m!=="cliente";fillPick();tab="painel";render()}
+document.getElementById("vAdmin").onclick=()=>setModo("admin");
+document.getElementById("vCli").onclick=()=>setModo("cliente");
+pick.onchange=()=>{cliAtual=pick.value;render()};
+document.querySelector("#live span").textContent="Monitorando · "+HOJE.toLocaleDateString("pt-BR");
+render();
+</script>
+</body>
+</html>
