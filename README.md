@@ -55,6 +55,10 @@ O app acompanha a validade de cada certificado emitido (desinsetização, desrat
 - Cálculo do ISS pela alíquota informada
 - Nota com prestador, tomador, valores e código de verificação
 
+**Impressão e PDF**
+- NFS-e, cobrança e ordem de serviço saem em PDF com o logo, o rodapé da empresa e a assinatura do cliente
+- Botão de imprimir quando o navegador permite
+
 **Exportação de dados**
 - Planilha Excel com uma aba para empresas, certificados, visitas, cobranças e notas fiscais
 - CSV das empresas, pronto para abrir no Excel

@@ -231,6 +231,7 @@ label.rad{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--
 .exp label.check{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface-2)}
 .exp label.check small{display:block;width:100%;color:var(--muted);font-weight:500;font-size:12.5px;margin-left:28px;margin-top:-6px}
 .expbtns{display:flex;gap:8px;flex-wrap:wrap}
+.docbtns{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
 .btn.ghost{background:var(--surface);color:var(--link);border:1.5px solid var(--line);box-shadow:none}
 .btn.ghost:hover{background:var(--surface-2)}
 @media (max-width:560px){.crow{grid-template-columns:minmax(0,1fr) auto}.crow .chip{grid-column:1/-1;justify-self:start}.nf .tot{grid-template-columns:1fr 1fr}.nf .tot div:nth-child(2){border-right:0}}
@@ -275,6 +276,7 @@ label.rad{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const HOJE = new Date(); HOJE.setHours(0,0,0,0);
 const iso=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
@@ -283,7 +285,11 @@ const VALIDADE_MESES = {"Desinsetização":12,"Desratização":3,"Higienização
 const EMPRESA = {nome:"Agrocel Soluções Ambientais (exemplo)",cnpj:"00.000.000/0001-00",cidade:"Rio Fortuna/SC"};
 const TECNICOS = ["Responsável técnico (Eng. Agrônomo)","Técnico de campo"];
 const LOGO = "assets/logo-agrocel.png";
-const SIG = "data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 90"><path d="M15 60 C30 20,45 20,50 55 S70 80,80 45 S100 15,110 50 S130 70,140 40 C150 25,160 60,175 50 S200 35,208 42" fill="none" stroke="#10301a" stroke-width="2.4" stroke-linecap="round"/></svg>');
+const SIG = (()=>{const cv=document.createElement("canvas");cv.width=440;cv.height=180;const x=cv.getContext("2d");
+  x.strokeStyle="#10301a";x.lineWidth=5;x.lineCap="round";x.lineJoin="round";x.beginPath();x.moveTo(30,120);
+  x.bezierCurveTo(60,40,90,40,100,110);x.bezierCurveTo(115,165,145,160,160,90);x.bezierCurveTo(175,30,205,30,220,100);
+  x.bezierCurveTo(235,150,265,145,280,80);x.bezierCurveTo(295,45,320,125,350,100);x.bezierCurveTo(380,75,405,70,418,86);x.stroke();
+  return cv.toDataURL("image/png")})();
 
 // Dados de demonstração (fictícios). As datas são relativas a hoje para a demo sempre mostrar os três estados.
 const rel=n=>{const x=new Date(HOJE);x.setDate(x.getDate()+n);return iso(x)};
@@ -525,7 +531,7 @@ function compHTML(v){const c=cli(v.cli);const ok=v.status==="assinada";
   return `<div class="sheet"><div class="sh-h"><img src="${LOGO}" alt="Agrocel"><div><b>Ordem de serviço ${v.os}</b><span>Termo de compromisso e comprovante de execução</span></div><button class="x" data-close aria-label="Fechar">✕</button></div>
   <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>CNPJ</dt><dd class="mono">${esc(c.cnpj)}</dd><dt>Data e hora</dt><dd>${fmtHora(v.data)}</dd><dt>Técnico</dt><dd>${esc(v.tecnico)}</dd><dt>Serviço</dt><dd>${esc(v.tipo)} · ${esc(v.praga)}</dd><dt>Produtos</dt><dd>${esc(v.prod)}</dd><dt>Áreas tratadas</dt><dd>${esc(v.areas||"-")}</dd></dl>
   <div class="termo"><b>Orientações e termo de compromisso</b><ul>${TERMO.map(t=>`<li>${t}</li>`).join("")}</ul><p>Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima.</p></div>
-  ${ok?`<div class="sig"><img src="${v.assinatura.img}" alt="Assinatura de ${esc(v.assinatura.nome)}"><div><b>${esc(v.assinatura.nome)}</b><span>Assinado eletronicamente em ${fmtHora(v.assinatura.em)}</span><span class="mono">Código de verificação ${v.assinatura.cod}</span></div></div>`
+  ${ok?`<div class="sig"><img src="${v.assinatura.img}" alt="Assinatura de ${esc(v.assinatura.nome)}"><div><b>${esc(v.assinatura.nome)}</b><span>Assinado eletronicamente em ${fmtHora(v.assinatura.em)}</span><span class="mono">Código de verificação ${v.assinatura.cod}</span></div></div>${docBtns("os",v.id)}`
   :`<div class="signform"><label>Nome de quem assina<input id="sNome" autocomplete="name"></label><div class="padwrap"><canvas id="pad" aria-label="Quadro de assinatura"></canvas><span class="padhint">Assine aqui com o dedo</span><button type="button" class="clear" id="padClear">Limpar</button></div><button class="btn" id="sOk">Confirmar e assinar</button></div>`}
   </div>`}
 function makePad(cv){const ctx=cv.getContext("2d");let drawing=false,empty=true,last=[0,0];const wrap=cv.parentElement;
@@ -589,6 +595,76 @@ function wireVisita(){const $=id=>document.getElementById(id);let pad=makePad($(
     if(valor>0&&!$("vForma").value.startsWith("Não")){const b={id:"b"+Date.now(),visita:id,cli:v.cli,desc:`${v.tipo} · ${v.os}`,valor,venc:$("vVencCob").value||iso(HOJE),forma:$("vForma").value,status:"aberta"};if($("vGerar").checked)gerarCodigos(b);(db.cobrancas=db.cobrancas||[]).push(b)}
     abertos.add(v.cli);save();tab="painel";filtro=null;render();toast(ag?`${v.os} concluída e assinada`:`${v.os} registrada, aguardando o cliente`)}}
 
+// ---------- Imprimir e salvar em PDF ----------
+const PODE_IMPRIMIR = !(window.claude && typeof window.claude.use === "function");
+function docBtns(tipo,id){return `<div class="docbtns"><button class="btn" data-pdf="${tipo}" data-id="${id}">Salvar em PDF</button>${PODE_IMPRIMIR?`<button class="btn ghost" data-print="${tipo}" data-id="${id}">Imprimir</button>`:""}</div>`}
+let _logo=null;
+function logoPNG(){if(_logo!==null)return Promise.resolve(_logo);
+  return new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";
+    im.onload=()=>{const cv=document.createElement("canvas");cv.width=im.naturalWidth;cv.height=im.naturalHeight;
+      const cx=cv.getContext("2d");cx.drawImage(im,0,0);
+      try{_logo={d:cv.toDataURL("image/png"),w:im.naturalWidth,h:im.naturalHeight}}catch(_){_logo=false}res(_logo)};
+    im.onerror=()=>{_logo=false;res(_logo)};im.src=LOGO})}
+function docDados(tipo,id){
+  if(tipo==="os"){const v=vis(id);if(!v)return null;const c=cli(v.cli);
+    return {arq:`ordem-servico-${v.os}.pdf`,titulo:`Ordem de serviço ${v.os}`,sub:"Termo de compromisso e comprovante de execução",
+      linhas:[["Cliente",c.nome],["CNPJ",c.cnpj],["Endereço",c.end],["Data e hora",fmtHora(v.data)],["Técnico",v.tecnico],["Serviço",`${v.tipo} · ${v.praga}`],["Produtos",v.prod],["Áreas tratadas",v.areas||"-"]],
+      lista:{t:"Orientações e termo de compromisso",itens:TERMO,obs:"Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima."},
+      assinatura:v.assinatura||null};}
+  const b=cob(id);if(!b)return null;const c=cli(b.cli);
+  if(tipo==="cobranca") return {arq:`cobranca-${b.id}.pdf`,titulo:`Cobrança ${BRL(b.valor)}`,sub:b.desc,aviso:"Simulação: os códigos abaixo não são pagáveis.",
+    linhas:[["Pagador",c.nome],["CNPJ",c.cnpj],["Beneficiário",EMPRESA.nome],["CNPJ do beneficiário",EMPRESA.cnpj],["Valor",BRL(b.valor)],["Vencimento",fmt(b.venc)],["Forma",b.forma],["Situação",LCOB[stCob(b)]]],
+    blocos:[b.linha?["Boleto · linha digitável",b.linha]:null,b.pix?["Pix copia e cola",b.pix]:null].filter(Boolean)};
+  const n=b.nfse;if(!n)return null;
+  return {arq:`nfse-${n.numero}.pdf`,titulo:`NFS-e nº ${n.numero}`,sub:"Nota Fiscal de Serviço Eletrônica",aviso:"Simulação: documento sem validade fiscal.",
+    linhas:[["Emitida em",fmtHora(n.emitidaEm)],["Código de verificação",n.cod],["Prestador",EMPRESA.nome],["CNPJ do prestador",EMPRESA.cnpj],["Município",EMPRESA.cidade],["Tomador",c.nome],["CNPJ do tomador",c.cnpj],["Endereço do tomador",c.end],["Serviço","7.13 · Dedetização, desinsetização, desratização e congêneres"],["Discriminação",n.desc||b.desc]],
+    totais:[["Valor do serviço",BRL(b.valor)],["Alíquota ISS",String(n.aliquota).replace(".",",")+"%"],["ISS",BRL(b.valor*n.aliquota/100)],["Valor líquido",BRL(b.valor)]]};}
+async function gerarPDF(tipo,id){
+  const D=docDados(tipo,id);if(!D)return;
+  if(typeof window.jspdf==="undefined")return toast("Não foi possível carregar o gerador de PDF. Verifique a internet.");
+  const {jsPDF}=window.jspdf,doc=new jsPDF({unit:"mm",format:"a4"}),W=210,M=18;let y=0;
+  doc.setFillColor(0,65,7);doc.rect(0,0,W,30,"F");
+  const lg=await logoPNG();
+  if(lg){const h=16,w=h*lg.w/lg.h;doc.addImage(lg.d,"PNG",M,7,w,h)}
+  doc.setTextColor(242,248,238);doc.setFont("helvetica","bold");doc.setFontSize(15);doc.text(D.titulo,W-M,15,{align:"right"});
+  doc.setFont("helvetica","normal");doc.setFontSize(9.5);doc.text(D.sub,W-M,21,{align:"right"});y=42;
+  doc.setTextColor(18,32,22);
+  if(D.aviso){doc.setFillColor(255,243,214);doc.setDrawColor(178,106,0);doc.roundedRect(M,y-6,W-2*M,10,2,2,"FD");doc.setTextColor(140,84,0);doc.setFont("helvetica","bold");doc.setFontSize(9.5);doc.text(D.aviso,M+4,y+0.6);y+=14;doc.setTextColor(18,32,22)}
+  const LW=W-2*M-42;
+  D.linhas.forEach(([k,v])=>{const txt=doc.splitTextToSize(String(v),LW);
+    if(y>268){doc.addPage();y=24}
+    doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(90,107,94);doc.text(k,M,y);
+    doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(18,32,22);doc.text(txt,M+42,y);
+    y+=Math.max(6,txt.length*4.8)+1.4});
+  if(D.totais){y+=4;doc.setDrawColor(219,228,215);doc.line(M,y,W-M,y);y+=8;const cw=(W-2*M)/4;
+    D.totais.forEach(([k,v],i)=>{const x=M+i*cw;doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(90,107,94);doc.text(k,x,y);
+      doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(18,32,22);doc.text(v,x,y+6)});y+=16}
+  if(D.blocos)D.blocos.forEach(([k,v])=>{if(y>250){doc.addPage();y=24}
+    doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(90,107,94);doc.text(k.toUpperCase(),M,y);y+=5;
+    const t=doc.splitTextToSize(v,W-2*M-8);doc.setFillColor(246,249,244);doc.setDrawColor(219,228,215);doc.roundedRect(M,y-3.5,W-2*M,t.length*4.6+7,2,2,"FD");
+    doc.setFont("courier","normal");doc.setFontSize(9);doc.setTextColor(18,32,22);doc.text(t,M+4,y+1.5);y+=t.length*4.6+13});
+  if(D.lista){y+=5;if(y>225){doc.addPage();y=24}
+    doc.setFont("helvetica","bold");doc.setFontSize(10.5);doc.text(D.lista.t,M,y);y+=6;
+    doc.setFont("helvetica","normal");doc.setFontSize(9.5);
+    D.lista.itens.forEach(it=>{const t=doc.splitTextToSize(it,W-2*M-6);doc.text("•",M,y);doc.text(t,M+5,y);y+=t.length*4.6+2.2});
+    y+=3;doc.setFont("helvetica","bold");const o=doc.splitTextToSize(D.lista.obs,W-2*M);doc.text(o,M,y);y+=o.length*4.8+8}
+  if(D.assinatura){if(y>232){doc.addPage();y=24}
+    const a=D.assinatura;doc.setDrawColor(219,228,215);
+    try{doc.addImage(a.img,"PNG",M,y,60,24)}catch(_){}
+    doc.line(M,y+26,M+60,y+26);y+=31;
+    doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(18,32,22);doc.text(a.nome,M,y);
+    doc.setFont("helvetica","normal");doc.setFontSize(8.5);doc.setTextColor(90,107,94);
+    doc.text(`Assinado eletronicamente em ${fmtHora(a.em)} · código ${a.cod}`,M,y+5)}
+  const n=doc.getNumberOfPages();
+  for(let i=1;i<=n;i++){doc.setPage(i);doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(120,135,124);
+    doc.text(`${EMPRESA.nome} · CNPJ ${EMPRESA.cnpj} · ${EMPRESA.cidade}`,M,288);doc.text(`${i}/${n}`,W-M,288,{align:"right"})}
+  return {doc,arq:D.arq}}
+async function salvarPDF(tipo,id){const r=await gerarPDF(tipo,id);if(!r)return;await salvar(r.arq,r.doc.output("blob"))}
+async function imprimirPDF(tipo,id){const r=await gerarPDF(tipo,id);if(!r)return;
+  const url=URL.createObjectURL(r.doc.output("blob"));const w=window.open(url);
+  if(!w)return toast("O navegador bloqueou a janela de impressão. Use “Salvar em PDF”.");
+  w.addEventListener("load",()=>{try{w.print()}catch(_){}} );setTimeout(()=>URL.revokeObjectURL(url),60000)}
+
 // ---------- Cobranças (boleto/Pix), NFS-e e exportação — simulação ----------
 let filtroCob="todas";
 const BRL=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
@@ -641,7 +717,7 @@ function boletoHTML(b){const c=cli(b.cli);const temB=b.forma.includes("Boleto"),
   <dl class="kv"><dt>Pagador</dt><dd>${esc(c.nome)}</dd><dt>CNPJ</dt><dd class="mono">${esc(c.cnpj)}</dd><dt>Beneficiário</dt><dd>${esc(EMPRESA.nome)}</dd><dt>Valor</dt><dd>${BRL(b.valor)}</dd><dt>Vencimento</dt><dd>${fmt(b.venc)}</dd><dt>Situação</dt><dd>${chipCob(b)}</dd></dl>
   ${temB?`<div class="sec-t">Boleto · linha digitável</div><div class="copyrow"><code id="cLinha">${b.linha}</code><button class="dl" data-copy="cLinha">Copiar</button></div>`:""}
   ${temP?`<div class="sec-t">Pix</div><div class="pixbox">${qrSVG(b.pix)}<div><span class="note">Aponte a câmera do app do banco ou use o Pix copia e cola.</span><div class="copyrow"><code id="cPix">${b.pix}</code><button class="dl" data-copy="cPix">Copiar</button></div></div></div>`:""}
-  </div>`}
+  ${docBtns("cobranca",b.id)}</div>`}
 function nfseFormHTML(b){const c=cli(b.cli);return `<div class="sheet">${cab("Emitir NFS-e",esc(c.nome))}
   <div class="simu">Simulação: a emissão real é feita no sistema da prefeitura ou por uma API de notas.</div>
   <form id="fNf" style="grid-template-columns:1fr 1fr">
@@ -660,7 +736,7 @@ function nfseHTML(b){const c=cli(b.cli),n=b.nfse,iss=b.valor*n.aliquota/100;retu
   <div class="blk"><span class="lbl">Tomador</span><b>${esc(c.nome)}</b><span>CNPJ ${esc(c.cnpj)} · ${esc(c.end)}</span></div>
   <div class="blk"><span class="lbl">Serviço · item 7.13 da LC 116/2003</span><span>${esc(n.desc||b.desc)}</span></div>
   <div class="tot"><div><span class="lbl">Valor</span><br><b>${BRL(b.valor)}</b></div><div><span class="lbl">Alíquota ISS</span><br><b>${String(n.aliquota).replace(".",",")}%</b></div><div><span class="lbl">ISS</span><br><b>${BRL(iss)}</b></div><div><span class="lbl">Valor líquido</span><br><b>${BRL(b.valor)}</b></div></div></div>
-  </div>`}
+  ${docBtns("nfse",b.id)}</div>`}
 function acaoCob(act,id){const b=cob(id);if(!b)return;
   if(act==="gerar"){gerarCodigos(b);save();render();modal(boletoHTML(b));toast("Boleto/Pix gerado");return}
   if(act==="boleto"){modal(boletoHTML(b));return}
@@ -708,6 +784,8 @@ function toast(t){const el=document.getElementById("toast");el.textContent=t;el.
 document.addEventListener("click",e=>{
   const t=e.target.closest("[data-tab]"); if(t){tab=t.dataset.tab;render();return}
   const f=e.target.closest("[data-f]"); if(f){filtro=filtro===f.dataset.f?null:f.dataset.f;render();return}
+  const pf=e.target.closest("[data-pdf]"); if(pf){pf.disabled=true;salvarPDF(pf.dataset.pdf,pf.dataset.id).finally(()=>pf.disabled=false);return}
+  const pr=e.target.closest("[data-print]"); if(pr){imprimirPDF(pr.dataset.print,pr.dataset.id);return}
   const ac=e.target.closest("[data-act]"); if(ac){acaoCob(ac.dataset.act,ac.dataset.id);return}
   if(e.target.closest("[data-export]")){openExport();return}
   const cy=e.target.closest("[data-copy]"); if(cy){copiar(cy);return}
