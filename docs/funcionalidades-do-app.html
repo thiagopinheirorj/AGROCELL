@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Agrocel Certificados · Funcionalidades</title>
+<style>
+@page{size:A4;margin:14mm 0 14mm 0}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#122016;font:13px/1.45 "Segoe UI",system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+header{background:#004107;color:#f2f8ee;padding:22px 36px;display:flex;align-items:center;gap:20px;border-bottom:4px solid #8bc34a}
+header img{height:60px}
+header h1{margin:0;font-size:22px;font-weight:600}
+header p{margin:4px 0 0;font-size:12.5px;opacity:.82}
+main{padding:20px 36px 4px}
+h2{font-size:16px;color:#004107;margin:22px 0 4px}
+h2:first-child{margin-top:0}
+.sub{margin:0 0 10px;color:#5a6b5e;font-size:12.5px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{border:1px solid #dbe4d7;padding:6px 8px;text-align:left;vertical-align:top}
+th{background:#eef3ec;font-weight:600}
+td.c,th.c{text-align:center;width:92px}
+.sim{color:#004107;font-weight:600}.nao{color:#9aa79d}
+.area{border:1px solid #dbe4d7;border-radius:10px;padding:12px 14px;margin:10px 0;break-inside:avoid}
+.area h3{margin:0 0 6px;font-size:14px;color:#004107;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.area ul{margin:0;padding-left:18px}
+.area li{margin:2px 0}
+.chip{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:99px;vertical-align:middle;margin-left:4px;white-space:nowrap}
+.ok{background:#e4f3e3;color:#1f5f24}
+.si{background:#fff3d6;color:#8a5200}
+.pr{background:#eef0ee;color:#4d5a50}
+.perf{font-size:11px;color:#5a6b5e;font-weight:400}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.legenda{font-size:12px;color:#5a6b5e;margin:6px 0 0}
+.box{background:#eef3ec;border-radius:10px;padding:12px 14px;margin:10px 0;break-inside:avoid}
+.box b{color:#004107}
+footer{padding:10px 36px 0;font-size:11px;color:#5a6b5e}
+.pb{break-before:page}
+</style>
+</head>
+<body>
+<header>
+  <img src="../assets/logo-agrocel.png" alt="Agrocel">
+  <div><h1>Agrocel Certificados · Funcionalidades do aplicativo</h1><p>Sistema de gestão de certificados de controle de pragas · versão de 21 de outubro de 2026</p></div>
+</header>
+<main>
+
+<h2>1. Quem faz o quê</h2>
+<p class="sub">Três perfis de acesso. Cada pessoa entra com e-mail e senha e cai direto na área do seu perfil.</p>
+<table>
+<tr><th>Ação</th><th class="c">Cliente</th><th class="c">Técnico</th><th class="c">Administrador</th></tr>
+<tr><td>Ver certificados, ordens de serviço, fotos e relatórios</td><td class="c">só os seus</td><td class="c sim">todos</td><td class="c sim">todos</td></tr>
+<tr><td>Assinar ordem de serviço na tela</td><td class="c sim">sim</td><td class="c sim">sim, no local</td><td class="c sim">sim</td></tr>
+<tr><td>Cadastrar clientes e criar o acesso deles</td><td class="c nao">não</td><td class="c sim">sim</td><td class="c sim">sim</td></tr>
+<tr><td>Registrar visitas, laudos, fotos e relatórios</td><td class="c nao">não</td><td class="c sim">sim</td><td class="c sim">sim</td></tr>
+<tr><td>Emitir certificados com PDF anexado</td><td class="c nao">não</td><td class="c sim">sim</td><td class="c sim">sim</td></tr>
+<tr><td>Ver cobranças</td><td class="c">só as suas</td><td class="c nao">não</td><td class="c sim">todas</td></tr>
+<tr><td>Gerar boleto/Pix, emitir NFS-e, marcar como pago</td><td class="c nao">não</td><td class="c nao">não</td><td class="c sim">sim</td></tr>
+<tr><td>Exportar dados (Excel, CSV, JSON)</td><td class="c nao">não</td><td class="c nao">não</td><td class="c sim">sim</td></tr>
+<tr><td>Avisos de vencimento e documentos da Agrocel</td><td class="c nao">não</td><td class="c nao">não</td><td class="c sim">sim</td></tr>
+<tr><td>Cadastrar técnicos e administradores, desativar usuários</td><td class="c nao">não</td><td class="c nao">não</td><td class="c sim">sim</td></tr>
+<tr><td>Ver o registro de atividade e baixar registros.txt</td><td class="c nao">não</td><td class="c nao">não</td><td class="c sim">sim</td></tr>
+<tr><td>Excluir cadastros definitivamente (cliente, certificado, ordem, cobrança, usuário)</td><td class="c nao">não</td><td class="c">só fotos</td><td class="c sim">sim</td></tr>
+<tr><td>Redefinir senha de outra pessoa</td><td class="c nao">não</td><td class="c">só de clientes</td><td class="c sim">qualquer uma</td></tr>
+<tr><td>Trocar a própria senha</td><td class="c sim">sim</td><td class="c sim">sim</td><td class="c sim">sim</td></tr>
+</table>
+<p class="legenda">Importante: essas regras valem no banco de dados, não só na tela. Um cliente não consegue ver dados de outro cliente nem mexendo no navegador.</p>
+
+<h2>2. Funcionalidades por área</h2>
+<p class="sub"><span class="chip ok">Pronto</span> funciona de verdade · <span class="chip si">Simulação</span> funciona na tela, mas não é real · <span class="chip pr">Previsto</span> ainda não existe</p>
+
+<div class="area"><h3>Acesso e segurança <span class="chip ok">Pronto</span></h3>
+<ul>
+<li>Login com e-mail e senha; a sessão fica salva no aparelho até clicar em Sair.</li>
+<li>Primeiro acesso do sistema: cria o administrador, só enquanto não existir nenhum.</li>
+<li>Cadastro de usuários pelo administrador (técnico, administrador ou cliente), com senha provisória.</li>
+<li>Criação do acesso de um cliente direto na ficha da empresa, por técnico ou administrador.</li>
+<li>Redefinir senha, desativar e reativar usuários; cada pessoa troca a própria senha em Minha conta.</li>
+<li>Usuário desativado não entra mais, mesmo com a senha certa.</li>
+</ul></div>
+
+<div class="area"><h3>Cadastro de clientes <span class="chip ok">Pronto</span> <span class="perf">técnico e administrador</span></h3>
+<ul>
+<li>Ficha completa: razão social, nome fantasia, segmento, CNPJ, inscrição municipal.</li>
+<li>Endereço (CEP, rua, número, complemento, bairro, cidade, UF) e contato (responsável, telefone, e-mail dos avisos).</li>
+<li>Máscara automática e validação dos dígitos do CNPJ; aviso de CNPJ repetido.</li>
+<li>Anotações do técnico (acesso ao local, horários, cuidados) e edição da ficha a qualquer momento.</li>
+</ul></div>
+
+<div class="area"><h3>Painel de validade <span class="chip ok">Pronto</span> <span class="perf">técnico e administrador</span></h3>
+<ul>
+<li>Índice de conformidade: porcentagem de certificados em dia.</li>
+<li>Contadores de vencidos, que vencem em 30 dias e em dia; cada um funciona como filtro.</li>
+<li>Lista de clientes com busca por nome ou CNPJ; quem tem pendência sobe para o topo, em vermelho.</li>
+<li>Semáforo em todo o app: vermelho = vencido, amarelo = vence em até 30 dias, verde = em dia, sempre com a data.</li>
+<li>Linha do tempo dos próximos vencimentos e lista das ordens de serviço recentes.</li>
+</ul></div>
+
+<div class="area"><h3>Certificados <span class="chip ok">Pronto</span> <span class="perf">técnico e administrador</span></h3>
+<ul>
+<li>Validade sugerida pelo tipo de serviço: desinsetização 12 meses, desratização 3, higienização de reservatório 6 (pode ajustar).</li>
+<li>Anexo do PDF assinado, guardado em área privada; o cliente baixa pelo link temporário.</li>
+<li>Pode ser gerado junto com a visita técnica, já com a validade calculada.</li>
+</ul></div>
+
+<div class="area"><h3>Visita técnica e ordem de serviço <span class="chip ok">Pronto</span> <span class="perf">técnico e administrador</span></h3>
+<ul>
+<li>Registro no local: cliente, data e hora, serviço, praga-alvo, produtos usados e áreas tratadas.</li>
+<li>Relatório da visita em texto livre e fotos (várias de uma vez, reduzidas automaticamente para o celular não travar).</li>
+<li>Fotos podem ser adicionadas depois, abrindo a ordem de serviço.</li>
+<li>Ordem de serviço numerada (OS-2026-0001, 0002…), com as orientações pós-aplicação e o termo de compromisso na tela.</li>
+<li>Assinatura do cliente com o dedo, na hora, ou o cliente confirma depois na área dele.</li>
+<li>Comprovante com nome, data, hora e código de verificação; sai em PDF.</li>
+</ul></div>
+
+<div class="area"><h3>Área do cliente <span class="chip ok">Pronto</span></h3>
+<ul>
+<li>Vê só a própria empresa: certificados com data e situação, ordens de serviço, fotos e relatórios.</li>
+<li>Assina as ordens pendentes e baixa os PDFs.</li>
+<li>Acompanha as próprias cobranças (boleto, Pix e nota).</li>
+</ul></div>
+
+<div class="area"><h3>Cobranças e nota fiscal <span class="chip si">Simulação</span> <span class="perf">administrador</span></h3>
+<ul>
+<li>Valor e forma de pagamento definidos ao registrar a visita; situação: a gerar, aguardando, em atraso ou pago.</li>
+<li>Boleto (linha digitável) e Pix (QR Code e copia e cola): os códigos são de mentira e vêm rotulados assim.</li>
+<li>Totais a receber, em atraso e recebidos no mês; baixa do pagamento com um toque.</li>
+<li>NFS-e do item 7.13 da LC 116/2003, com ISS calculado pela alíquota informada. Sem validade fiscal.</li>
+</ul></div>
+
+<div class="area"><h3>PDFs e exportação <span class="chip ok">Pronto</span> <span class="perf">administrador</span></h3>
+<ul>
+<li>Nota, cobrança e ordem de serviço em PDF, com logo, rodapé e assinatura do cliente.</li>
+<li>Planilha Excel com cinco abas (empresas, certificados, visitas, cobranças, notas), CSV das empresas e backup completo em JSON.</li>
+</ul></div>
+
+<div class="area"><h3>Avisos de vencimento <span class="chip pr">Envio previsto</span> <span class="perf">administrador</span></h3>
+<ul>
+<li>Fila dos avisos dos próximos 90 dias, dois por certificado: 30 e 15 dias antes, com o texto pronto.</li>
+<li>Destinatários: responsável técnico da Agrocel e e-mail do cliente (a tela alerta quando o cliente não tem e-mail).</li>
+<li>O envio automático do e-mail ainda não está ligado. O WhatsApp também está previsto.</li>
+</ul></div>
+
+<div class="area"><h3>Documentos da própria Agrocel <span class="chip ok">Pronto</span> <span class="perf">administrador</span></h3>
+<ul>
+<li>Controle de validade de ART, alvarás e outros documentos da empresa, com o mesmo semáforo.</li>
+</ul></div>
+
+<div class="area"><h3>Registro de atividade <span class="chip ok">Pronto</span> <span class="perf">administrador</span></h3>
+<ul>
+<li>Aba <b>Registros</b>: quem fez o quê e quando. Entradas no sistema, cadastros, alterações, assinaturas, exclusões e mudanças em usuários.</li>
+<li>Busca por pessoa, cliente ou ação, e filtro por tipo de ação.</li>
+<li>Botão <b>Baixar registros.txt</b>: salva tudo (ou o que está filtrado) em um arquivo de texto.</li>
+<li>Ninguém altera nem apaga o registro, nem o administrador. Ele guarda só o nome dos campos mudados, nunca senhas, e-mails ou o conteúdo dos dados.</li>
+</ul></div>
+
+<div class="area"><h3>Exclusão definitiva de dados <span class="chip ok">Pronto</span> <span class="perf">administrador</span></h3>
+<ul>
+<li>Excluir cliente: apaga a empresa e tudo que é dela (certificados, ordens de serviço, fotos, cobranças, PDFs e os acessos do cliente). Exige digitar EXCLUIR.</li>
+<li>Excluir certificado (com o PDF), ordem de serviço (com as fotos), cobrança e usuário. O sistema não deixa excluir a si mesmo nem o único administrador.</li>
+<li>O técnico pode excluir fotos. Toda exclusão aparece no registro de atividade.</li>
+<li>Serve para atender pedidos de eliminação de dados e para limpar cadastros feitos por engano.</li>
+</ul></div>
+
+<div class="area"><h3>Ambiente de teste <span class="chip ok">Pronto</span></h3>
+<ul>
+<li>Basta abrir o endereço do app com <b>?teste</b> no final. Usa um banco separado, com clientes, certificados, visitas e cobranças fictícios.</li>
+<li>Faixa laranja avisa que é o ambiente de teste; nada feito ali vai para o sistema real.</li>
+<li>Acessos de teste para os três perfis; os dados podem ser restaurados ao estado inicial a qualquer momento.</li>
+<li>Regra de trabalho: testar primeiro lá e só depois liberar no sistema real.</li>
+</ul></div>
+
+<h2 class="pb">3. Cuidados com a LGPD (proteção de dados)</h2>
+<p class="sub">Resumo prático do que o app guarda, do que já protege e do que ainda precisa ser feito. Não é parecer jurídico: confirme os pontos marcados com um advogado.</p>
+
+<div class="area"><h3>Quem é quem no tratamento dos dados</h3>
+<ul>
+<li><b>Agrocel (Fernando)</b>: controladora. Decide quais dados dos clientes são coletados e para quê.</li>
+<li><b>Desenvolvedor do sistema</b>: operador. Trata os dados em nome da Agrocel, seguindo as instruções dela. Isso deve estar no contrato.</li>
+<li><b>Supabase</b>: hospedagem do banco, dos arquivos e do login, em servidores em São Paulo.</li>
+<li><b>Titulares</b>: as pessoas dos clientes (responsável no local, quem assina a ordem de serviço) e os usuários do sistema.</li>
+</ul></div>
+
+<table>
+<tr><th>Dado guardado</th><th>Onde aparece no app</th><th>Quem vê</th></tr>
+<tr><td>Nome, telefone e e-mail do responsável no local</td><td>Ficha do cliente, avisos</td><td>Técnico e administrador; o cliente vê a própria ficha</td></tr>
+<tr><td>Nome, e-mail e perfil de quem usa o sistema</td><td>Login, aba Usuários</td><td>O próprio usuário e o administrador</td></tr>
+<tr><td>Assinatura desenhada na tela, nome, data, hora e código</td><td>Ordem de serviço, comprovante em PDF</td><td>Técnico, administrador e o cliente da ordem</td></tr>
+<tr><td>Fotos e relatórios das visitas</td><td>Ordem de serviço</td><td>Técnico, administrador e o cliente da ordem</td></tr>
+<tr><td>CNPJ, endereço, certificados, cobranças</td><td>Todo o app</td><td>Conforme o perfil (ver seção 1)</td></tr>
+</table>
+<p class="legenda">CNPJ e razão social são dados de empresa. Nome, telefone, e-mail, assinatura e imagem de pessoas são dados pessoais e precisam de cuidado.</p>
+
+<div class="area"><h3>O que já está protegido <span class="chip ok">Pronto</span></h3>
+<ul>
+<li><b>Acesso mínimo por perfil:</b> cada pessoa vê só o que precisa. As regras valem no banco, não só na tela.</li>
+<li><b>Um cliente nunca vê dados de outro cliente.</b> Testado com os três perfis.</li>
+<li><b>Senhas:</b> o app não guarda a senha, só o servidor de login, de forma embaralhada (hash). Mínimo de 8 caracteres.</li>
+<li><b>Arquivos privados:</b> fotos e PDFs ficam em área fechada e só abrem por links temporários, que expiram em poucos minutos.</li>
+<li><b>Conexão criptografada (HTTPS)</b> no site publicado e no servidor.</li>
+<li><b>Chaves secretas fora do código:</b> o repositório público só tem a chave pública, que não dá acesso aos dados sozinha.</li>
+<li><b>Usuário desativado perde o acesso</b> na hora, mesmo com a senha certa.</li>
+<li><b>Ambiente de teste separado,</b> com dados fictícios, para nunca testar com dados reais.</li>
+<li><b>Backup sob demanda:</b> o administrador exporta todos os dados quando quiser.</li>
+<li><b>Registro de atividade:</b> quem entrou, criou, alterou, assinou ou excluiu, e quando. Ninguém consegue apagar nem alterar esse registro.</li>
+<li><b>Eliminação de dados:</b> o administrador exclui cliente, certificado, ordem de serviço, cobrança e usuário de forma definitiva, junto com os arquivos.</li>
+</ul></div>
+
+<div class="area"><h3>O que ainda precisa ser feito</h3>
+<table>
+<tr><th>Cuidado</th><th>Situação</th><th>O que fazer</th></tr>
+<tr><td>Política de privacidade e termo de uso no app</td><td><span class="chip pr">Falta</span></td><td>Texto simples, link na tela de login, explicando quais dados, para quê e por quanto tempo</td></tr>
+<tr><td>Contrato com cláusulas de LGPD (Agrocel e desenvolvedor)</td><td><span class="chip pr">Falta</span></td><td>Definir papéis, finalidade, sigilo, o que acontece se encerrar o contrato (ex.: devolução e eliminação dos dados)</td></tr>
+<tr><td>Base legal registrada</td><td><span class="chip pr">Falta</span></td><td>Registrar por escrito, por exemplo, execução de contrato e exigência da fiscalização sanitária. Confirmar com advogado</td></tr>
+<tr><td>Prazo de guarda e eliminação</td><td><span class="chip pr">Falta</span></td><td>Definir por quanto tempo guardar certificados, fotos e assinaturas. A exclusão já existe no app (aba Clientes); falta decidir o prazo e quem executa</td></tr>
+<tr><td>Canal para o titular pedir acesso, correção ou exclusão</td><td><span class="chip pr">Falta</span></td><td>Um e-mail de contato. Pequenas empresas podem ficar dispensadas de nomear encarregado, mas precisam de um canal (confirmar)</td></tr>
+<tr><td>Proteção contra senhas vazadas no login</td><td><span class="chip si">Verificar</span></td><td>Ativar no painel do Supabase (pode depender do plano). O Supabase já avisa que está desligada</td></tr>
+<tr><td>Definir quem lê o registro de atividade e com que frequência</td><td><span class="chip pr">Falta</span></td><td>Entra na rotina de verificação de segurança: olhar o registro com regularidade</td></tr>
+<tr><td>Segundo fator de login para administradores</td><td><span class="chip pr">Falta</span></td><td>Código no celular além da senha</td></tr>
+<tr><td>Troca obrigatória da senha provisória no primeiro acesso</td><td><span class="chip pr">Falta</span></td><td>Hoje a troca é opcional, em Minha conta</td></tr>
+<tr><td>Backup automático do banco</td><td><span class="chip si">Verificar</span></td><td>Confirmar o que o plano do Supabase oferece e, se preciso, contratar um plano com backup diário</td></tr>
+<tr><td>Plano de resposta a incidente</td><td><span class="chip pr">Falta</span></td><td>Quem faz o quê se houver vazamento: conter, avisar os afetados e a ANPD no prazo da regra vigente (confirmar com advogado)</td></tr>
+</table></div>
+
+<div class="area"><h3>Boas práticas para a equipe</h3>
+<ul>
+<li>Cada pessoa usa o próprio login. Nunca compartilhe senha.</li>
+<li>Desative o acesso de quem sai da empresa no mesmo dia.</li>
+<li>Entregue a senha provisória em mãos ou por canal seguro e peça para trocar logo no primeiro acesso.</li>
+<li>Evite fotografar pessoas. Fotografe o ambiente, as iscas e os equipamentos.</li>
+<li>Não escreva dados pessoais desnecessários nos campos de observação e relatório.</li>
+<li>Deixe o celular com bloqueio de tela e saia da conta em aparelhos de outras pessoas.</li>
+<li>Nunca use dados reais no ambiente de teste.</li>
+<li>Se perder o celular ou suspeitar de acesso indevido, avise o administrador para desativar o usuário e trocar as senhas.</li>
+</ul></div>
+
+<div class="box"><b>Próximo passo: rotina de verificação de segurança.</b> Uma revisão periódica, com lista fixa: usuários ativos e perfis corretos, senhas provisórias antigas, alertas de segurança do banco, testes de acesso por perfil, backups e atualizações. Ela será criada a seguir e passa a fazer parte deste documento.</div>
+
+<h2>4. O que falta e depende de decisão</h2>
+<div class="box">
+<table>
+<tr><th>Item</th><th>Situação</th><th>O que destrava</th></tr>
+<tr><td>E-mails automáticos de aviso</td><td>Previsto</td><td>Ligar um serviço de e-mail ao sistema</td></tr>
+<tr><td>Convite e recuperação de senha por e-mail</td><td>Previsto</td><td>O mesmo serviço de e-mail</td></tr>
+<tr><td>Boleto e Pix de verdade</td><td>Simulação</td><td>Conta de cobrança (banco ou plataforma), comparando a tarifa por boleto pago</td></tr>
+<tr><td>NFS-e de verdade</td><td>Simulação</td><td>Confirmar com o contador a alíquota de ISS e como a prefeitura emite</td></tr>
+<tr><td>Dispensar o termo em papel</td><td>Em análise</td><td>Confirmar com a Vigilância Sanitária que a assinatura eletrônica simples vale (Lei 14.063/2020)</td></tr>
+<tr><td>Avisos por WhatsApp</td><td>Previsto</td><td>Escolher o serviço de envio</td></tr>
+<tr><td>Versão para outras dedetizadoras</td><td>Previsto</td><td>Cada empresa com login, logo e clientes próprios</td></tr>
+</table>
+</div>
+</main>
+<footer>Agrocel – Soluções no campo e na cidade · Rio Fortuna/SC · Desenvolvido por Thiago Pinho Pinheiro</footer>
+</body>
+</html>

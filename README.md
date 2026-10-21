@@ -14,6 +14,11 @@ O app acompanha a validade de cada certificado emitido (desinsetização, desrat
 
 > **Os dados ficam no banco (Supabase), não neste repositório.** As capturas de tela abaixo usam dados fictícios. Boleto, Pix e NFS-e continuam sendo simulação.
 
+## Registro de atividade e exclusão de dados
+
+- **Aba Registros (administrador):** mostra quem fez o quê e quando (entradas no sistema, cadastros, alterações, assinaturas e exclusões), com busca e filtro. O botão **Baixar registros.txt** salva tudo em um arquivo de texto. Ninguém consegue apagar nem alterar esse registro, e ele nunca guarda senhas nem e-mails.
+- **Exclusão definitiva (administrador):** botões **Excluir** em cliente, certificado, ordem de serviço, cobrança e usuário. Excluir um cliente apaga também tudo o que é dele (certificados, ordens, fotos, cobranças, PDFs e os acessos dele), depois de digitar EXCLUIR. O técnico só consegue excluir fotos.
+
 ## Ambiente de teste
 
 Para experimentar sem risco, abra o app com `?teste` no final do endereço (por exemplo `https://thiagopinheirorj.github.io/AGROCELL/?teste`). Ele usa um banco separado, com clientes, certificados, visitas e cobranças **fictícios**, e mostra uma faixa laranja "Ambiente de teste". Nada feito ali vai para o sistema real.

@@ -105,3 +105,94 @@ create policy anexos_enviar on storage.objects for insert to authenticated with 
 create policy anexos_apagar on storage.objects for delete to authenticated using (
   bucket_id = 'anexos' and app_priv.papel() in ('admin','tecnico')
 );
+
+-- ---------------------------------------------------------------------------
+-- Registro de atividade (quem fez o quê). Só o admin lê; ninguém altera nem apaga.
+-- ---------------------------------------------------------------------------
+create table public.auditoria (
+  id bigint generated always as identity primary key,
+  em timestamptz not null default now(),
+  usuario_id uuid,
+  usuario_nome text not null,
+  papel text,
+  acao text not null,
+  tipo text not null,
+  registro_id text,
+  cli text,
+  resumo text not null,
+  campos text
+);
+create index auditoria_em_idx on public.auditoria (em desc);
+alter table public.auditoria enable row level security;
+create policy auditoria_ler on public.auditoria for select to authenticated using (app_priv.papel() = 'admin');
+revoke insert, update, delete, truncate on public.auditoria from authenticated, anon;
+
+create or replace function app_priv.resumo_registro(p_tipo text, p_data jsonb) returns text
+language sql immutable set search_path = '' as $$
+  select case p_tipo
+    when 'clientes' then 'Cliente: ' || coalesce(nullif(p_data->>'fantasia',''), p_data->>'nome', '?')
+    when 'certs' then 'Certificado: ' || coalesce(p_data->>'tipo','?') || ' (validade ' || coalesce(p_data->>'venc','?') || ')'
+    when 'visitas' then 'Ordem de serviço ' || coalesce(p_data->>'os','?')
+    when 'cobrancas' then 'Cobrança: ' || coalesce(p_data->>'desc','?')
+    when 'docs' then 'Documento: ' || coalesce(p_data->>'nome','?')
+    when 'proprios' then 'Documento da empresa: ' || coalesce(p_data->>'nome','?')
+    when 'fotos' then 'Foto: ' || coalesce(p_data->>'nome','?')
+    else p_tipo end
+$$;
+
+create or replace function app_priv.auditar_registro() returns trigger
+language plpgsql security definer set search_path = '' as $$
+declare r public.registros; u public.perfis; a text; campos text;
+begin
+  if tg_op = 'DELETE' then r := old; else r := new; end if;
+  select * into u from public.perfis where id = auth.uid();
+  if tg_op = 'INSERT' then a := 'criou';
+  elsif tg_op = 'DELETE' then a := 'excluiu';
+  else
+    if r.tipo = 'visitas' and r.data->>'status' = 'assinada' and coalesce(old.data->>'status','') <> 'assinada' then a := 'assinou';
+    else a := 'alterou'; end if;
+    select string_agg(k, ', ' order by k) into campos from (
+      select n.key as k from jsonb_each(new.data) n where n.value is distinct from old.data->n.key
+      union
+      select o.key from jsonb_each(old.data) o where not (new.data ? o.key)
+    ) x;
+    if campos is null then return null; end if;
+  end if;
+  insert into public.auditoria(usuario_id, usuario_nome, papel, acao, tipo, registro_id, cli, resumo, campos)
+  values (auth.uid(), coalesce(u.nome, 'Sistema'), u.papel, a, r.tipo, r.id, r.cli, app_priv.resumo_registro(r.tipo, r.data), campos);
+  return null;
+end $$;
+create trigger registros_auditoria after insert or update or delete on public.registros
+  for each row execute function app_priv.auditar_registro();
+
+create or replace function app_priv.auditar_perfil() returns trigger
+language plpgsql security definer set search_path = '' as $$
+declare u public.perfis; a text; r public.perfis;
+begin
+  if auth.uid() is null then return null; end if;
+  select * into u from public.perfis where id = auth.uid();
+  if tg_op = 'DELETE' then r := old; a := 'excluiu';
+  else
+    r := new;
+    if old.ativo is distinct from new.ativo then a := case when new.ativo then 'reativou' else 'desativou' end;
+    elsif old.papel is distinct from new.papel then a := 'alterou perfil';
+    else return null; end if;
+  end if;
+  insert into public.auditoria(usuario_id, usuario_nome, papel, acao, tipo, registro_id, cli, resumo)
+  values (auth.uid(), coalesce(u.nome,'Sistema'), u.papel, a, 'usuarios', r.id::text, r.cliente_id, 'Usuário ' || r.nome || ' (' || r.papel || ')');
+  return null;
+end $$;
+create trigger perfis_auditoria after update or delete on public.perfis
+  for each row execute function app_priv.auditar_perfil();
+
+create or replace function public.registrar_acesso() returns void
+language plpgsql security definer set search_path = '' as $$
+declare u public.perfis;
+begin
+  select * into u from public.perfis where id = auth.uid() and ativo;
+  if not found then return; end if;
+  insert into public.auditoria(usuario_id, usuario_nome, papel, acao, tipo, resumo)
+  values (u.id, u.nome, u.papel, 'entrou', 'acesso', 'Entrou no sistema');
+end $$;
+revoke all on function public.registrar_acesso() from public, anon;
+grant execute on function public.registrar_acesso() to authenticated;

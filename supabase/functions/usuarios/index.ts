@@ -15,6 +15,14 @@ const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE
 const PAPEIS = ["admin", "tecnico", "cliente"];
 const emailOk = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
+type Ator = { id: string | null; nome: string; papel: string | null };
+// Registro de atividade: guarda quem fez o quê, sem e-mails nem senhas.
+async function registrar(ator: Ator, acao: string, resumo: string, cli: string | null = null) {
+  await admin.from("auditoria").insert({
+    usuario_id: ator.id, usuario_nome: ator.nome, papel: ator.papel, acao, tipo: "usuarios", cli, resumo,
+  });
+}
+
 async function criarUsuario(nome: string, email: string, senha: string, papel: string, clienteId: string | null) {
   const { data, error } = await admin.auth.admin.createUser({ email, password: senha, email_confirm: true });
   if (error || !data.user) {
@@ -47,6 +55,7 @@ Deno.serve(async (req) => {
     if (!nome || !emailOk(email)) return resp({ erro: "Informe nome e e-mail válidos." }, 400);
     if (senha.length < 8) return resp({ erro: "A senha precisa ter pelo menos 8 caracteres." }, 400);
     const r = await criarUsuario(nome, email, senha, "admin", null);
+    if (r.ok) await registrar({ id: r.id!, nome, papel: "admin" }, "criou", "Primeiro administrador criado");
     return resp(r, r.erro ? 400 : 200);
   }
 
@@ -54,9 +63,10 @@ Deno.serve(async (req) => {
   const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
   const { data: u } = await admin.auth.getUser(token);
   if (!u?.user) return resp({ erro: "Sessão inválida. Entre novamente." }, 401);
-  const { data: eu } = await admin.from("perfis").select("papel, ativo").eq("id", u.user.id).maybeSingle();
+  const { data: eu } = await admin.from("perfis").select("nome, papel, ativo").eq("id", u.user.id).maybeSingle();
   if (!eu || !eu.ativo || !["admin", "tecnico"].includes(eu.papel)) return resp({ erro: "Sem permissão." }, 403);
   const souAdmin = eu.papel === "admin";
+  const ator: Ator = { id: u.user.id, nome: eu.nome, papel: eu.papel };
 
   if (acao === "criar") {
     const nome = String(b.nome ?? "").trim(), email = String(b.email ?? "").trim().toLowerCase(), senha = String(b.senha ?? "");
@@ -71,17 +81,36 @@ Deno.serve(async (req) => {
       if (!c) return resp({ erro: "Empresa não encontrada." }, 400);
     }
     const r = await criarUsuario(nome, email, senha, papel, clienteId);
+    if (r.ok) await registrar(ator, "criou", `Usuário ${nome} (${papel})`, clienteId);
     return resp(r, r.erro ? 400 : 200);
   }
 
   if (acao === "redefinir_senha") {
     const id = String(b.id ?? ""), senha = String(b.senha ?? "");
     if (senha.length < 8) return resp({ erro: "A senha precisa ter pelo menos 8 caracteres." }, 400);
-    const { data: alvo } = await admin.from("perfis").select("papel").eq("id", id).maybeSingle();
+    const { data: alvo } = await admin.from("perfis").select("nome, papel, cliente_id").eq("id", id).maybeSingle();
     if (!alvo) return resp({ erro: "Usuário não encontrado." }, 404);
     if (!souAdmin && alvo.papel !== "cliente") return resp({ erro: "Sem permissão." }, 403);
     const { error } = await admin.auth.admin.updateUserById(id, { password: senha });
-    return error ? resp({ erro: error.message }, 400) : resp({ ok: true });
+    if (error) return resp({ erro: error.message }, 400);
+    await registrar(ator, "redefiniu senha", `Usuário ${alvo.nome} (${alvo.papel})`, alvo.cliente_id);
+    return resp({ ok: true });
+  }
+
+  if (acao === "excluir_usuario") {
+    if (!souAdmin) return resp({ erro: "Só o administrador exclui usuários." }, 403);
+    const id = String(b.id ?? "");
+    if (id === u.user.id) return resp({ erro: "Você não pode excluir o próprio usuário." }, 400);
+    const { data: alvo } = await admin.from("perfis").select("nome, papel, cliente_id").eq("id", id).maybeSingle();
+    if (!alvo) return resp({ erro: "Usuário não encontrado." }, 404);
+    if (alvo.papel === "admin") {
+      const { count } = await admin.from("perfis").select("id", { count: "exact", head: true }).eq("papel", "admin").eq("ativo", true);
+      if ((count ?? 0) <= 1) return resp({ erro: "Não dá para excluir o único administrador." }, 400);
+    }
+    const { error } = await admin.auth.admin.deleteUser(id);
+    if (error) return resp({ erro: error.message }, 400);
+    await registrar(ator, "excluiu", `Usuário ${alvo.nome} (${alvo.papel})`, alvo.cliente_id);
+    return resp({ ok: true });
   }
 
   return resp({ erro: "Ação desconhecida" }, 400);

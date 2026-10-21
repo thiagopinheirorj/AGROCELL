@@ -29,6 +29,12 @@ Painel com semáforo e filtros · cadastro de clientes (máscara e validação d
 - Para **restaurar o teste ao estado inicial** (datas relativas a hoje): `node supabase/seed-teste.mjs <senha>`. O script só mexe no projeto de teste.
 - Fluxo de trabalho: criar/alterar a funcionalidade, testar com `?teste`, e só então usar no real. Mudanças de banco: aplicar primeiro no projeto de teste e depois no real; o SQL de referência fica em `supabase/schema.sql` e a função em `supabase/functions/usuarios/index.ts` (idênticos nos dois projetos).
 
+### Registro de atividade e exclusão (LGPD)
+- Tabela `auditoria` (só o admin lê; ninguém altera nem apaga, nem o admin): gravada por triggers em `registros` e `perfis` (criou/alterou/excluiu/assinou/desativou), pela função `usuarios` (criar, redefinir senha, excluir usuário) e pelo `registrar_acesso()` chamado no login. Guarda só nomes de campos alterados, nunca valores, e-mails ou senhas.
+- Aba **Registros** (admin) lista, filtra e baixa tudo em `registros.txt`.
+- **Exclusão definitiva** (só admin; técnico só exclui fotos): cliente (apaga também certificados, OS, fotos, cobranças, PDFs e acessos do cliente, com confirmação digitando EXCLUIR), certificado (e PDF), ordem de serviço (e fotos), cobrança, foto e usuário (não exclui a si mesmo nem o único admin). Os arquivos do storage são apagados junto.
+- Mudanças de banco sempre no projeto de teste primeiro, depois no real, e atualizar `supabase/schema.sql`.
+
 ### Login e perfis
 Três perfis (tabela `perfis`, papel `admin` | `tecnico` | `cliente`):
 - **admin**: tudo, inclusive cobranças, NFS-e, avisos, documentos da empresa e cadastro de usuários (aba "Usuários").

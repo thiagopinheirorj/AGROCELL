@@ -65,6 +65,7 @@ textarea{resize:vertical;min-height:84px}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--lime);outline-offset:1px}
 .who{font-size:13px;opacity:.85}
 .hbtn{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.18);color:var(--on-brand);font:700 13px var(--body);padding:6px 12px;border-radius:9px;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:not-allowed}
 .hbtn:hover{background:rgba(0,0,0,.4)}
 .login{max-width:420px;margin:28px auto}
 .login h2{font-size:22px;margin:0 0 6px}
@@ -352,7 +353,8 @@ function save(){
   fila = fila.then(async () => {
     if(up.length){const {error} = await sb.from("registros").upsert(up); if(error) throw error}
     for(const k of del){const i = k.indexOf(":"); const {error} = await sb.from("registros").delete().eq("tipo", k.slice(0,i)).eq("id", k.slice(i+1)); if(error) throw error}
-  }).catch(async e => {toast("Não foi possível salvar: " + (e.message || e)); try{await carregar(); render()}catch(_){}});
+    return true;
+  }).catch(async e => {toast("Não foi possível salvar: " + (e.message || e)); try{await carregar(); render()}catch(_){} return false});
   return fila;
 }
 async function entrar(session){
@@ -363,7 +365,7 @@ async function entrar(session){
   abertos = new Set(db.clientes.slice(0,2).map(c => c.id));
   return null;
 }
-async function sair(){await sb.auth.signOut(); ME = null; db = novoDB(); snap = new Map(); USUARIOS = []; tab = "painel"; closeModal(); render()}
+async function sair(){await sb.auth.signOut(); ME = null; REGS = []; REGS_OK = false; db = novoDB(); snap = new Map(); USUARIOS = []; tab = "painel"; closeModal(); render()}
 async function chamarUsuarios(body){
   const {data, error} = await sb.functions.invoke("usuarios", {body});
   if(error){let m = error.message; try{const j = await error.context.json(); if(j.erro) m = j.erro}catch(_){} return {erro:m}}
@@ -423,13 +425,13 @@ function ring(pct,size=92,light=true){const r=size/2-8,c=2*Math.PI*r,off=c*(1-pc
 function pdfLink(u,t){return u?`<button class="dl" data-anexo="${esc(u)}">${IC_DL}${t}</button>`:`<span class="nopdf">PDF ainda não anexado</span>`}
 function certHTML(k){const s=status(k.venc);return `<div class="cert">
   <div class="date s-${s}"><b>${fmt(k.venc)}</b><span>${quando(k.venc)}</span></div>
-  <div class="cinfo"><b>${esc(k.tipo)} ${chip(s)}</b><div>${esc(k.praga)}</div><div>${esc(k.prod)} · executado em ${fmt(k.exec)}</div></div>
+  <div class="cinfo"><b>${esc(k.tipo)} ${chip(s)}</b><div>${esc(k.praga)}</div><div>${esc(k.prod)} · executado em ${fmt(k.exec)}</div>${isAdmin()?`<div style="margin-top:6px"><button class="dl" data-delcert="${k.id}">Excluir certificado</button></div>`:""}</div>
   ${k.pdf||!k.visita?pdfLink(k.pdf,"Baixar PDF"):`<button class="dl" data-comp="${k.visita}">Ver comprovante</button>`}</div>`}
 function docsHTML(id){const ds=(db.docs||[]).filter(x=>x.cli===id);return ds.length?`<div class="docs"><div class="t">Outros documentos</div>${ds.map(x=>`<div class="drow"><span>${esc(x.nome)} · ${fmt(x.data)}</span>${pdfLink(x.pdf,"Baixar PDF")}</div>`).join("")}</div>`:""}
 
 function abasDoPerfil(){
   if(!ME) return [];
-  if(ME.papel==="admin") return [["painel","Painel"],["visita","Registrar visita"],["cobrancas","Cobranças"],["clientes","Clientes"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"],["usuarios","Usuários"]];
+  if(ME.papel==="admin") return [["painel","Painel"],["visita","Registrar visita"],["cobrancas","Cobranças"],["clientes","Clientes"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"],["usuarios","Usuários"],["registros","Registros"]];
   if(ME.papel==="tecnico") return [["painel","Painel"],["visita","Registrar visita"],["clientes","Clientes"],["novo","Novo certificado"]];
   return [["painel","Meus certificados"]];
 }
@@ -441,7 +443,8 @@ function render(){
   if(!T.find(t=>t[0]===tab)) tab="painel";
   tabsEl.innerHTML=T.map(([k,l])=>`<button role="tab" aria-selected="${k===tab}" data-tab="${k}">${l}</button>`).join("");
   if(modo==="cliente"){app.innerHTML=viewCliente();return}
-  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="cobrancas"?viewCobrancas():tab==="clientes"?viewClientes():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():tab==="usuarios"?viewUsuarios():viewAgrocel();
+  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="cobrancas"?viewCobrancas():tab==="clientes"?viewClientes():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():tab==="usuarios"?viewUsuarios():tab==="registros"?viewRegistros():viewAgrocel();
+  if(tab==="registros") wireRegistros();
   if(tab==="usuarios") wireUsuarios();
   if(tab==="agrocel") wireAgrocel();
   if(tab==="novo") wireNovo();
@@ -608,6 +611,7 @@ function compHTML(v){const c=cli(v.cli);const ok=v.status==="assinada";
   <div class="termo"><b>Orientações e termo de compromisso</b><ul>${TERMO.map(t=>`<li>${t}</li>`).join("")}</ul><p>Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima.</p></div>
   ${ok?`<div class="sig"><img src="${v.assinatura.img}" alt="Assinatura de ${esc(v.assinatura.nome)}"><div><b>${esc(v.assinatura.nome)}</b><span>Assinado eletronicamente em ${fmtHora(v.assinatura.em)}</span><span class="mono">Código de verificação ${v.assinatura.cod}</span></div></div>${docBtns("os",v.id)}`
   :`<div class="signform"><label>Nome de quem assina<input id="sNome" autocomplete="name"></label><div class="padwrap"><canvas id="pad" aria-label="Quadro de assinatura"></canvas><span class="padhint">Assine aqui com o dedo</span><button type="button" class="clear" id="padClear">Limpar</button></div><button class="btn" id="sOk">Confirmar e assinar</button></div>`}
+  ${isAdmin()?`<button class="dl" data-delvis="${v.id}" style="justify-self:start">Excluir ordem de serviço</button>`:""}
   </div>`}
 function makePad(cv){const ctx=cv.getContext("2d");let drawing=false,empty=true,last=[0,0];const wrap=cv.parentElement;
   function reset(){const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cv.width=Math.max(1,r.width*dpr);cv.height=Math.max(1,r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.lineWidth=2.4;ctx.lineCap="round";ctx.lineJoin="round";ctx.strokeStyle=ctx.fillStyle="#10301a";empty=true;wrap.classList.remove("has")}
@@ -642,9 +646,9 @@ async function fotosRender(v){
   if(!fs.length){box.innerHTML="";return}
   const {data}=await sb.storage.from("anexos").createSignedUrls(fs.map(f=>f.path),600);
   const url={};(data||[]).forEach(x=>{if(x.signedUrl)url[x.path]=x.signedUrl});
-  box.innerHTML=`<div class="sec-t" style="margin-bottom:8px">Fotos da visita</div><div class="fotos">${fs.filter(f=>url[f.path]).map(f=>`<a href="${esc(url[f.path])}" target="_blank" rel="noopener"><img src="${esc(url[f.path])}" alt="${esc(f.nome||"Foto da visita")}" loading="lazy"></a>`).join("")}</div>`;
+  box.innerHTML=`<div class="sec-t" style="margin-bottom:8px">Fotos da visita</div><div class="fotos">${fs.filter(f=>url[f.path]).map(f=>`<div style="position:relative"><a href="${esc(url[f.path])}" target="_blank" rel="noopener"><img src="${esc(url[f.path])}" alt="${esc(f.nome||"Foto da visita")}" loading="lazy"></a>${isStaff()?`<button class="dl" data-delfoto="${f.id}" aria-label="Excluir foto" style="position:absolute;top:4px;right:4px;padding:2px 7px">✕</button>`:""}</div>`).join("")}</div>`;
 }
-function closeModal(){const m=document.getElementById("modal");m.hidden=true;m.innerHTML="";document.body.style.overflow=""}
+function closeModal(){if(confirmar.res){const r=confirmar.res;confirmar.res=null;r(false)}const m=document.getElementById("modal");m.hidden=true;m.innerHTML="";document.body.style.overflow=""}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 function viewVisita(){const a=new Date();a.setSeconds(0,0);const local=new Date(a-a.getTimezoneOffset()*6e4).toISOString().slice(0,16);
   return `<div class="card"><div class="steps"><span>1 · Serviço e cobrança</span><span>2 · Orientações</span><span>3 · Assinatura do cliente</span></div>
@@ -742,7 +746,7 @@ function viewClientes(){
   <section class="panel" style="margin-top:20px"><div class="ph"><h2>Clientes cadastrados</h2><span class="note">${db.clientes.length} empresa${db.clientes.length===1?"":"s"}</span></div>
   <div class="clist">${db.clientes.map(x=>{const p=piorStatus(x.id);return `<div class="cl"><span class="av">${iniciais(x.nome)}</span>
     <span class="nm"><b>${esc(x.fantasia||x.nome)}</b><small>${esc(x.cnpj)}</small><span class="meta">${esc(x.end||"-")}${x.tel?" · "+esc(x.tel):""}</span></span>
-    <span class="uacts"><button class="dl" data-acesso="${x.id}">Criar acesso</button><button class="dl" data-edit="${x.id}">Editar</button></span></div>`}).join("")}</div></section>`}
+    <span class="uacts"><button class="dl" data-acesso="${x.id}">Criar acesso</button><button class="dl" data-edit="${x.id}">Editar</button>${isAdmin()?`<button class="dl" data-delcli="${x.id}">Excluir</button>`:""}</span></div>`}).join("")}</div></section>`}
 function wireClientes(){
   const $=id=>document.getElementById(id);
   $("qCnpj").oninput=e=>e.target.value=maskCNPJ(e.target.value);
@@ -855,6 +859,7 @@ function linhaCob(b,cliente){const s=stCob(b);const c=cli(b.cli);
   if(!cliente&&(s==="a"||s==="r")) acts.push(`<button class="dl" data-act="pagar" data-id="${b.id}">Marcar como pago</button>`);
   if(b.nfse) acts.push(`<button class="dl" data-act="vernf" data-id="${b.id}">NFS-e nº ${b.nfse.numero}</button>`);
   else if(!cliente) acts.push(`<button class="dl" data-act="nfse" data-id="${b.id}">Emitir NFS-e</button>`);
+  if(!cliente&&isAdmin()) acts.push(`<button class="dl" data-act="excluir" data-id="${b.id}">Excluir</button>`);
   if(cliente&&s==="n") acts.length=0;
   return `<div class="crow ${s==="r"?"atraso":""}"><div class="ci"><b>${cliente?esc(b.desc):esc(c.nome)}</b><span>${cliente?esc(b.forma):esc(b.desc)+" · "+esc(b.forma)}</span></div>
   <div class="cv"><b>${BRL(b.valor)}</b><span>${s==="g"&&b.pagoEm?"pago em "+fmt(b.pagoEm):"vence "+fmt(b.venc)}</span></div>${chipCob(b)}
@@ -906,6 +911,7 @@ function nfseHTML(b){const c=cli(b.cli),n=b.nfse,iss=b.valor*n.aliquota/100;retu
   <div class="tot"><div><span class="lbl">Valor</span><br><b>${BRL(b.valor)}</b></div><div><span class="lbl">Alíquota ISS</span><br><b>${String(n.aliquota).replace(".",",")}%</b></div><div><span class="lbl">ISS</span><br><b>${BRL(iss)}</b></div><div><span class="lbl">Valor líquido</span><br><b>${BRL(b.valor)}</b></div></div></div>
   ${docBtns("nfse",b.id)}</div>`}
 function acaoCob(act,id){const b=cob(id);if(!b)return;
+  if(act==="excluir"){excluirItem("cobrança",`${BRL(b.valor)} · ${esc(b.desc)}`,"A cobrança e a nota fiscal ligada a ela serão apagadas.",async()=>{db.cobrancas=db.cobrancas.filter(x=>x.id!==id)});return}
   if(act==="gerar"){gerarCodigos(b);save();render();modal(boletoHTML(b));toast("Boleto/Pix gerado");return}
   if(act==="boleto"){modal(boletoHTML(b));return}
   if(act==="pagar"){b.status="paga";b.pagoEm=iso(HOJE);save();render();toast(`Pagamento de ${BRL(b.valor)} registrado`);return}
@@ -949,6 +955,150 @@ async function salvar(nome,blob){
 
 function toast(t){const el=document.getElementById("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2400)}
 
+// ---------- Exclusão de cadastros (LGPD: eliminação) e registro de atividade ----------
+// A exclusão é definitiva. Cada exclusão e cada alteração ficam no registro de atividade (aba Registros, só admin).
+function confirmar(titulo, sub, texto, botao, palavra){
+  return new Promise(res => {
+    modal(`<div class="sheet">${cab(titulo, sub)}
+    <p style="margin:0">${texto}</p>
+    ${palavra ? `<label style="display:grid;gap:5px;font-size:12px;font-weight:700;color:var(--muted)">Digite ${palavra} para confirmar<input id="cfTxt" autocomplete="off"></label>` : ""}
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="cfOk" style="background:var(--red)"${palavra ? " disabled" : ""}>${botao}</button><button class="btn ghost" id="cfNo">Cancelar</button></div></div>`);
+    confirmar.res = res;
+    const fim = v => {confirmar.res = null; closeModal(); res(v)};
+    document.getElementById("cfNo").onclick = () => fim(false);
+    document.getElementById("cfOk").onclick = () => fim(true);
+    if(palavra){const t = document.getElementById("cfTxt"), ok = document.getElementById("cfOk");
+      t.oninput = () => {ok.disabled = t.value.trim().toUpperCase() !== palavra}; t.focus()}
+  });
+}
+async function apagarArquivos(paths){
+  paths = paths.filter(Boolean);
+  for(let i = 0; i < paths.length; i += 100){const {error} = await sb.storage.from("anexos").remove(paths.slice(i, i + 100)); if(error) throw error}
+}
+async function arquivosDaPasta(pasta){
+  const out = [];
+  for(let de = 0;; de += 100){
+    const {data, error} = await sb.storage.from("anexos").list(pasta, {limit: 100, offset: de});
+    if(error) throw error;
+    (data || []).forEach(f => {if(f.id) out.push(pasta + "/" + f.name)});
+    if(!data || data.length < 100) break;
+  }
+  return out;
+}
+// Exclusão simples de um item: confirma, executa a remoção local e grava.
+async function excluirItem(titulo, sub, aviso, remover, arquivos){
+  if(!await confirmar("Excluir " + titulo, sub, aviso + " Não dá para desfazer.", "Excluir")) return;
+  try{
+    if(arquivos) await apagarArquivos(arquivos);
+    await remover();
+    if(!await save()) return;
+    render(); toast("Excluído");
+  }catch(e){toast("Não foi possível excluir: " + (e.message || e)); try{await carregar(); render()}catch(_){}}
+}
+async function excluirCliente(id){
+  const c = cli(id); if(!c) return;
+  const n = t => db[t].filter(o => o.cli === id).length;
+  const users = USUARIOS.filter(u => u.cliente_id === id);
+  const ok = await confirmar("Excluir cliente", esc(c.nome),
+    `Isso apaga <b>para sempre</b> a empresa, ${n("certs")} certificado(s), ${n("visitas")} ordem(ns) de serviço, ${n("fotos")} foto(s), ${n("cobrancas")} cobrança(s), os PDFs anexados e ${users.length} acesso(s) de cliente. Não dá para desfazer. Se precisar guardar uma cópia, exporte os dados antes.`,
+    "Excluir tudo", "EXCLUIR");
+  if(!ok) return;
+  toast("Excluindo…");
+  try{
+    await apagarArquivos(await arquivosDaPasta(id));
+    for(const u of users){const r = await chamarUsuarios({acao: "excluir_usuario", id: u.id}); if(r.erro) throw new Error(r.erro)}
+    TABELAS.forEach(t => {db[t] = db[t].filter(o => t === "clientes" ? o.id !== id : o.cli !== id)});
+    if(!await save()) return;
+    await carregarUsuarios(); editando = null; render(); toast("Cliente excluído");
+  }catch(e){toast("Não foi possível excluir: " + (e.message || e)); try{await carregar(); await carregarUsuarios(); render()}catch(_){}}
+}
+function excluirCertificado(id){
+  const k = db.certs.find(x => x.id === id); if(!k) return;
+  excluirItem("certificado", `${esc(k.tipo)} · ${esc(cli(k.cli)?.nome || "")}`, "O certificado e o PDF anexado serão apagados.",
+    async () => {db.certs = db.certs.filter(x => x.id !== id)}, k.pdf ? [k.pdf] : null);
+}
+async function excluirVisita(id){
+  const v = vis(id); if(!v) return;
+  const fotos = db.fotos.filter(f => f.visita === id);
+  if(!await confirmar("Excluir ordem de serviço", `${esc(v.os)} · ${esc(cli(v.cli)?.nome || "")}`,
+    `A ordem de serviço, a assinatura do cliente e ${fotos.length} foto(s) serão apagadas. Certificados e cobranças ligados a ela continuam, sem o comprovante. Não dá para desfazer.`, "Excluir")) return;
+  try{
+    await apagarArquivos(fotos.map(f => f.path));
+    db.fotos = db.fotos.filter(f => f.visita !== id);
+    db.visitas = db.visitas.filter(x => x.id !== id);
+    db.certs.forEach(k => {if(k.visita === id) delete k.visita});
+    db.cobrancas.forEach(b => {if(b.visita === id) delete b.visita});
+    if(!await save()) return;
+    closeModal(); render(); toast("Ordem de serviço excluída");
+  }catch(e){toast("Não foi possível excluir: " + (e.message || e)); try{await carregar(); render()}catch(_){}}
+}
+async function excluirFoto(id){
+  const f = db.fotos.find(x => x.id === id); if(!f) return;
+  const v = vis(f.visita);
+  if(!await confirmar("Excluir foto", esc(f.nome || "Foto da visita"), "A foto será apagada. Não dá para desfazer.", "Excluir")) return;
+  try{
+    await apagarArquivos([f.path]);
+    db.fotos = db.fotos.filter(x => x.id !== id);
+    if(!await save()) return;
+    if(v) openComp(v.id); toast("Foto excluída");
+  }catch(e){toast("Não foi possível excluir: " + (e.message || e))}
+}
+async function excluirUsuario(id){
+  const u = USUARIOS.find(x => x.id === id); if(!u) return;
+  if(!await confirmar("Excluir usuário", esc(u.nome) + " · " + PAPEL_NOME[u.papel], "O acesso será apagado e a pessoa não consegue mais entrar. Os registros de atividade dela continuam guardados.", "Excluir")) return;
+  const r = await chamarUsuarios({acao: "excluir_usuario", id});
+  if(r.erro) return toast(r.erro);
+  await carregarUsuarios(); render(); toast("Usuário excluído");
+}
+
+// Registro de atividade (somente admin)
+let REGS = [], REGS_OK = false, regBusca = "", regAcao = "";
+async function carregarRegistros(){
+  const out = [];
+  for(let de = 0; de < 10000; de += 1000){
+    const {data, error} = await sb.from("auditoria").select("*").order("em", {ascending: false}).order("id", {ascending: false}).range(de, de + 999);
+    if(error) throw error;
+    out.push(...data); if(data.length < 1000) break;
+  }
+  REGS = out; REGS_OK = true;
+}
+const fmtReg = r => new Date(r.em).toLocaleString("pt-BR", {day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit"});
+const TIPO_REG = {clientes:"Cliente", certs:"Certificado", visitas:"Ordem de serviço", cobrancas:"Cobrança", docs:"Documento", proprios:"Documento da empresa", fotos:"Foto", usuarios:"Usuário", acesso:"Acesso"};
+function regsFiltrados(){
+  const q = regBusca.trim().toLowerCase();
+  return REGS.filter(r => (!regAcao || r.acao === regAcao) && (!q || (r.usuario_nome + " " + r.resumo + " " + r.acao + " " + (r.campos || "")).toLowerCase().includes(q)));
+}
+function viewRegistros(){
+  if(!REGS_OK) return `<div class="empty">Carregando os registros…</div>`;
+  const lista = regsFiltrados(), acoes = [...new Set(REGS.map(r => r.acao))].sort();
+  return `<div class="card" style="margin-bottom:20px"><h2 style="font-size:20px;margin-bottom:6px">Registro de atividade</h2>
+    <p class="note" style="margin-bottom:14px">Quem fez o quê e quando: entradas no sistema, cadastros, alterações, assinaturas e exclusões. Ninguém consegue apagar nem alterar este registro. Senhas e e-mails nunca entram aqui.</p>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:12px">
+      <input id="rgBusca" type="search" placeholder="Buscar por pessoa, cliente ou ação" value="${esc(regBusca)}" aria-label="Buscar nos registros">
+      <select id="rgAcao" aria-label="Filtrar por ação"><option value="">Todas as ações</option>${acoes.map(a => `<option${a === regAcao ? " selected" : ""}>${esc(a)}</option>`).join("")}</select></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn" id="rgTxt">Baixar registros.txt</button><button class="btn ghost" id="rgAtual">Atualizar</button>
+      <span class="note">${lista.length} de ${REGS.length} registro${REGS.length === 1 ? "" : "s"}</span></div></div>
+  <section class="panel"><div class="clist">${lista.slice(0, 200).map(r => `<div class="cl" style="grid-template-columns:minmax(0,1fr) auto">
+    <span class="nm"><b>${esc(r.resumo)}</b><small style="font-family:var(--body)">${esc(r.usuario_nome)}${r.papel ? " · " + PAPEL_NOME[r.papel] : ""} · ${fmtReg(r)}</small>${r.campos ? `<span class="meta">Campos: ${esc(r.campos)}</span>` : ""}</span>
+    <span class="chip ${r.acao === "excluiu" ? "s-r" : r.acao === "criou" || r.acao === "assinou" ? "s-g" : "s-n"}">${esc(r.acao)}</span></div>`).join("") || '<div class="empty">Nenhum registro neste filtro.</div>'}</div>
+    ${lista.length > 200 ? `<p class="note" style="padding:12px 16px">Mostrando os 200 mais recentes. O arquivo registros.txt leva todos os ${lista.length}.</p>` : ""}</section>`;
+}
+function textoRegistros(){
+  const l = regsFiltrados();
+  const cab = ["REGISTROS DE ATIVIDADE · Agrocel Certificados",
+    `Gerado em ${new Date().toLocaleString("pt-BR")} por ${ME.nome} · ${l.length} registro${l.length === 1 ? "" : "s"}${AMBIENTE === "teste" ? " · AMBIENTE DE TESTE" : ""}`,
+    "Formato: data e hora | pessoa (perfil) | ação | o quê | campos alterados", "-".repeat(78)];
+  return "﻿" + cab.concat(l.map(r => [fmtReg(r), r.usuario_nome + (r.papel ? ` (${PAPEL_NOME[r.papel]})` : ""), r.acao, r.resumo, r.campos || ""].join(" | "))).join("\r\n") + "\r\n";
+}
+function wireRegistros(){
+  if(!REGS_OK){carregarRegistros().then(render).catch(e => toast("Não foi possível carregar os registros: " + (e.message || e))); return}
+  const $ = id => document.getElementById(id);
+  $("rgBusca").oninput = e => {regBusca = e.target.value; const p = e.target.selectionStart; render(); const n = $("rgBusca"); n.focus(); n.setSelectionRange(p, p)};
+  $("rgAcao").onchange = e => {regAcao = e.target.value; render()};
+  $("rgAtual").onclick = () => carregarRegistros().then(() => {render(); toast("Registros atualizados")}).catch(e => toast("Erro: " + (e.message || e)));
+  $("rgTxt").onclick = () => salvar("registros.txt", new Blob([textoRegistros()], {type: "text/plain;charset=utf-8"}));
+}
+
 // ---------- Login, usuários e conta ----------
 function viewLogin(){
   return `<div class="card login"><h2>Entrar</h2><p class="note">Use o e-mail e a senha fornecidos pela Agrocel.</p>
@@ -967,6 +1117,7 @@ function wireLogin(){
     if(error){bt.disabled=false;$("lMsg").textContent="E-mail ou senha incorretos.";return}
     const m=await entrar(data.session);
     if(m){bt.disabled=false;$("lMsg").textContent=m;return}
+    sb.rpc("registrar_acesso").then(()=>{},()=>{});
     render()};
   $("lPrimeiro").onclick=e=>{e.preventDefault();
     modal(`<div class="sheet">${cab("Primeiro acesso","Cria o administrador do sistema")}
@@ -1045,7 +1196,7 @@ function viewUsuarios(){
   <section class="panel"><div class="ph"><h2>Usuários</h2><span class="note">${USUARIOS.length} cadastrado${USUARIOS.length===1?"":"s"}</span></div>
   <div class="clist">${USUARIOS.map(u=>`<div class="cl"><span class="av">${iniciais(u.nome)||"?"}</span>
     <span class="nm"><b>${esc(u.nome)} <span class="chip s-n">${PAPEL_NOME[u.papel]}</span> ${u.ativo?"":'<span class="chip s-r"><i></i>Desativado</span>'}</b><small>${esc(u.email)}</small>${u.papel==="cliente"?`<span class="meta">${esc(emp(u.cliente_id))}</span>`:""}</span>
-    <span class="uacts"><button class="dl" data-usenha="${u.id}">Nova senha</button>${u.id===ME.id?"":`<button class="dl" data-uativo="${u.id}">${u.ativo?"Desativar":"Reativar"}</button>`}</span></div>`).join("")||'<div class="empty">Nenhum usuário.</div>'}</div></section>`;
+    <span class="uacts"><button class="dl" data-usenha="${u.id}">Nova senha</button>${u.id===ME.id?"":`<button class="dl" data-uativo="${u.id}">${u.ativo?"Desativar":"Reativar"}</button><button class="dl" data-uexcluir="${u.id}">Excluir</button>`}</span></div>`).join("")||'<div class="empty">Nenhum usuário.</div>'}</div></section>`;
 }
 function wireUsuarios(){
   const $=id=>document.getElementById(id);
@@ -1060,7 +1211,7 @@ function wireUsuarios(){
 }
 
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-tab]"); if(t){tab=t.dataset.tab;render();return}
+  const t=e.target.closest("[data-tab]"); if(t){tab=t.dataset.tab;if(tab==="registros")REGS_OK=false;render();return}
   const f=e.target.closest("[data-f]"); if(f){filtro=filtro===f.dataset.f?null:f.dataset.f;render();return}
   const pf=e.target.closest("[data-pdf]"); if(pf){pf.disabled=true;salvarPDF(pf.dataset.pdf,pf.dataset.id).finally(()=>pf.disabled=false);return}
   const pr=e.target.closest("[data-print]"); if(pr){imprimirPDF(pr.dataset.print,pr.dataset.id);return}
@@ -1073,6 +1224,11 @@ document.addEventListener("click",e=>{
   const us=e.target.closest("[data-usenha]"); if(us){modalSenha(us.dataset.usenha);return}
   const ua=e.target.closest("[data-uativo]"); if(ua){const u=USUARIOS.find(x=>x.id===ua.dataset.uativo);if(!u)return;
     sb.from("perfis").update({ativo:!u.ativo}).eq("id",u.id).then(async({error})=>{if(error)return toast("Não foi possível alterar: "+error.message);await carregarUsuarios();render();toast(u.ativo?"Usuário desativado":"Usuário reativado")});return}
+  const dx=e.target.closest("[data-delcli]"); if(dx){excluirCliente(dx.dataset.delcli);return}
+  const dk=e.target.closest("[data-delcert]"); if(dk){excluirCertificado(dk.dataset.delcert);return}
+  const dv=e.target.closest("[data-delvis]"); if(dv){excluirVisita(dv.dataset.delvis);return}
+  const df=e.target.closest("[data-delfoto]"); if(df){excluirFoto(df.dataset.delfoto);return}
+  const ux=e.target.closest("[data-uexcluir]"); if(ux){excluirUsuario(ux.dataset.uexcluir);return}
   const dp=e.target.closest("[data-delprop]"); if(dp){db.proprios=db.proprios.filter(p=>p.id!==dp.dataset.delprop);save();render();return}
   const cy=e.target.closest("[data-copy]"); if(cy){copiar(cy);return}
   const fb=e.target.closest("[data-fcob]"); if(fb){filtroCob=fb.dataset.fcob;render();return}
