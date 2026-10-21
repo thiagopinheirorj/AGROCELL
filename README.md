@@ -14,6 +14,12 @@ O app acompanha a validade de cada certificado emitido (desinsetização, desrat
 
 > **Os dados ficam no banco (Supabase), não neste repositório.** As capturas de tela abaixo usam dados fictícios. Boleto, Pix e NFS-e continuam sendo simulação.
 
+## Ambiente de teste
+
+Para experimentar sem risco, abra o app com `?teste` no final do endereço (por exemplo `https://thiagopinheirorj.github.io/AGROCELL/?teste`). Ele usa um banco separado, com clientes, certificados, visitas e cobranças **fictícios**, e mostra uma faixa laranja "Ambiente de teste". Nada feito ali vai para o sistema real.
+
+Para restaurar o ambiente de teste ao estado inicial: `node supabase/seed-teste.mjs <senha>`.
+
 ## Login e perfis
 
 O acesso é feito com e-mail e senha. Existem três perfis:

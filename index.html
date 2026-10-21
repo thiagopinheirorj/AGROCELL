@@ -291,6 +291,7 @@ form h3 .note{font-weight:500}
   </div>
 </div></header>
 
+<div class="demo gut" id="demoBar" hidden><div class="wrap">AMBIENTE DE TESTE · dados fictícios, pode mexer à vontade. Nada aqui vai para o sistema real.</div></div>
 <main class="gut"><div class="wrap" id="app"></div></main>
 <div class="modal" id="modal" hidden></div>
 <div class="toast" id="toast" hidden></div>
@@ -307,9 +308,17 @@ const EMPRESA = {nome:"Agrocel Soluções Ambientais (exemplo)",cnpj:"00.000.000
 const LOGO = "assets/logo-agrocel.png";
 // ---------- Login (Supabase) e dados ----------
 // A chave abaixo é a chave pública (anon) do projeto: pode ficar no código. Quem protege os dados são as regras de acesso do banco (RLS).
-const SUPABASE_URL = "https://xchohhtxzsgfkmnyddjh.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjaG9oaHR4enNnZmttbnlkZGpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MTYxMTcsImV4cCI6MjEwODE5MjExN30.5exnwM3doEYd3DBPITyDYN7Rh7ZdnAlKBkt1gv3Bcqo";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Dois ambientes com o mesmo código: o real e o de teste (dados fictícios). Abra o endereço do app com ?teste no final para usar o de teste.
+const AMBIENTES = {
+  real:  {url:"https://xchohhtxzsgfkmnyddjh.supabase.co", key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjaG9oaHR4enNnZmttbnlkZGpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MTYxMTcsImV4cCI6MjEwODE5MjExN30.5exnwM3doEYd3DBPITyDYN7Rh7ZdnAlKBkt1gv3Bcqo"},
+  teste: {url:"https://fnwtbezcalgnihuckolc.supabase.co", key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZud3RiZXpjYWxnbmlodWNrb2xjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MTc4MTgsImV4cCI6MjEwODE5MzgxOH0.bS4YdG_L6dc_DDkED-LsQv6-OIE2eqHOmVDn-K4Fmgs"}
+};
+const AMBIENTE = /[?&]teste\b/.test(location.search) ? "teste" : "real";
+const sb = supabase.createClient(AMBIENTES[AMBIENTE].url, AMBIENTES[AMBIENTE].key);
+if(AMBIENTE === "teste"){
+  document.title = "TESTE · " + document.title;
+  document.getElementById("demoBar").hidden = false;
+}
 const TABELAS = ["clientes","certs","visitas","cobrancas","docs","proprios","fotos"];
 const PAPEL_NOME = {admin:"Administrador",tecnico:"Técnico",cliente:"Cliente"};
 const novoDB = () => ({clientes:[],certs:[],visitas:[],cobrancas:[],docs:[],proprios:[],fotos:[]});

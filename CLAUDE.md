@@ -22,6 +22,13 @@ Painel com semáforo e filtros · cadastro de clientes (máscara e validação d
 - Publicado em GitHub Pages: https://thiagopinheirorj.github.io/AGROCELL/ · repositório público: https://github.com/thiagopinheirorj/agrocell
 - Para testar localmente: servidor estático na pasta (`npx http-server -p 8765`; Python não está instalado de verdade) e abrir `http://127.0.0.1:8765/index.html`.
 
+### Dois ambientes (real e teste)
+- **Real**: projeto Supabase `agrocell` (`xchohhtxzsgfkmnyddjh`), sem dados de demonstração. É o que abre em `.../AGROCELL/`.
+- **Teste (sandbox)**: projeto `agrocell-teste` (`fnwtbezcalgnihuckolc`), com dados fictícios. Abre com `?teste` no final do endereço (`.../AGROCELL/?teste`) e mostra a faixa "AMBIENTE DE TESTE". O código é o mesmo; só muda a URL/chave escolhida em `AMBIENTES` no `index.html`. Nada do teste vai para o real.
+- Acessos de teste: `admin@agrocel.teste`, `tecnico@agrocel.teste` e `cliente@agrocel.teste` (empresa Vale Verde). A senha é a informada ao rodar o seed.
+- Para **restaurar o teste ao estado inicial** (datas relativas a hoje): `node supabase/seed-teste.mjs <senha>`. O script só mexe no projeto de teste.
+- Fluxo de trabalho: criar/alterar a funcionalidade, testar com `?teste`, e só então usar no real. Mudanças de banco: aplicar primeiro no projeto de teste e depois no real; o SQL de referência fica em `supabase/schema.sql` e a função em `supabase/functions/usuarios/index.ts` (idênticos nos dois projetos).
+
 ### Login e perfis
 Três perfis (tabela `perfis`, papel `admin` | `tecnico` | `cliente`):
 - **admin**: tudo, inclusive cobranças, NFS-e, avisos, documentos da empresa e cadastro de usuários (aba "Usuários").

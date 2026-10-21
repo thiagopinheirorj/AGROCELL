@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fluxo do app Agrocel Certificados</title>
+<style>
+@page{size:210mm 297mm;margin:0}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#122016;font-family:"Segoe UI",system-ui,sans-serif;width:794px}
+header{background:#004107;color:#f2f8ee;padding:22px 36px;display:flex;align-items:center;gap:20px;border-bottom:4px solid #8bc34a}
+header img{height:64px}
+header h1{margin:0;font-size:22px;font-weight:600}
+header p{margin:4px 0 0;font-size:13px;opacity:.8}
+main{padding:26px 36px 20px}
+h2{font-size:16px;margin:0 0 4px;color:#004107}
+.sub{font-size:13px;color:#5a6b5e;margin:0 0 12px}
+section{margin-bottom:30px}
+svg{width:100%;height:auto;display:block}
+text{font-family:"Segoe UI",system-ui,sans-serif}
+.t{font-size:14px;fill:#2C2C2A}.th{font-size:14px;font-weight:600;fill:#2C2C2A}.ts{font-size:12px;fill:#5F5E5A}
+.arr{stroke-width:1.5;fill:none}
+.c-gray rect{fill:#F1EFE8;stroke:#5F5E5A}.c-gray .th,.c-gray .t{fill:#444441}.c-gray .ts{fill:#5F5E5A}
+.c-coral rect{fill:#FAECE7;stroke:#993C1D}.c-coral .th,.c-coral .t{fill:#712B13}.c-coral .ts{fill:#993C1D}
+.c-teal rect{fill:#E1F5EE;stroke:#0F6E56}.c-teal .th,.c-teal .t{fill:#085041}.c-teal .ts{fill:#0F6E56}
+.c-purple rect{fill:#EEEDFE;stroke:#534AB7}.c-purple .th,.c-purple .t{fill:#3C3489}.c-purple .ts{fill:#534AB7}
+.c-amber rect{fill:#FAEEDA;stroke:#854F0B}.c-amber .th,.c-amber .t{fill:#633806}.c-amber .ts{fill:#854F0B}
+footer{padding:0 36px 24px;font-size:12px;color:#5a6b5e}
+</style>
+</head>
+<body>
+<header>
+  <img src="../assets/logo-agrocel.png" alt="Agrocel">
+  <div><h1>Fluxo do app · Certificados e conformidade sanitária</h1><p>Quem acessa o quê e como uma visita vira certificado e aviso</p></div>
+</header>
+<main>
+<section>
+<h2>1. Acesso por perfil</h2>
+<p class="sub">Depois do login, cada pessoa entra na área do seu perfil. O banco confere cada leitura e gravação.</p>
+<svg viewBox="0 0 680 500" role="img" aria-label="Fluxo por perfil">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g class="c-gray"><rect x="250" y="10" width="180" height="56" rx="8" stroke-width="0.7"/>
+<text class="th" x="340" y="28" text-anchor="middle" dominant-baseline="central">Tela de login</text>
+<text class="ts" x="340" y="48" text-anchor="middle" dominant-baseline="central">E-mail e senha</text></g>
+<path d="M340 66 L340 86 L140 86 L140 104" class="arr" stroke="#888780" marker-end="url(#arrow)"/>
+<path d="M340 66 L340 104" class="arr" stroke="#888780" marker-end="url(#arrow)"/>
+<path d="M340 66 L340 86 L540 86 L540 104" class="arr" stroke="#888780" marker-end="url(#arrow)"/>
+<g class="c-coral"><rect x="50" y="106" width="180" height="56" rx="8" stroke-width="0.7"/>
+<text class="th" x="140" y="124" text-anchor="middle" dominant-baseline="central">Cliente</text>
+<text class="ts" x="140" y="144" text-anchor="middle" dominant-baseline="central">Só vê o que é seu</text></g>
+<g class="c-teal"><rect x="250" y="106" width="180" height="56" rx="8" stroke-width="0.7"/>
+<text class="th" x="340" y="124" text-anchor="middle" dominant-baseline="central">Técnico</text>
+<text class="ts" x="340" y="144" text-anchor="middle" dominant-baseline="central">Campo e cadastro</text></g>
+<g class="c-purple"><rect x="450" y="106" width="180" height="56" rx="8" stroke-width="0.7"/>
+<text class="th" x="540" y="124" text-anchor="middle" dominant-baseline="central">Administrador</text>
+<text class="ts" x="540" y="144" text-anchor="middle" dominant-baseline="central">Acesso total</text></g>
+<line x1="140" y1="162" x2="140" y2="184" class="arr" stroke="#D85A30" marker-end="url(#arrow)"/>
+<line x1="340" y1="162" x2="340" y2="184" class="arr" stroke="#1D9E75" marker-end="url(#arrow)"/>
+<line x1="540" y1="162" x2="540" y2="184" class="arr" stroke="#7F77DD" marker-end="url(#arrow)"/>
+<g class="c-coral">
+<rect x="50" y="186" width="180" height="40" rx="8" stroke-width="0.7"/><text class="t" x="140" y="206" text-anchor="middle" dominant-baseline="central">Meus certificados</text>
+<rect x="50" y="246" width="180" height="40" rx="8" stroke-width="0.7"/><text class="t" x="140" y="266" text-anchor="middle" dominant-baseline="central">OS, fotos e laudos</text>
+<rect x="50" y="306" width="180" height="40" rx="8" stroke-width="0.7"/><text class="t" x="140" y="326" text-anchor="middle" dominant-baseline="central">Assinar ordem</text>
+<rect x="50" y="366" width="180" height="40" rx="8" stroke-width="0.7"/><text class="t" x="140" y="386" text-anchor="middle" dominant-baseline="central">Ver cobranças</text></g>
+<g class="c-teal">
+<rect x="250" y="186" width="180" height="40" rx="8" stroke-width="0.7"/><text class="t" x="340" y="206" text-anchor="middle" dominant-baseline="central">Painel e clientes</text>
+<rect x="250" y="246" width="180" height="40" rx="8" stroke-width="0.7"/><text class="t" x="340" y="266" text-anchor="middle" dominant-baseline="central">Cadastrar cliente</text>
+<rect x="250" y="306" width="180" height="40" rx="8" stroke-width="0.7"/><text class="t" x="340" y="326" text-anchor="middle" dominant-baseline="central">Registrar visita</text>
+<rect x="250" y="366" width="180" height="40" rx="8" stroke-width="0.7"/><text class="t" x="340" y="386" text-anchor="middle" dominant-baseline="central">Novo certificado</text></g>
+<g class="c-purple">
+<rect x="450" y="186" width="180" height="40" rx="8" stroke-width="0.7"/><text class="t" x="540" y="206" text-anchor="middle" dominant-baseline="central">Tudo do técnico</text>
+<rect x="450" y="246" width="180" height="40" rx="8" stroke-width="0.7"/><text class="t" x="540" y="266" text-anchor="middle" dominant-baseline="central">Cobranças e NFS-e</text>
+<rect x="450" y="306" width="180" height="40" rx="8" stroke-width="0.7"/><text class="t" x="540" y="326" text-anchor="middle" dominant-baseline="central">Usuários e senhas</text>
+<rect x="450" y="366" width="180" height="40" rx="8" stroke-width="0.7"/><text class="t" x="540" y="386" text-anchor="middle" dominant-baseline="central">Avisos e documentos</text></g>
+<g class="c-gray"><rect x="50" y="434" width="580" height="44" rx="8" stroke-width="0.7"/>
+<text class="t" x="340" y="456" text-anchor="middle" dominant-baseline="central">Banco Supabase: cada perfil só lê e grava o que a regra permite</text></g>
+</svg>
+</section>
+
+<section>
+<h2>2. Da visita ao aviso de vencimento</h2>
+<p class="sub">O técnico registra no local, o cliente assina na tela e o sistema acompanha a validade.</p>
+<svg viewBox="0 0 680 150" role="img" aria-label="Caminho da visita">
+<defs><marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g class="c-teal"><rect x="30" y="20" width="140" height="64" rx="8" stroke-width="0.7"/>
+<text class="th" x="100" y="42" text-anchor="middle" dominant-baseline="central">Registra visita</text>
+<text class="ts" x="100" y="64" text-anchor="middle" dominant-baseline="central">fotos e relatório</text></g>
+<g class="c-coral"><rect x="190" y="20" width="140" height="64" rx="8" stroke-width="0.7"/>
+<text class="th" x="260" y="42" text-anchor="middle" dominant-baseline="central">Cliente assina</text>
+<text class="ts" x="260" y="64" text-anchor="middle" dominant-baseline="central">na tela, com código</text></g>
+<g class="c-teal"><rect x="350" y="20" width="140" height="64" rx="8" stroke-width="0.7"/>
+<text class="th" x="420" y="42" text-anchor="middle" dominant-baseline="central">Certificado</text>
+<text class="ts" x="420" y="64" text-anchor="middle" dominant-baseline="central">validade sugerida</text></g>
+<g class="c-amber"><rect x="510" y="20" width="140" height="64" rx="8" stroke-width="0.7"/>
+<text class="th" x="580" y="42" text-anchor="middle" dominant-baseline="central">Aviso ao cliente</text>
+<text class="ts" x="580" y="64" text-anchor="middle" dominant-baseline="central">30 e 15 dias antes</text></g>
+<line x1="170" y1="52" x2="188" y2="52" class="arr" stroke="#888780" marker-end="url(#arrow2)"/>
+<line x1="330" y1="52" x2="348" y2="52" class="arr" stroke="#888780" marker-end="url(#arrow2)"/>
+<line x1="490" y1="52" x2="508" y2="52" class="arr" stroke="#888780" marker-end="url(#arrow2)"/>
+<rect x="510" y="100" width="140" height="28" rx="4" fill="none" stroke="#888780" stroke-width="0.7" stroke-dasharray="4 3"/>
+<text class="ts" x="580" y="114" text-anchor="middle" dominant-baseline="central">envio ainda não ativo</text>
+</svg>
+</section>
+</main>
+<footer>Agrocel – Soluções no campo e na cidade · Rio Fortuna/SC · Cores do certificado: vermelho = vencido, amarelo = vence em até 30 dias, verde = em dia.</footer>
+</body>
+</html>
