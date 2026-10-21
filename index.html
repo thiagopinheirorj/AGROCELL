@@ -60,9 +60,19 @@ header::after{content:"";position:absolute;inset:auto 0 0 0;height:3px;backgroun
 header select{background:rgba(0,0,0,.25);color:var(--on-brand);border:1px solid rgba(255,255,255,.18);max-width:260px}
 header select option{color:#122016;background:#fff}
 
-select,input{font:15px var(--body);padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);width:100%}
-input:focus,select:focus{outline:2px solid var(--lime);outline-offset:1px}
-button:focus-visible,a:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+select,input,textarea{font:15px var(--body);padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);width:100%}
+textarea{resize:vertical;min-height:84px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--lime);outline-offset:1px}
+.who{font-size:13px;opacity:.85}
+.hbtn{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.18);color:var(--on-brand);font:700 13px var(--body);padding:6px 12px;border-radius:9px;cursor:pointer}
+.hbtn:hover{background:rgba(0,0,0,.4)}
+.login{max-width:420px;margin:28px auto}
+.login h2{font-size:22px;margin:0 0 6px}
+.login form{grid-template-columns:1fr;margin-top:16px}
+.fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.fotos a{display:block;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2)}
+.fotos img{width:100%;height:100%;object-fit:cover;display:block}
+.cl .uacts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}button:focus-visible,a:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
 main{padding-block:22px 56px}
 
 .kpis{display:grid;grid-template-columns:1.25fr 1fr 1fr 1fr;gap:12px;margin-bottom:22px}
@@ -273,83 +283,112 @@ form h3 .note{font-weight:500}
   </div>
   <div class="bar">
     <nav class="tabs" id="tabs" role="tablist"></nav>
-    <div class="role">
-      <div class="seg" role="group" aria-label="Entrar como">
-        <button id="vAdmin" aria-pressed="true">Admin</button>
-        <button id="vCli" aria-pressed="false">Cliente</button>
-      </div>
-      <select id="cliPick" aria-label="Cliente" hidden></select>
+    <div class="role" hidden>
+      <span class="who" id="who"></span>
+      <button class="hbtn" id="btnConta">Minha conta</button>
+      <button class="hbtn" id="btnSair">Sair</button>
     </div>
   </div>
 </div></header>
 
-<div class="demo gut"><div class="wrap">Demonstração com dados fictícios · clientes, CNPJs e documentos são exemplos</div></div>
 <main class="gut"><div class="wrap" id="app"></div></main>
 <div class="modal" id="modal" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 const HOJE = new Date(); HOJE.setHours(0,0,0,0);
 const iso=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
 const EMAIL_FERNANDO = "responsavel.tecnico@exemplo.com";
 const VALIDADE_MESES = {"Desinsetização":12,"Desratização":3,"Higienização de reservatório":6,"Outro":12};
 const EMPRESA = {nome:"Agrocel Soluções Ambientais (exemplo)",cnpj:"00.000.000/0001-00",cidade:"Rio Fortuna/SC"};
-const TECNICOS = ["Responsável técnico (Eng. Agrônomo)","Técnico de campo"];
 const LOGO = "assets/logo-agrocel.png";
-const SIG = (()=>{const cv=document.createElement("canvas");cv.width=440;cv.height=180;const x=cv.getContext("2d");
-  x.strokeStyle="#10301a";x.lineWidth=5;x.lineCap="round";x.lineJoin="round";x.beginPath();x.moveTo(30,120);
-  x.bezierCurveTo(60,40,90,40,100,110);x.bezierCurveTo(115,165,145,160,160,90);x.bezierCurveTo(175,30,205,30,220,100);
-  x.bezierCurveTo(235,150,265,145,280,80);x.bezierCurveTo(295,45,320,125,350,100);x.bezierCurveTo(380,75,405,70,418,86);x.stroke();
-  return cv.toDataURL("image/png")})();
+// ---------- Login (Supabase) e dados ----------
+// A chave abaixo é a chave pública (anon) do projeto: pode ficar no código. Quem protege os dados são as regras de acesso do banco (RLS).
+const SUPABASE_URL = "https://xchohhtxzsgfkmnyddjh.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjaG9oaHR4enNnZmttbnlkZGpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MTYxMTcsImV4cCI6MjEwODE5MjExN30.5exnwM3doEYd3DBPITyDYN7Rh7ZdnAlKBkt1gv3Bcqo";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const TABELAS = ["clientes","certs","visitas","cobrancas","docs","proprios","fotos"];
+const PAPEL_NOME = {admin:"Administrador",tecnico:"Técnico",cliente:"Cliente"};
+const novoDB = () => ({clientes:[],certs:[],visitas:[],cobrancas:[],docs:[],proprios:[],fotos:[]});
+let ME = null, db = novoDB(), snap = new Map(), fila = Promise.resolve(), USUARIOS = [];
+const isAdmin = () => !!ME && ME.papel === "admin";
+const isStaff = () => !!ME && ME.papel !== "cliente";
 
-// Dados de demonstração (fictícios). As datas são relativas a hoje para a demo sempre mostrar os três estados.
-const rel=n=>{const x=new Date(HOJE);x.setDate(x.getDate()+n);return iso(x)};
-const PDF="assets/exemplos/";
-const seed = {
-  clientes:[
-    {id:"c1",nome:"Posto Serra Verde Combustíveis Ltda",cnpj:"11.222.333/0001-81",end:"Rua das Palmeiras, 120, Centro, Garopaba/SC",email:"gerencia@postoserraverde.exemplo"},
-    {id:"c2",nome:"Mercado Bom Preço Ltda",cnpj:"22.333.444/0001-81",end:"Av. Central, 455, Rio Fortuna/SC",email:"compras@bompreco.exemplo"},
-    {id:"c3",nome:"Laticínio Vale Verde",cnpj:"33.444.555/0001-81",end:"Estrada Geral, km 8, Braço do Norte/SC",email:"qualidade@valeverde.exemplo"},
-    {id:"c4",nome:"Restaurante Sabor da Serra",cnpj:"44.555.666/0001-81",end:"Rua XV de Novembro, 32, Imbituba/SC",email:""}
-  ],
-  certs:[
-    {id:"k1",cli:"c1",tipo:"Desinsetização",praga:"Moscas, aranhas, baratas e formigas",prod:"Lambda-cialotrina, Bifentrina, Tiametoxam",exec:rel(-184),venc:rel(181),pdf:PDF+"posto-serra-verde-desinsetizacao.pdf"},
-    {id:"k2",cli:"c1",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005%",exec:rel(-184),venc:rel(-92),pdf:PDF+"posto-serra-verde-desratizacao.pdf"},
-    {id:"k3",cli:"c2",tipo:"Desinsetização",praga:"Baratas e formigas",prod:"Optigard Duo (Lambda-cialotrina + Tiametoxam)",exec:rel(-343),venc:rel(22),pdf:PDF+"mercado-bom-preco-desinsetizacao.pdf"},
-    {id:"k4",cli:"c2",tipo:"Higienização de reservatório",praga:"Microbiológico",prod:"Hidróxido de sódio + Ácido peracético",exec:rel(-60),venc:rel(122)},
-    {id:"k5",cli:"c3",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005% (Maki Bloco)",exec:rel(-30),venc:rel(61),visita:"v1"},
-    {id:"k6",cli:"c3",tipo:"Desinsetização",praga:"Moscas e baratas",prod:"Advion Barata Gel (Indoxacarbe)",exec:rel(-200),venc:rel(165)},
-    {id:"k7",cli:"c4",tipo:"Desinsetização",praga:"Baratas",prod:"Quarteto 400 SC",exec:rel(-382),venc:rel(-17)},
-    {id:"k8",cli:"c4",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005%",exec:rel(-80),venc:rel(10),visita:"v2"}
-  ],
-  docs:[
-    {cli:"c1",nome:"Certificado de execução de serviço",data:rel(-184),pdf:PDF+"posto-serra-verde-execucao.pdf"}
-  ],
-  visitas:[
-    {id:"v1",os:"OS-2026-0001",cli:"c3",tecnico:"Técnico de campo",data:rel(-30)+"T08:40",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005% (Maki Bloco)",areas:"Câmara fria, expedição e perímetro",status:"assinada",assinatura:{nome:"Carla Mendes",img:SIG,em:rel(-30)+"T09:15:00",cod:"7F3A91C2"}},
-    {id:"v2",os:"OS-2026-0002",cli:"c4",tecnico:"Técnico de campo",data:rel(-80)+"T14:00",tipo:"Desratização",praga:"Rato",prod:"Bromadiolona 0,005%",areas:"Cozinha e depósito",status:"pendente"}
-  ],
-  cobrancas:[
-    {id:"b1",visita:"v1",cli:"c3",desc:"Desratização · OS-2026-0001",valor:650,venc:rel(-20),forma:"Boleto + Pix",status:"paga",geradaEm:rel(-30)+"T09:20:00",pagoEm:rel(-22),nfse:{numero:"000041",emitidaEm:rel(-22)+"T10:05:00",aliquota:3,cod:"A1B2-C3D4"}},
-    {id:"b2",visita:"v2",cli:"c4",desc:"Desratização · OS-2026-0002",valor:220,venc:rel(-70),forma:"Boleto",status:"aberta",geradaEm:rel(-80)+"T14:30:00"},
-    {id:"b3",cli:"c2",desc:"Desinsetização · contrato mensal",valor:480,venc:rel(8),forma:"Pix",status:"aberta",geradaEm:rel(-2)+"T08:00:00"},
-    {id:"b4",cli:"c1",desc:"Desratização · renovação",valor:350,venc:rel(15),forma:"Boleto + Pix",status:"aberta"},
-    {id:"b5",cli:"c3",desc:"Manutenção mensal · perímetro",valor:650,venc:rel(-1),forma:"Boleto + Pix",status:"paga",geradaEm:rel(-9)+"T09:00:00",pagoEm:rel(-3)}
-  ],
-  proprios:[
-    {nome:"ART do responsável técnico (CREA-SC)",venc:rel(73)},
-    {nome:"Alvará de Funcionamento",venc:rel(104)},
-    {nome:"Alvará Sanitário",venc:rel(172)}
-  ]
-};
+async function carregar(){
+  const out = novoDB(); const s = new Map();
+  for(let de = 0;; de += 1000){
+    const {data, error} = await sb.from("registros").select("tipo,id,data").order("tipo").order("id").range(de, de + 999);
+    if(error) throw error;
+    data.forEach(r => {(out[r.tipo] || (out[r.tipo] = [])).push(r.data); s.set(r.tipo + ":" + r.id, JSON.stringify(r.data))});
+    if(data.length < 1000) break;
+  }
+  db = out; snap = s;
+}
+async function carregarUsuarios(){
+  const {data, error} = await sb.from("perfis").select("*").order("nome");
+  USUARIOS = error ? [] : data;
+}
+// Grava no banco só o que mudou desde a última leitura/gravação.
+function save(){
+  const up = [], vivos = new Set();
+  TABELAS.forEach(t => (db[t] = db[t] || []).forEach(o => {
+    if(!o.id) o.id = t[0] + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+    const k = t + ":" + o.id, s = JSON.stringify(o); vivos.add(k);
+    if(snap.get(k) !== s){snap.set(k, s); up.push({tipo:t, id:o.id, cli:t === "clientes" ? o.id : (o.cli || null), data:o})}
+  }));
+  const del = [...snap.keys()].filter(k => !vivos.has(k)); del.forEach(k => snap.delete(k));
+  fila = fila.then(async () => {
+    if(up.length){const {error} = await sb.from("registros").upsert(up); if(error) throw error}
+    for(const k of del){const i = k.indexOf(":"); const {error} = await sb.from("registros").delete().eq("tipo", k.slice(0,i)).eq("id", k.slice(i+1)); if(error) throw error}
+  }).catch(async e => {toast("Não foi possível salvar: " + (e.message || e)); try{await carregar(); render()}catch(_){}});
+  return fila;
+}
+async function entrar(session){
+  const {data:p} = await sb.from("perfis").select("*").eq("id", session.user.id).maybeSingle();
+  if(!p || !p.ativo){await sb.auth.signOut(); ME = null; return "Seu acesso não está ativo. Fale com a Agrocel."}
+  ME = p; modo = p.papel === "cliente" ? "cliente" : "admin"; cliAtual = p.cliente_id; tab = "painel"; filtro = null; busca = "";
+  try{await carregar(); if(isAdmin()) await carregarUsuarios()}catch(e){await sb.auth.signOut(); ME = null; return "Não foi possível carregar os dados: " + (e.message || e)}
+  abertos = new Set(db.clientes.slice(0,2).map(c => c.id));
+  return null;
+}
+async function sair(){await sb.auth.signOut(); ME = null; db = novoDB(); snap = new Map(); USUARIOS = []; tab = "painel"; closeModal(); render()}
+async function chamarUsuarios(body){
+  const {data, error} = await sb.functions.invoke("usuarios", {body});
+  if(error){let m = error.message; try{const j = await error.context.json(); if(j.erro) m = j.erro}catch(_){} return {erro:m}}
+  return data || {};
+}
+const genSenha = () => {const a = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"; const r = crypto.getRandomValues(new Uint32Array(10)); return Array.from(r, n => a[n % a.length]).join("")};
 
-let db; try{db=JSON.parse(localStorage.getItem("agrocel-demo-v3"))}catch(e){}
-if(!db||!db.clientes) db=JSON.parse(JSON.stringify(seed));
-const save=()=>{try{localStorage.setItem("agrocel-demo-v3",JSON.stringify(db))}catch(e){}};
+// Anexos (fotos e PDFs) ficam num bucket privado; os links são temporários.
+async function reduzir(file){
+  if(!file.type.startsWith("image/") || file.type === "image/gif") return file;
+  try{
+    const bm = await createImageBitmap(file); const k = Math.min(1, 1600 / Math.max(bm.width, bm.height));
+    const cv = document.createElement("canvas"); cv.width = Math.round(bm.width * k); cv.height = Math.round(bm.height * k);
+    cv.getContext("2d").drawImage(bm, 0, 0, cv.width, cv.height);
+    const blob = await new Promise(r => cv.toBlob(r, "image/jpeg", .82));
+    return blob ? new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", {type:"image/jpeg"}) : file;
+  }catch(_){return file}
+}
+async function subir(file, cli){
+  const f = await reduzir(file);
+  const nome = f.name.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^\w.-]+/g, "_");
+  const path = `${cli}/${Date.now().toString(36)}${Math.random().toString(36).slice(2,5)}-${nome}`;
+  const {error} = await sb.storage.from("anexos").upload(path, f, {contentType:f.type});
+  if(error) throw error;
+  return path;
+}
+async function abrirAnexo(path){
+  const w = window.open("", "_blank");
+  const {data, error} = await sb.storage.from("anexos").createSignedUrl(path, 300);
+  if(error){if(w) w.close(); return toast("Não foi possível abrir o arquivo.")}
+  if(w) w.location = data.signedUrl; else location.href = data.signedUrl;
+}
 
-let modo="admin", tab="painel", cliAtual="c1", filtro=null, busca="", abertos=new Set(["c1","c4"]);
+let modo = "admin", tab = "painel", cliAtual = null, filtro = null, busca = "", abertos = new Set();
 
 const d=s=>{const [y,m,dd]=s.split("-").map(Number);return new Date(y,m-1,dd)};
 const fmt=s=>d(s).toLocaleDateString("pt-BR");
@@ -372,22 +411,30 @@ function ring(pct,size=92,light=true){const r=size/2-8,c=2*Math.PI*r,off=c*(1-pc
   <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--lime)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 ${size/2} ${size/2})"/>
   <text x="50%" y="53%" text-anchor="middle" dominant-baseline="middle" font-size="${size/4.4}" fill="${light?"#f2f8ee":"var(--fg)"}">${pct}%</text></svg>`}
 
-function pdfLink(u,t){return u?`<a class="dl" href="${esc(u)}" target="_blank" rel="noopener">${IC_DL}${t}</a>`:`<span class="nopdf">PDF ainda não anexado</span>`}
+function pdfLink(u,t){return u?`<button class="dl" data-anexo="${esc(u)}">${IC_DL}${t}</button>`:`<span class="nopdf">PDF ainda não anexado</span>`}
 function certHTML(k){const s=status(k.venc);return `<div class="cert">
   <div class="date s-${s}"><b>${fmt(k.venc)}</b><span>${quando(k.venc)}</span></div>
   <div class="cinfo"><b>${esc(k.tipo)} ${chip(s)}</b><div>${esc(k.praga)}</div><div>${esc(k.prod)} · executado em ${fmt(k.exec)}</div></div>
   ${k.pdf||!k.visita?pdfLink(k.pdf,"Baixar PDF"):`<button class="dl" data-comp="${k.visita}">Ver comprovante</button>`}</div>`}
 function docsHTML(id){const ds=(db.docs||[]).filter(x=>x.cli===id);return ds.length?`<div class="docs"><div class="t">Outros documentos</div>${ds.map(x=>`<div class="drow"><span>${esc(x.nome)} · ${fmt(x.data)}</span>${pdfLink(x.pdf,"Baixar PDF")}</div>`).join("")}</div>`:""}
 
+function abasDoPerfil(){
+  if(!ME) return [];
+  if(ME.papel==="admin") return [["painel","Painel"],["visita","Registrar visita"],["cobrancas","Cobranças"],["clientes","Clientes"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"],["usuarios","Usuários"]];
+  if(ME.papel==="tecnico") return [["painel","Painel"],["visita","Registrar visita"],["clientes","Clientes"],["novo","Novo certificado"]];
+  return [["painel","Meus certificados"]];
+}
 function render(){
-  const T = modo==="admin"
-    ? [["painel","Painel"],["visita","Registrar visita"],["cobrancas","Cobranças"],["clientes","Clientes"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"]]
-    : [["painel","Meus certificados"]];
+  const T=abasDoPerfil(), tabsEl=document.getElementById("tabs"), app=document.getElementById("app");
+  document.querySelector(".role").hidden=!ME;
+  if(!ME){tabsEl.innerHTML="";app.innerHTML=viewLogin();wireLogin();return}
+  document.getElementById("who").textContent=`${ME.nome} · ${PAPEL_NOME[ME.papel]}`;
   if(!T.find(t=>t[0]===tab)) tab="painel";
-  document.getElementById("tabs").innerHTML=T.map(([k,l])=>`<button role="tab" aria-selected="${k===tab}" data-tab="${k}">${l}</button>`).join("");
-  const app=document.getElementById("app");
+  tabsEl.innerHTML=T.map(([k,l])=>`<button role="tab" aria-selected="${k===tab}" data-tab="${k}">${l}</button>`).join("");
   if(modo==="cliente"){app.innerHTML=viewCliente();return}
-  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="cobrancas"?viewCobrancas():tab==="clientes"?viewClientes():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():viewAgrocel();
+  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="cobrancas"?viewCobrancas():tab==="clientes"?viewClientes():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():tab==="usuarios"?viewUsuarios():viewAgrocel();
+  if(tab==="usuarios") wireUsuarios();
+  if(tab==="agrocel") wireAgrocel();
   if(tab==="novo") wireNovo();
   if(tab==="visita") wireVisita();
   if(tab==="clientes") wireClientes();
@@ -414,7 +461,7 @@ function viewPainel(){
   </section>
   <div class="grid">
     <section class="panel">
-      <div class="ph"><h2>Clientes</h2><button class="dl" data-novocli>Novo cliente</button><button class="dl" data-export>Exportar dados</button>
+      <div class="ph"><h2>Clientes</h2><button class="dl" data-novocli>Novo cliente</button>${isAdmin()?'<button class="dl" data-export>Exportar dados</button>':""}
         <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
         <input id="busca" type="search" placeholder="Buscar por nome ou CNPJ" value="${esc(busca)}" aria-label="Buscar cliente"></div>
         ${filtro?`<button class="clear" data-f="${filtro}">Filtro: ${LABEL[filtro]} ✕</button>`:""}
@@ -427,8 +474,8 @@ function viewPainel(){
           <span class="w"><b>${esc(k.tipo)}</b><span>${esc(cli(k.cli).nome.replace(/ \(.*\)/,""))}</span></span>
           <span class="d">${fmt(k.venc)}<br>${dias(k.venc)<0?"vencido":dias(k.venc)+" dias"}</span></li>`}).join("")}</ul></section>
       ${painelOS()}
-      <section class="panel"><div class="ph"><h2>Documentos Agrocel</h2></div>
-        <div class="mini">${pros.map(p=>`<div class="r"><span>${esc(p.nome)}</span><span style="color:${COR[status(p.venc)]}">${fmt(p.venc)}</span></div>`).join("")}</div></section>
+      ${isAdmin()?`<section class="panel"><div class="ph"><h2>Documentos Agrocel</h2></div>
+        <div class="mini">${pros.length?pros.map(p=>`<div class="r"><span>${esc(p.nome)}</span><span style="color:${COR[status(p.venc)]}">${fmt(p.venc)}</span></div>`).join(""):'<span class="note">Nenhum documento cadastrado. Use a aba “Documentos Agrocel”.</span>'}</div></section>`:""}
     </aside>
   </div>`;
 }
@@ -451,7 +498,9 @@ function listaHTML(){
 function renderLista(){const l=document.getElementById("lista");if(l)l.innerHTML=listaHTML()}
 
 function viewCliente(){
-  const c=cli(cliAtual);const ks=db.certs.filter(k=>k.cli===c.id).sort((a,b)=>d(a.venc)-d(b.venc));
+  const c=cli(cliAtual);
+  if(!c) return `<section class="panel"><div class="empty">Seu cadastro de empresa ainda não está disponível. Fale com a Agrocel.</div></section>`;
+  const ks=db.certs.filter(k=>k.cli===c.id).sort((a,b)=>d(a.venc)-d(b.venc));
   const ok=ks.filter(k=>status(k.venc)==="g").length;const pct=ks.length?Math.round(ok/ks.length*100):0;const p=piorStatus(c.id);
   return `<div class="hello">${ring(pct,84,false)}<div><span class="note">Área do cliente</span><h1>${esc(c.nome)}</h1>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px">${p?chip(p):""}<span class="note">${ok} de ${ks.length} certificados em dia</span></div></div></div>
@@ -484,8 +533,8 @@ function wireNovo(){
   $("fCert").onsubmit=async e=>{e.preventDefault();
     const id=$("fCli").value;
     if(!$("fVenc").value) return toast("Informe a data de validade.");
-    let pdf="";const f=$("fPdf").files[0];
-    if(f){pdf=URL.createObjectURL(f);toast("PDF anexado (na demonstração, fica só nesta sessão)")}
+    let pdf="";const f=$("fPdf").files[0];const bt=$("fCert").querySelector("button[type=submit]");
+    if(f){bt.disabled=true;toast("Enviando o PDF…");try{pdf=await subir(f,id)}catch(err){bt.disabled=false;return toast("Não foi possível enviar o PDF: "+(err.message||err))}}
     db.certs.push({id:"k"+Date.now(),pdf,cli:id,tipo:$("fTipo").value,praga:$("fPraga").value||"-",prod:$("fProd").value||"-",exec:$("fExec").value,venc:$("fVenc").value});
     abertos.add(id); save(); tab="painel"; filtro=null; render(); toast("Certificado salvo");
   };
@@ -496,7 +545,7 @@ function viewAvisos(){
   db.certs.forEach(k=>[30,15].forEach(n=>{const x=d(k.venc);x.setDate(x.getDate()-n);const s=iso(x),dd=dias(s);if(dd>=-1&&dd<=90)lista.push({k,n,s,dd})}));
   lista.sort((a,b)=>a.dd-b.dd);
   return `<section class="panel"><div class="ph"><h2>Avisos programados · próximos 90 dias</h2><span class="chip s-g"><i></i>${lista.length} na fila</span></div>
-  <div class="intro"><p class="note">Cada certificado gera dois e-mails, 30 e 15 dias antes de vencer, para o responsável técnico (${EMAIL_FERNANDO}) e para o cliente. Nesta demonstração eles aparecem só aqui; o envio real é feito pelo servidor.</p></div>
+  <div class="intro"><p class="note">Cada certificado gera dois e-mails, 30 e 15 dias antes de vencer, para o responsável técnico (${EMAIL_FERNANDO}) e para o cliente. Por enquanto eles aparecem só aqui; o envio automático ainda não está ativo.</p></div>
   ${lista.length?lista.map(({k,n,s})=>{const c=cli(k.cli);return `<div class="mail">
     <div class="h"><b style="font-family:var(--mono)">${fmt(s)}</b><span class="chip s-a"><i></i>aviso de ${n} dias</span><b>${esc(k.tipo)}</b></div>
     <div class="meta">Para: ${EMAIL_FERNANDO}${c.email?", "+esc(c.email):' · <span style="color:var(--amber);font-weight:700">cliente sem e-mail cadastrado</span>'}</div>
@@ -510,10 +559,18 @@ Agrocel – Soluções no campo e na cidade</pre></div>`}).join(""):'<div class=
 }
 
 function viewAgrocel(){
-  return `<section class="panel"><div class="ph"><h2>Documentos da Agrocel</h2><span class="note">visível só para o admin</span></div>
-  <div class="cbody" style="padding:16px">${[...db.proprios].sort((a,b)=>d(a.venc)-d(b.venc)).map(p=>{const s=status(p.venc);return `<div class="cert">
+  return `<div class="card" style="margin-bottom:20px"><h2 style="font-size:20px;margin-bottom:16px">Novo documento da empresa</h2>
+  <form id="fProp"><label>Nome do documento<input id="pNome" placeholder="Ex.: Alvará Sanitário" required></label>
+  <label>Válido até<input id="pVenc" type="date" required></label><button class="btn" type="submit">Adicionar</button></form></div>
+  <section class="panel"><div class="ph"><h2>Documentos da Agrocel</h2><span class="note">visível só para o admin</span></div>
+  <div class="cbody" style="padding:16px">${db.proprios.length?[...db.proprios].sort((a,b)=>d(a.venc)-d(b.venc)).map(p=>{const s=status(p.venc);return `<div class="cert">
     <div class="date s-${s}"><b>${fmt(p.venc)}</b><span>${quando(p.venc)}</span></div>
-    <div class="cinfo"><b>${esc(p.nome)} ${chip(s)}</b><div>Avisos vão apenas para o responsável técnico.</div></div><span></span></div>`}).join("")}</div></section>`;
+    <div class="cinfo"><b>${esc(p.nome)} ${chip(s)}</b><div>Avisos vão apenas para o responsável técnico.</div></div><button class="dl" data-delprop="${p.id}">Remover</button></div>`}).join(""):'<div class="empty">Nenhum documento cadastrado ainda.</div>'}</div></section>`;
+}
+function wireAgrocel(){
+  document.getElementById("fProp").onsubmit=e=>{e.preventDefault();
+    db.proprios.push({id:"p"+Date.now(),nome:document.getElementById("pNome").value.trim(),venc:document.getElementById("pVenc").value});
+    save();render();toast("Documento adicionado")};
 }
 
 
@@ -536,6 +593,9 @@ function painelOS(){
 function compHTML(v){const c=cli(v.cli);const ok=v.status==="assinada";
   return `<div class="sheet"><div class="sh-h"><img src="${LOGO}" alt="Agrocel"><div><b>Ordem de serviço ${v.os}</b><span>Termo de compromisso e comprovante de execução</span></div><button class="x" data-close aria-label="Fechar">✕</button></div>
   <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>CNPJ</dt><dd class="mono">${esc(c.cnpj)}</dd><dt>Data e hora</dt><dd>${fmtHora(v.data)}</dd><dt>Técnico</dt><dd>${esc(v.tecnico)}</dd><dt>Serviço</dt><dd>${esc(v.tipo)} · ${esc(v.praga)}</dd><dt>Produtos</dt><dd>${esc(v.prod)}</dd><dt>Contato</dt><dd>${esc(c.resp||"-")}${c.tel?" · "+esc(c.tel):""}</dd><dt>Áreas tratadas</dt><dd>${esc(v.areas||"-")}</dd></dl>
+  ${v.relatorio?`<div><div class="sec-t">Relatório da visita</div><p style="margin:6px 0 0;white-space:pre-wrap">${esc(v.relatorio)}</p></div>`:""}
+  <div id="fotosBox"></div>
+  ${isStaff()?`<label class="dl" style="justify-self:start;cursor:pointer">Adicionar fotos<input id="fFotoAdd" type="file" accept="image/*" multiple hidden></label>`:""}
   <div class="termo"><b>Orientações e termo de compromisso</b><ul>${TERMO.map(t=>`<li>${t}</li>`).join("")}</ul><p>Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima.</p></div>
   ${ok?`<div class="sig"><img src="${v.assinatura.img}" alt="Assinatura de ${esc(v.assinatura.nome)}"><div><b>${esc(v.assinatura.nome)}</b><span>Assinado eletronicamente em ${fmtHora(v.assinatura.em)}</span><span class="mono">Código de verificação ${v.assinatura.cod}</span></div></div>${docBtns("os",v.id)}`
   :`<div class="signform"><label>Nome de quem assina<input id="sNome" autocomplete="name"></label><div class="padwrap"><canvas id="pad" aria-label="Quadro de assinatura"></canvas><span class="padhint">Assine aqui com o dedo</span><button type="button" class="clear" id="padClear">Limpar</button></div><button class="btn" id="sOk">Confirmar e assinar</button></div>`}
@@ -551,10 +611,30 @@ function makePad(cv){const ctx=cv.getContext("2d");let drawing=false,empty=true,
 function assinar(v,nome,img){v.status="assinada";v.assinatura={nome,img,em:new Date().toISOString(),cod:Math.random().toString(16).slice(2,10).toUpperCase().padEnd(8,"0")}}
 function openComp(id){const v=vis(id);if(!v)return;const m=document.getElementById("modal");
   m.innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-label="Ordem de serviço ${v.os}">${compHTML(v)}</div>`;m.hidden=false;document.body.style.overflow="hidden";
+  fotosRender(v);
+  const add=document.getElementById("fFotoAdd");
+  if(add)add.onchange=async()=>{const fs=[...add.files];if(!fs.length)return;toast("Enviando fotos…");
+    try{await anexarFotos(v,fs);fotosRender(v);toast(`${fs.length} foto${fs.length===1?"":"s"} adicionada${fs.length===1?"":"s"}`)}catch(err){toast("Não foi possível enviar: "+(err.message||err))}};
   if(v.status!=="assinada"){const pad=makePad(document.getElementById("pad"));document.getElementById("padClear").onclick=pad.clear;
-    document.getElementById("sOk").onclick=()=>{const nome=document.getElementById("sNome").value.trim();
+    document.getElementById("sOk").onclick=async()=>{const nome=document.getElementById("sNome").value.trim();
       if(!nome)return toast("Escreva o nome de quem está assinando.");if(pad.isEmpty())return toast("Faça a assinatura no quadro.");
-      assinar(v,nome,pad.data());save();closeModal();render();toast(`${v.os} assinada`)}}}
+      if(ME.papel==="cliente"){const {data,error}=await sb.rpc("assinar_visita",{p_id:v.id,p_nome:nome,p_img:pad.data()});
+        if(error)return toast("Não foi possível assinar: "+error.message);
+        Object.assign(v,data);snap.set("visitas:"+v.id,JSON.stringify(v))}
+      else{assinar(v,nome,pad.data());save()}
+      closeModal();render();toast(`${v.os} assinada`)}}}
+async function anexarFotos(v,files){
+  for(const f of files){const path=await subir(f,v.cli);db.fotos.push({id:"f"+Date.now()+Math.random().toString(36).slice(2,5),cli:v.cli,visita:v.id,path,nome:f.name,em:new Date().toISOString()})}
+  await save();
+}
+async function fotosRender(v){
+  const box=document.getElementById("fotosBox");if(!box)return;
+  const fs=db.fotos.filter(f=>f.visita===v.id);
+  if(!fs.length){box.innerHTML="";return}
+  const {data}=await sb.storage.from("anexos").createSignedUrls(fs.map(f=>f.path),600);
+  const url={};(data||[]).forEach(x=>{if(x.signedUrl)url[x.path]=x.signedUrl});
+  box.innerHTML=`<div class="sec-t" style="margin-bottom:8px">Fotos da visita</div><div class="fotos">${fs.filter(f=>url[f.path]).map(f=>`<a href="${esc(url[f.path])}" target="_blank" rel="noopener"><img src="${esc(url[f.path])}" alt="${esc(f.nome||"Foto da visita")}" loading="lazy"></a>`).join("")}</div>`;
+}
 function closeModal(){const m=document.getElementById("modal");m.hidden=true;m.innerHTML="";document.body.style.overflow=""}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 function viewVisita(){const a=new Date();a.setSeconds(0,0);const local=new Date(a-a.getTimezoneOffset()*6e4).toISOString().slice(0,16);
@@ -562,18 +642,20 @@ function viewVisita(){const a=new Date();a.setSeconds(0,0);const local=new Date(
   <form id="fVis">
     <h3 class="full first">Dados da visita <span class="note mono">${proxOS()}</span></h3>
     <label class="full">Cliente<select id="vCliente">${db.clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select></label>
-    <label>Técnico responsável<select id="vTec">${TECNICOS.map(t=>`<option>${esc(t)}</option>`).join("")}</select></label>
+    <label>Técnico responsável<input id="vTec" value="${esc(ME.nome)}" readonly></label>
     <label>Data e hora da visita<input id="vData" type="datetime-local" value="${local}"></label>
     <label>Tipo de serviço<select id="vTipo">${Object.keys(VALIDADE_MESES).map(t=>`<option>${t}</option>`).join("")}</select></label>
     <label>Praga-alvo<input id="vPraga" placeholder="Ex.: baratas e formigas"></label>
     <label class="full">Produtos usados<input id="vProd" placeholder="Ex.: Optigard Duo (Lambda-cialotrina + Tiametoxam)"></label>
     <label class="full">Áreas tratadas<input id="vAreas" placeholder="Ex.: cozinha, depósito, perímetro externo"></label>
+    <label class="full">Relatório da visita<textarea id="vRel" placeholder="O que foi encontrado, o que foi feito e recomendações ao cliente"></textarea></label>
+    <label class="full">Fotos <span class="note">opcional · várias de uma vez</span><input id="vFotos" type="file" accept="image/*" multiple></label>
     <label class="check full"><input type="checkbox" id="vCert" checked> Gerar certificado válido até <input type="date" id="vVenc" class="inl" aria-label="Validade do certificado"></label>
-    <h3 class="full">Cobrança</h3>
+    ${isAdmin()?`<h3 class="full">Cobrança</h3>
     <label>Valor do serviço (R$)<input id="vValor" inputmode="decimal" placeholder="0,00"></label>
     <label>Vencimento<input id="vVencCob" type="date"></label>
     <label class="full">Forma de pagamento<select id="vForma"><option>Boleto + Pix</option><option>Boleto</option><option>Pix</option><option>Não cobrar (contrato ou garantia)</option></select></label>
-    <label class="check full"><input type="checkbox" id="vGerar" checked> Gerar boleto/Pix ao concluir a visita</label>
+    <label class="check full"><input type="checkbox" id="vGerar" checked> Gerar boleto/Pix ao concluir a visita</label>`:""}
     <h3 class="full">Orientações ao cliente</h3>
     <ul class="termo full">${TERMO.map(t=>`<li>${t}</li>`).join("")}</ul>
     <h3 class="full">Confirmação do cliente</h3>
@@ -587,17 +669,21 @@ function viewVisita(){const a=new Date();a.setSeconds(0,0);const local=new Date(
 function wireVisita(){const $=id=>document.getElementById(id);let pad=makePad($("pad"));$("padClear").onclick=()=>pad.clear();
   const modo_=()=>document.querySelector('[name=vModo]:checked').value;
   const sug=()=>{$("vVenc").value=addMeses(($("vData").value||iso(HOJE)).slice(0,10),VALIDADE_MESES[$("vTipo").value])};sug();$("vTipo").onchange=sug;$("vData").onchange=sug;
-  {const x=new Date(HOJE);x.setDate(x.getDate()+10);$("vVencCob").value=iso(x)}
+  if($("vVencCob")){const x=new Date(HOJE);x.setDate(x.getDate()+10);$("vVencCob").value=iso(x)}
   document.querySelectorAll('[name=vModo]').forEach(r=>r.onchange=()=>{const ag=modo_()==="agora";$("vSign").hidden=!ag;if(ag)pad=makePad($("pad"))});
-  $("fVis").onsubmit=e=>{e.preventDefault();const ag=modo_()==="agora";
+  $("fVis").onsubmit=async e=>{e.preventDefault();const ag=modo_()==="agora";
+    if(!db.clientes.length)return toast("Cadastre um cliente antes de registrar a visita.");
     if(!$("vData").value)return toast("Informe a data da visita.");
     if(ag&&!$("vNome").value.trim())return toast("Escreva o nome de quem está assinando.");
     if(ag&&pad.isEmpty())return toast("Peça para o cliente assinar no quadro.");
-    const id="v"+Date.now();const v={id,os:proxOS(),cli:$("vCliente").value,tecnico:$("vTec").value,data:$("vData").value,tipo:$("vTipo").value,praga:$("vPraga").value||"-",prod:$("vProd").value||"-",areas:$("vAreas").value,status:"pendente"};
+    const bt=$("fVis").querySelector("button[type=submit]");
+    const id="v"+Date.now();const v={id,os:proxOS(),cli:$("vCliente").value,tecnico:$("vTec").value,data:$("vData").value,tipo:$("vTipo").value,praga:$("vPraga").value||"-",prod:$("vProd").value||"-",areas:$("vAreas").value,relatorio:$("vRel").value.trim(),status:"pendente"};
     if(ag) assinar(v,$("vNome").value.trim(),pad.data());
+    const fotos=[...$("vFotos").files];
+    if(fotos.length){bt.disabled=true;toast("Enviando fotos…");try{for(const f of fotos){const path=await subir(f,v.cli);db.fotos.push({id:"f"+Date.now()+Math.random().toString(36).slice(2,5),cli:v.cli,visita:id,path,nome:f.name,em:new Date().toISOString()})}}catch(err){bt.disabled=false;return toast("Não foi possível enviar as fotos: "+(err.message||err))}}
     (db.visitas=db.visitas||[]).push(v);
     if($("vCert").checked&&$("vVenc").value) db.certs.push({id:"k"+Date.now(),cli:v.cli,tipo:v.tipo,praga:v.praga,prod:v.prod,exec:v.data.slice(0,10),venc:$("vVenc").value,pdf:"",visita:id});
-    const valor=parseValor($("vValor").value);
+    const valor=$("vValor")?parseValor($("vValor").value):0;
     if(valor>0&&!$("vForma").value.startsWith("Não")){const b={id:"b"+Date.now(),visita:id,cli:v.cli,desc:`${v.tipo} · ${v.os}`,valor,venc:$("vVencCob").value||iso(HOJE),forma:$("vForma").value,status:"aberta"};if($("vGerar").checked)gerarCodigos(b);(db.cobrancas=db.cobrancas||[]).push(b)}
     abertos.add(v.cli);save();tab="painel";filtro=null;render();toast(ag?`${v.os} concluída e assinada`:`${v.os} registrada, aguardando o cliente`)}}
 
@@ -647,7 +733,7 @@ function viewClientes(){
   <section class="panel" style="margin-top:20px"><div class="ph"><h2>Clientes cadastrados</h2><span class="note">${db.clientes.length} empresa${db.clientes.length===1?"":"s"}</span></div>
   <div class="clist">${db.clientes.map(x=>{const p=piorStatus(x.id);return `<div class="cl"><span class="av">${iniciais(x.nome)}</span>
     <span class="nm"><b>${esc(x.fantasia||x.nome)}</b><small>${esc(x.cnpj)}</small><span class="meta">${esc(x.end||"-")}${x.tel?" · "+esc(x.tel):""}</span></span>
-    <button class="dl" data-edit="${x.id}">Editar</button></div>`}).join("")}</div></section>`}
+    <span class="uacts"><button class="dl" data-acesso="${x.id}">Criar acesso</button><button class="dl" data-edit="${x.id}">Editar</button></span></div>`}).join("")}</div></section>`}
 function wireClientes(){
   const $=id=>document.getElementById(id);
   $("qCnpj").oninput=e=>e.target.value=maskCNPJ(e.target.value);
@@ -854,29 +940,145 @@ async function salvar(nome,blob){
 
 function toast(t){const el=document.getElementById("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2400)}
 
+// ---------- Login, usuários e conta ----------
+function viewLogin(){
+  return `<div class="card login"><h2>Entrar</h2><p class="note">Use o e-mail e a senha fornecidos pela Agrocel.</p>
+  <form id="fLogin">
+    <label>E-mail<input id="lEmail" type="email" autocomplete="username" required></label>
+    <label>Senha<input id="lSenha" type="password" autocomplete="current-password" required></label>
+    <p class="note hint-err" id="lMsg"></p>
+    <button class="btn" type="submit">Entrar</button>
+  </form>
+  <p class="note" style="margin-top:16px">Esqueceu a senha? Peça uma nova ao técnico ou ao administrador. <a href="#" id="lPrimeiro">Primeiro acesso do sistema</a></p></div>`;
+}
+function wireLogin(){
+  const $=id=>document.getElementById(id);
+  $("fLogin").onsubmit=async e=>{e.preventDefault();const bt=e.target.querySelector("button");bt.disabled=true;$("lMsg").textContent="";
+    const {data,error}=await sb.auth.signInWithPassword({email:$("lEmail").value.trim(),password:$("lSenha").value});
+    if(error){bt.disabled=false;$("lMsg").textContent="E-mail ou senha incorretos.";return}
+    const m=await entrar(data.session);
+    if(m){bt.disabled=false;$("lMsg").textContent=m;return}
+    render()};
+  $("lPrimeiro").onclick=e=>{e.preventDefault();
+    modal(`<div class="sheet">${cab("Primeiro acesso","Cria o administrador do sistema")}
+    <p class="note">Disponível só enquanto não existir nenhum administrador.</p>
+    <form id="fBoot" style="grid-template-columns:1fr">
+      <label>Nome<input id="bNome" required autocomplete="name"></label>
+      <label>E-mail<input id="bEmail" type="email" required autocomplete="username"></label>
+      <label>Senha <span class="note">mínimo 8 caracteres</span><input id="bSenha" type="password" minlength="8" required autocomplete="new-password"></label>
+      <p class="note hint-err" id="bMsg"></p>
+      <button class="btn" type="submit">Criar administrador</button></form></div>`);
+    $("fBoot").onsubmit=async ev=>{ev.preventDefault();const bt=ev.target.querySelector("button");bt.disabled=true;
+      const r=await chamarUsuarios({acao:"bootstrap",nome:$("bNome").value,email:$("bEmail").value,senha:$("bSenha").value});
+      if(r.erro){bt.disabled=false;$("bMsg").textContent=r.erro;return}
+      const em=$("bEmail").value.trim();closeModal();$("lEmail").value=em;toast("Administrador criado. Entre com o e-mail e a senha.")}};
+}
+function modalConta(){
+  modal(`<div class="sheet">${cab("Minha conta",esc(ME.nome)+" · "+PAPEL_NOME[ME.papel])}
+  <dl class="kv"><dt>E-mail</dt><dd>${esc(ME.email)}</dd><dt>Perfil</dt><dd>${PAPEL_NOME[ME.papel]}</dd></dl>
+  <form id="fConta" style="grid-template-columns:1fr">
+    <label>Nova senha <span class="note">mínimo 8 caracteres</span><input id="cSenha" type="password" minlength="8" required autocomplete="new-password"></label>
+    <label>Repita a nova senha<input id="cSenha2" type="password" minlength="8" required autocomplete="new-password"></label>
+    <p class="note hint-err" id="cMsg"></p>
+    <button class="btn" type="submit">Trocar senha</button></form></div>`);
+  document.getElementById("fConta").onsubmit=async e=>{e.preventDefault();const m=document.getElementById("cMsg");
+    if(document.getElementById("cSenha").value!==document.getElementById("cSenha2").value){m.textContent="As senhas não conferem.";return}
+    const {error}=await sb.auth.updateUser({password:document.getElementById("cSenha").value});
+    if(error){m.textContent=error.message;return}
+    closeModal();toast("Senha alterada")};
+}
+function credenciaisHTML(titulo,email,senha){
+  return `<div class="sheet">${cab(titulo,"Anote e entregue ao usuário")}
+  <dl class="kv"><dt>Endereço</dt><dd>${esc(location.origin+location.pathname)}</dd><dt>E-mail</dt><dd class="mono">${esc(email)}</dd><dt>Senha provisória</dt><dd class="mono" id="cred">${esc(senha)}</dd></dl>
+  <p class="note">Esta senha só aparece agora. O usuário pode trocá-la em “Minha conta”.</p></div>`;
+}
+function modalAcesso(cliId){
+  const c=cli(cliId);if(!c)return;
+  modal(`<div class="sheet">${cab("Criar acesso do cliente",esc(c.fantasia||c.nome))}
+  <form id="fAcesso" style="grid-template-columns:1fr">
+    <label>Nome de quem vai acessar<input id="aNome" value="${esc(c.resp||c.fantasia||c.nome)}" required></label>
+    <label>E-mail de acesso<input id="aEmail" type="email" value="${esc(c.email||"")}" required autocomplete="off"></label>
+    <label>Senha provisória<input id="aSenha" value="${genSenha()}" minlength="8" required autocomplete="off"></label>
+    <p class="note">O cliente verá apenas os certificados, ordens de serviço, fotos e cobranças desta empresa.</p>
+    <p class="note hint-err" id="aMsg"></p>
+    <button class="btn" type="submit">Criar acesso</button></form></div>`);
+  document.getElementById("fAcesso").onsubmit=async e=>{e.preventDefault();const bt=e.target.querySelector("button");bt.disabled=true;
+    const email=document.getElementById("aEmail").value.trim(),senha=document.getElementById("aSenha").value;
+    const r=await chamarUsuarios({acao:"criar",papel:"cliente",cliente_id:cliId,nome:document.getElementById("aNome").value.trim(),email,senha});
+    if(r.erro){bt.disabled=false;document.getElementById("aMsg").textContent=r.erro;return}
+    if(isAdmin())await carregarUsuarios();
+    modal(credenciaisHTML("Acesso criado",email,senha))};
+}
+function modalSenha(id){
+  const u=USUARIOS.find(x=>x.id===id);if(!u)return;
+  modal(`<div class="sheet">${cab("Nova senha",esc(u.nome))}
+  <form id="fNs" style="grid-template-columns:1fr">
+    <label>Nova senha provisória<input id="nsSenha" value="${genSenha()}" minlength="8" required autocomplete="off"></label>
+    <p class="note hint-err" id="nsMsg"></p>
+    <button class="btn" type="submit">Redefinir senha</button></form></div>`);
+  document.getElementById("fNs").onsubmit=async e=>{e.preventDefault();const s=document.getElementById("nsSenha").value;
+    const r=await chamarUsuarios({acao:"redefinir_senha",id,senha:s});
+    if(r.erro){document.getElementById("nsMsg").textContent=r.erro;return}
+    modal(credenciaisHTML("Senha redefinida",u.email,s))};
+}
+function viewUsuarios(){
+  const emp=id=>{const c=cli(id);return c?(c.fantasia||c.nome):"empresa removida"};
+  return `<div class="card" style="margin-bottom:20px"><h2 style="font-size:20px;margin-bottom:16px">Novo usuário</h2>
+  <form id="fUsr">
+    <label>Nome<input id="uNome" required autocomplete="off"></label>
+    <label>E-mail<input id="uEmail" type="email" required autocomplete="off"></label>
+    <label>Perfil<select id="uPapel"><option value="tecnico">Técnico</option><option value="admin">Administrador</option><option value="cliente">Cliente</option></select></label>
+    <label id="uEmpWrap" hidden>Empresa do cliente<select id="uEmp">${db.clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select></label>
+    <label class="full">Senha provisória <span class="note">mínimo 8 caracteres; o usuário pode trocar em “Minha conta”</span><input id="uSenha" value="${genSenha()}" minlength="8" required autocomplete="off"></label>
+    <p class="note full" style="margin:0">Técnico: cadastra clientes, laudos, certificados, fotos e relatórios. Administrador: acesso total. Cliente: vê só os próprios documentos.</p>
+    <p class="note full hint-err" id="uMsg"></p>
+    <button class="btn" type="submit">Cadastrar usuário</button></form></div>
+  <section class="panel"><div class="ph"><h2>Usuários</h2><span class="note">${USUARIOS.length} cadastrado${USUARIOS.length===1?"":"s"}</span></div>
+  <div class="clist">${USUARIOS.map(u=>`<div class="cl"><span class="av">${iniciais(u.nome)||"?"}</span>
+    <span class="nm"><b>${esc(u.nome)} <span class="chip s-n">${PAPEL_NOME[u.papel]}</span> ${u.ativo?"":'<span class="chip s-r"><i></i>Desativado</span>'}</b><small>${esc(u.email)}</small>${u.papel==="cliente"?`<span class="meta">${esc(emp(u.cliente_id))}</span>`:""}</span>
+    <span class="uacts"><button class="dl" data-usenha="${u.id}">Nova senha</button>${u.id===ME.id?"":`<button class="dl" data-uativo="${u.id}">${u.ativo?"Desativar":"Reativar"}</button>`}</span></div>`).join("")||'<div class="empty">Nenhum usuário.</div>'}</div></section>`;
+}
+function wireUsuarios(){
+  const $=id=>document.getElementById(id);
+  const sync=()=>{$("uEmpWrap").hidden=$("uPapel").value!=="cliente"};$("uPapel").onchange=sync;sync();
+  $("fUsr").onsubmit=async e=>{e.preventDefault();const bt=e.target.querySelector("button");bt.disabled=true;$("uMsg").textContent="";
+    const papel=$("uPapel").value;
+    if(papel==="cliente"&&!db.clientes.length){bt.disabled=false;$("uMsg").textContent="Cadastre a empresa do cliente primeiro (aba Clientes).";return}
+    const email=$("uEmail").value.trim(),senha=$("uSenha").value;
+    const r=await chamarUsuarios({acao:"criar",papel,cliente_id:papel==="cliente"?$("uEmp").value:null,nome:$("uNome").value.trim(),email,senha});
+    if(r.erro){bt.disabled=false;$("uMsg").textContent=r.erro;return}
+    await carregarUsuarios();render();modal(credenciaisHTML("Usuário cadastrado",email,senha))};
+}
+
 document.addEventListener("click",e=>{
   const t=e.target.closest("[data-tab]"); if(t){tab=t.dataset.tab;render();return}
   const f=e.target.closest("[data-f]"); if(f){filtro=filtro===f.dataset.f?null:f.dataset.f;render();return}
   const pf=e.target.closest("[data-pdf]"); if(pf){pf.disabled=true;salvarPDF(pf.dataset.pdf,pf.dataset.id).finally(()=>pf.disabled=false);return}
   const pr=e.target.closest("[data-print]"); if(pr){imprimirPDF(pr.dataset.print,pr.dataset.id);return}
   const ac=e.target.closest("[data-act]"); if(ac){acaoCob(ac.dataset.act,ac.dataset.id);return}
-  if(e.target.closest("[data-export]")){openExport();return}
+  if(e.target.closest("[data-export]")){if(isAdmin())openExport();return}
   if(e.target.closest("[data-novocli]")){tab="clientes";editando=null;render();return}
   const ed=e.target.closest("[data-edit]"); if(ed){tab="clientes";editando=ed.dataset.edit;render();window.scrollTo({top:0,behavior:"smooth"});return}
+  const an=e.target.closest("[data-anexo]"); if(an){abrirAnexo(an.dataset.anexo);return}
+  const ae=e.target.closest("[data-acesso]"); if(ae){modalAcesso(ae.dataset.acesso);return}
+  const us=e.target.closest("[data-usenha]"); if(us){modalSenha(us.dataset.usenha);return}
+  const ua=e.target.closest("[data-uativo]"); if(ua){const u=USUARIOS.find(x=>x.id===ua.dataset.uativo);if(!u)return;
+    sb.from("perfis").update({ativo:!u.ativo}).eq("id",u.id).then(async({error})=>{if(error)return toast("Não foi possível alterar: "+error.message);await carregarUsuarios();render();toast(u.ativo?"Usuário desativado":"Usuário reativado")});return}
+  const dp=e.target.closest("[data-delprop]"); if(dp){db.proprios=db.proprios.filter(p=>p.id!==dp.dataset.delprop);save();render();return}
   const cy=e.target.closest("[data-copy]"); if(cy){copiar(cy);return}
   const fb=e.target.closest("[data-fcob]"); if(fb){filtroCob=fb.dataset.fcob;render();return}
   const cp=e.target.closest("[data-comp]"); if(cp){openComp(cp.dataset.comp);return}
   if(e.target.closest("[data-close]")||e.target.id==="modal"){closeModal();return}
   const o=e.target.closest("[data-open]"); if(o){const id=o.dataset.open;abertos.has(id)?abertos.delete(id):abertos.add(id);renderLista()}
 });
-const pick=document.getElementById("cliPick");
-function fillPick(){pick.innerHTML=db.clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join("");pick.value=cliAtual}
-function setModo(m){modo=m;document.getElementById("vAdmin").setAttribute("aria-pressed",m==="admin");document.getElementById("vCli").setAttribute("aria-pressed",m==="cliente");pick.hidden=m!=="cliente";fillPick();tab="painel";render()}
-document.getElementById("vAdmin").onclick=()=>setModo("admin");
-document.getElementById("vCli").onclick=()=>setModo("cliente");
-pick.onchange=()=>{cliAtual=pick.value;render()};
+document.getElementById("btnSair").onclick=sair;
+document.getElementById("btnConta").onclick=modalConta;
 document.querySelector("#live span").textContent="Monitorando · "+HOJE.toLocaleDateString("pt-BR");
-render();
+document.getElementById("app").innerHTML='<div class="empty">Carregando…</div>';
+(async()=>{
+  try{const {data}=await sb.auth.getSession();if(data.session){const m=await entrar(data.session);if(m)toast(m)}}catch(e){toast("Não foi possível conectar ao servidor.")}
+  render();
+})();
 </script>
 </body>
 </html>

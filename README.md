@@ -12,7 +12,19 @@ O app acompanha a validade de cada certificado emitido (desinsetização, desrat
 
 ![Cadastro de clientes](docs/cadastro-cliente.png)
 
-> **Demonstração com dados fictícios.** Os clientes, CNPJs e PDFs deste repositório são exemplos e não representam clientes reais.
+> **Os dados ficam no banco (Supabase), não neste repositório.** As capturas de tela abaixo usam dados fictícios. Boleto, Pix e NFS-e continuam sendo simulação.
+
+## Login e perfis
+
+O acesso é feito com e-mail e senha. Existem três perfis:
+
+| Perfil | O que pode fazer |
+|---|---|
+| **Cliente** | Ver apenas os próprios certificados, ordens de serviço, fotos, relatórios e cobranças; assinar ordens pendentes |
+| **Técnico** | Cadastrar clientes e criar o acesso deles, registrar visitas e laudos com relatório e fotos, emitir certificados com PDF |
+| **Administrador** | Acesso total: cobranças, NFS-e, exportação, avisos, documentos da empresa e cadastro de técnicos, administradores e clientes (aba **Usuários**) |
+
+Primeiro acesso: na tela de login, use **Primeiro acesso do sistema** para criar o administrador. Isso só funciona enquanto não existe nenhum administrador. Depois, o administrador cadastra os demais usuários com uma senha provisória, e cada pessoa troca a senha em **Minha conta**.
 
 ## Funcionalidades
 
@@ -84,7 +96,9 @@ O app acompanha a validade de cada certificado emitido (desinsetização, desrat
 
 ## Como rodar
 
-É uma página estática, sem instalação. Abra o `index.html` no navegador ou publique pelo GitHub Pages (*Settings → Pages → Deploy from branch → main / root*).
+É uma página estática que conversa com o Supabase (login, banco e arquivos). Sirva a pasta com qualquer servidor estático (por exemplo `npx http-server -p 8765`) e abra `http://127.0.0.1:8765/index.html`, ou publique pelo GitHub Pages (*Settings → Pages → Deploy from branch → main / root*).
+
+O app usa a chave pública (anon) do projeto, que pode ficar no código; a proteção dos dados é feita pelas regras de acesso do banco.
 
 ## Estrutura
 
@@ -97,8 +111,9 @@ docs/painel.png            captura de tela
 
 ## Próximos passos
 
-- [ ] Login real para administradores e clientes
-- [ ] Banco de dados no servidor da Agrocel
+- [x] Login real para administradores, técnicos e clientes
+- [x] Banco de dados (Supabase)
+- [ ] E-mail de convite e de recuperação de senha
 - [ ] Envio automático dos e-mails de aviso
 - [ ] Avisos por WhatsApp
 - [ ] Integração real de boleto/Pix com o banco ou plataforma de cobrança
