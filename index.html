@@ -721,7 +721,24 @@ function viewClientes(){
 function wireClientes(){
   const $=id=>document.getElementById(id);
   $("qCnpj").oninput=e=>e.target.value=maskDoc(e.target.value);
-  $("qCep").oninput=e=>e.target.value=maskCEP(e.target.value);
+  let cepBuscado="";
+  $("qCep").oninput=async e=>{e.target.value=maskCEP(e.target.value);
+    const cep=soNum(e.target.value);if(cep.length!==8||cep===cepBuscado)return;
+    cepBuscado=cep;const msg=$("qMsg");msg.className="note full";msg.textContent="Buscando endereço pelo CEP...";
+    try{
+      const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),6000);
+      const r=await fetch(`https://viacep.com.br/ws/${cep}/json/`,{signal:ctl.signal});clearTimeout(t);
+      const d=await r.json();
+      if(soNum($("qCep").value)!==cep)return;
+      if(d.erro){msg.textContent="CEP não encontrado. Preencha o endereço na mão.";return}
+      if(d.logradouro)$("qRua").value=d.logradouro;
+      if(d.bairro)$("qBairro").value=d.bairro;
+      if(d.localidade)$("qCidade").value=d.localidade;
+      if(d.uf)$("qUf").value=UFS.includes(d.uf)?d.uf:"Outro";
+      msg.textContent="Endereço preenchido pelo CEP. Confira e informe o número.";
+      $(d.logradouro?"qNum":"qRua").focus();
+    }catch(_){cepBuscado="";msg.textContent="Sem conexão para buscar o CEP. Preencha o endereço na mão."}
+  };
   $("qTel").oninput=e=>e.target.value=maskTel(e.target.value);
   $("fCad").onsubmit=e=>{e.preventDefault();const msg=$("qMsg");msg.className="note full";
     const nome=$("qNome").value.trim();
