@@ -489,7 +489,7 @@ function viewPainel(){
     <section class="panel">
       <div class="ph"><h2>Clientes</h2><button class="dl" data-novocli>Novo cliente</button>${isAdmin()?'<button class="dl" data-export>Exportar dados</button>':""}
         <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-        <input id="busca" type="search" placeholder="Buscar por nome ou CNPJ" value="${esc(busca)}" aria-label="Buscar cliente"></div>
+        <input id="busca" type="search" placeholder="Buscar por nome, CPF ou CNPJ" value="${esc(busca)}" aria-label="Buscar cliente"></div>
         ${filtro?`<button class="clear" data-f="${filtro}">Filtro: ${LABEL[filtro]} ✕</button>`:""}
       </div>
       <div id="lista">${listaHTML()}</div>
@@ -618,7 +618,7 @@ function painelOS(){
   <div class="mini">${vs.length?vs.map(v=>`<button class="vlink" data-comp="${v.id}"><span><b>${v.os}</b><small>${esc(cli(v.cli).nome.replace(/ \(.*\)/,""))}</small></span>${v.status==="assinada"?'<span class="chip s-g"><i></i>Assinada</span>':'<span class="chip s-a"><i></i>Pendente</span>'}</button>`).join(""):'<span class="note">Nenhuma visita registrada ainda. Use “Registrar visita” no próximo atendimento.</span>'}</div></section>`}
 function compHTML(v){const c=cli(v.cli);const ok=v.status==="assinada";
   return `<div class="sheet"><div class="sh-h"><img src="${LOGO}" alt="Agrocel"><div><b>Ordem de serviço ${v.os}</b><span>Termo de compromisso e comprovante de execução</span></div><button class="x" data-close aria-label="Fechar">✕</button></div>
-  <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>CNPJ</dt><dd class="mono">${esc(c.cnpj)}</dd><dt>Data e hora</dt><dd>${fmtHora(v.data)}</dd><dt>Técnico</dt><dd>${esc(v.tecnico)}</dd><dt>Serviço</dt><dd>${esc(v.tipo)} · ${esc(v.praga)}</dd><dt>Produtos</dt><dd>${esc(v.prod)}</dd><dt>Contato</dt><dd>${esc(c.resp||"-")}${c.tel?" · "+esc(c.tel):""}</dd><dt>Áreas tratadas</dt><dd>${esc(v.areas||"-")}</dd></dl>
+  <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>${docRot(c.cnpj)}</dt><dd class="mono">${esc(c.cnpj)}</dd><dt>Data e hora</dt><dd>${fmtHora(v.data)}</dd><dt>Técnico</dt><dd>${esc(v.tecnico)}</dd><dt>Serviço</dt><dd>${esc(v.tipo)} · ${esc(v.praga)}</dd><dt>Produtos</dt><dd>${esc(v.prod)}</dd><dt>Contato</dt><dd>${esc(c.resp||"-")}${c.tel?" · "+esc(c.tel):""}</dd><dt>Áreas tratadas</dt><dd>${esc(v.areas||"-")}</dd></dl>
   ${v.relatorio?`<div><div class="sec-t">Relatório da visita</div><p style="margin:6px 0 0;white-space:pre-wrap">${esc(v.relatorio)}</p></div>`:""}
   <div id="fotosBox"></div>
   ${isStaff()?`<label class="dl" style="justify-self:start;cursor:pointer">Adicionar fotos<input id="fFotoAdd" type="file" accept="image/*" multiple hidden></label>`:""}
@@ -670,12 +670,19 @@ const SEGMENTOS=["Posto de combustível","Mercado e padaria","Restaurante e lanc
 const UFS=["SC","RS","PR","SP","RJ","MG","ES","BA","GO","MT","MS","DF","Outro"];
 const soNum=t=>String(t||"").replace(/\D/g,"");
 function maskCNPJ(t){const d=soNum(t).slice(0,14);return d.replace(/^(\d{2})(\d)/,"$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1/$2").replace(/(\d{4})(\d)/,"$1-$2")}
+function maskCPF(t){const d=soNum(t).slice(0,11);return d.replace(/^(\d{3})(\d)/,"$1.$2").replace(/^(\d{3})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1-$2")}
+const maskDoc=t=>soNum(t).length>11?maskCNPJ(t):maskCPF(t);
+const docRot=t=>soNum(t).length===11?"CPF":"CNPJ";
 function maskCEP(t){const d=soNum(t).slice(0,8);return d.length>5?d.slice(0,5)+"-"+d.slice(5):d}
 function maskTel(t){const d=soNum(t).slice(0,11);if(d.length<3)return d;
   return d.length<=10?`(${d.slice(0,2)}) ${d.slice(2,6)}${d.length>6?"-"+d.slice(6):""}`:`(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`}
 function cnpjOK(t){const d=soNum(t);if(d.length!==14||/^(\d)\1+$/.test(d))return false;
   const calc=n=>{let p=n===12?5:6,s=0;for(let i=0;i<n;i++){s+=+d[i]*p;p=p===2?9:p-1}const r=s%11;return r<2?0:11-r};
   return calc(12)===+d[12]&&calc(13)===+d[13]}
+function cpfOK(t){const d=soNum(t);if(d.length!==11||/^(\d)\1+$/.test(d))return false;
+  const calc=n=>{let s=0;for(let i=0;i<n;i++)s+=+d[i]*(n+1-i);const r=(s*10)%11;return r===10?0:r};
+  return calc(9)===+d[9]&&calc(10)===+d[10]}
+const docOK=t=>soNum(t).length===11?cpfOK(t):cnpjOK(t);
 const compEnd=o=>[[o.rua,o.num].filter(Boolean).join(", "),o.bairro,o.cidade?[o.cidade,o.uf].filter(Boolean).join("/"):""].filter(Boolean).join(" · ");
 function viewClientes(){
   const c=editando?cli(editando):null;const novo=!c;
@@ -688,7 +695,7 @@ function viewClientes(){
     <label class="full"><span class="cap">Razão social <span class="note">obrigatório</span></span><input id="qNome" value="${esc(o.nome||"")}" autocomplete="organization"></label>
     <label>Nome fantasia<input id="qFant" value="${esc(o.fantasia||"")}" placeholder="Como o cliente é conhecido"></label>
     <label>Segmento<select id="qSeg">${opt(SEGMENTOS,o.seg)}</select></label>
-    <label><span class="cap">CNPJ <span class="note">obrigatório</span></span><input id="qCnpj" inputmode="numeric" value="${esc(o.cnpj||"")}" placeholder="00.000.000/0000-00"></label>
+    <label><span class="cap">CPF ou CNPJ <span class="note">obrigatório</span></span><input id="qCnpj" inputmode="numeric" value="${esc(o.cnpj||"")}" placeholder="CPF ou CNPJ, só números"></label>
     <label>Inscrição municipal<input id="qIm" value="${esc(o.im||"")}" placeholder="Para a NFS-e"></label>
     <h3 class="full">Endereço do estabelecimento</h3>
     <label>CEP<input id="qCep" inputmode="numeric" value="${esc(o.cep||"")}" placeholder="00000-000"></label>
@@ -713,17 +720,17 @@ function viewClientes(){
     <span class="uacts"><button class="dl" data-acesso="${x.id}">Criar acesso</button><button class="dl" data-edit="${x.id}">Editar</button>${isAdmin()?`<button class="dl" data-delcli="${x.id}">Excluir</button>`:""}</span></div>`}).join("")}</div></section>`}
 function wireClientes(){
   const $=id=>document.getElementById(id);
-  $("qCnpj").oninput=e=>e.target.value=maskCNPJ(e.target.value);
+  $("qCnpj").oninput=e=>e.target.value=maskDoc(e.target.value);
   $("qCep").oninput=e=>e.target.value=maskCEP(e.target.value);
   $("qTel").oninput=e=>e.target.value=maskTel(e.target.value);
   $("fCad").onsubmit=e=>{e.preventDefault();const msg=$("qMsg");msg.className="note full";
     const nome=$("qNome").value.trim();
     if(!nome){msg.className="note full hint-err";msg.textContent="Preencha a razão social.";return $("qNome").focus()}
     const cnpj=$("qCnpj").value.trim();
-    if(!cnpjOK(cnpj)){msg.className="note full hint-err";msg.textContent="CNPJ inválido. Confira os números.";return $("qCnpj").focus()}
+    if(!docOK(cnpj)){msg.className="note full hint-err";msg.textContent="CPF ou CNPJ inválido. Confira os números.";return $("qCnpj").focus()}
     const dup=db.clientes.find(c=>soNum(c.cnpj)===soNum(cnpj)&&c.id!==editando);
-    if(dup){msg.className="note full hint-err";msg.textContent=`Este CNPJ já está cadastrado para ${dup.nome}.`;return $("qCnpj").focus()}
-    const o={nome,fantasia:$("qFant").value.trim(),seg:$("qSeg").value,cnpj:maskCNPJ(cnpj),im:$("qIm").value.trim(),
+    if(dup){msg.className="note full hint-err";msg.textContent=`Este ${docRot(cnpj)} já está cadastrado para ${dup.nome}.`;return $("qCnpj").focus()}
+    const o={nome,fantasia:$("qFant").value.trim(),seg:$("qSeg").value,cnpj:maskDoc(cnpj),im:$("qIm").value.trim(),
       cep:$("qCep").value.trim(),rua:$("qRua").value.trim(),num:$("qNum").value.trim(),comp:$("qComp").value.trim(),
       bairro:$("qBairro").value.trim(),cidade:$("qCidade").value.trim(),uf:$("qUf").value,
       resp:$("qResp").value.trim(),tel:$("qTel").value.trim(),email:$("qEmail").value.trim(),obs:$("qObs").value.trim()};
@@ -744,16 +751,16 @@ function logoPNG(){if(_logo!==null)return Promise.resolve(_logo);
 function docDados(tipo,id){
   if(tipo==="os"){const v=vis(id);if(!v)return null;const c=cli(v.cli);
     return {arq:`ordem-servico-${v.os}.pdf`,titulo:`Ordem de serviço ${v.os}`,sub:"Termo de compromisso e comprovante de execução",
-      linhas:[["Cliente",c.nome],["CNPJ",c.cnpj],["Endereço",c.end],["Data e hora",fmtHora(v.data)],["Técnico",v.tecnico],["Serviço",`${v.tipo} · ${v.praga}`],["Produtos",v.prod],["Contato no local",(c.resp||"-")+(c.tel?" · "+c.tel:"")],["Áreas tratadas",v.areas||"-"]],
+      linhas:[["Cliente",c.nome],[docRot(c.cnpj),c.cnpj],["Endereço",c.end],["Data e hora",fmtHora(v.data)],["Técnico",v.tecnico],["Serviço",`${v.tipo} · ${v.praga}`],["Produtos",v.prod],["Contato no local",(c.resp||"-")+(c.tel?" · "+c.tel:"")],["Áreas tratadas",v.areas||"-"]],
       lista:{t:"Orientações e termo de compromisso",itens:TERMO,obs:"Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima."},
       assinatura:v.assinatura||null};}
   const b=cob(id);if(!b)return null;const c=cli(b.cli);
   if(tipo==="cobranca") return {arq:`cobranca-${b.id}.pdf`,titulo:`Cobrança ${BRL(b.valor)}`,sub:b.desc,aviso:"Simulação: os códigos abaixo não são pagáveis.",
-    linhas:[["Pagador",c.nome],["CNPJ",c.cnpj],["Beneficiário",EMPRESA.nome],["CNPJ do beneficiário",EMPRESA.cnpj],["Valor",BRL(b.valor)],["Vencimento",fmt(b.venc)],["Forma",b.forma],["Situação",LCOB[stCob(b)]]],
+    linhas:[["Pagador",c.nome],[docRot(c.cnpj),c.cnpj],["Beneficiário",EMPRESA.nome],["CNPJ do beneficiário",EMPRESA.cnpj],["Valor",BRL(b.valor)],["Vencimento",fmt(b.venc)],["Forma",b.forma],["Situação",LCOB[stCob(b)]]],
     blocos:[b.linha?["Boleto · linha digitável",b.linha]:null,b.pix?["Pix copia e cola",b.pix]:null].filter(Boolean)};
   const n=b.nfse;if(!n)return null;
   return {arq:`nfse-${n.numero}.pdf`,titulo:`NFS-e nº ${n.numero}`,sub:"Nota Fiscal de Serviço Eletrônica",aviso:"Simulação: documento sem validade fiscal.",
-    linhas:[["Emitida em",fmtHora(n.emitidaEm)],["Código de verificação",n.cod],["Prestador",EMPRESA.nome],["CNPJ do prestador",EMPRESA.cnpj],["Município",EMPRESA.cidade],["Tomador",c.nome],["CNPJ do tomador",c.cnpj],["Endereço do tomador",c.end],["Serviço","7.13 · Dedetização, desinsetização, desratização e congêneres"],["Discriminação",n.desc||b.desc]],
+    linhas:[["Emitida em",fmtHora(n.emitidaEm)],["Código de verificação",n.cod],["Prestador",EMPRESA.nome],["CNPJ do prestador",EMPRESA.cnpj],["Município",EMPRESA.cidade],["Tomador",c.nome],[docRot(c.cnpj)+" do tomador",c.cnpj],["Endereço do tomador",c.end],["Serviço","7.13 · Dedetização, desinsetização, desratização e congêneres"],["Discriminação",n.desc||b.desc]],
     totais:[["Valor do serviço",BRL(b.valor)],["Alíquota ISS",String(n.aliquota).replace(".",",")+"%"],["ISS",BRL(b.valor*n.aliquota/100)],["Valor líquido",BRL(b.valor)]]};}
 async function gerarPDF(tipo,id){
   const D=docDados(tipo,id);if(!D)return;
@@ -851,7 +858,7 @@ const cab=(t,sub)=>`<div class="sh-h"><img src="${LOGO}" alt="Agrocel"><div><b>$
 function boletoHTML(b){const c=cli(b.cli);const temB=b.forma.includes("Boleto"),temP=b.forma.includes("Pix");
   return `<div class="sheet">${cab("Cobrança "+BRL(b.valor),esc(b.desc))}
   <div class="simu">Simulação: estes códigos não são pagáveis.</div>
-  <dl class="kv"><dt>Pagador</dt><dd>${esc(c.nome)}</dd><dt>CNPJ</dt><dd class="mono">${esc(c.cnpj)}</dd><dt>Beneficiário</dt><dd>${esc(EMPRESA.nome)}</dd><dt>Valor</dt><dd>${BRL(b.valor)}</dd><dt>Vencimento</dt><dd>${fmt(b.venc)}</dd><dt>Situação</dt><dd>${chipCob(b)}</dd></dl>
+  <dl class="kv"><dt>Pagador</dt><dd>${esc(c.nome)}</dd><dt>${docRot(c.cnpj)}</dt><dd class="mono">${esc(c.cnpj)}</dd><dt>Beneficiário</dt><dd>${esc(EMPRESA.nome)}</dd><dt>Valor</dt><dd>${BRL(b.valor)}</dd><dt>Vencimento</dt><dd>${fmt(b.venc)}</dd><dt>Situação</dt><dd>${chipCob(b)}</dd></dl>
   ${temB?`<div class="sec-t">Boleto · linha digitável</div><div class="copyrow"><code id="cLinha">${b.linha}</code><button class="dl" data-copy="cLinha">Copiar</button></div>`:""}
   ${temP?`<div class="sec-t">Pix</div><div class="pixbox">${qrSVG(b.pix)}<div><span class="note">Aponte a câmera do app do banco ou use o Pix copia e cola.</span><div class="copyrow"><code id="cPix">${b.pix}</code><button class="dl" data-copy="cPix">Copiar</button></div></div></div>`:""}
   ${docBtns("cobranca",b.id)}</div>`}
@@ -870,7 +877,7 @@ function nfseHTML(b){const c=cli(b.cli),n=b.nfse,iss=b.valor*n.aliquota/100;retu
   <div class="simu">Simulação: documento sem validade fiscal.</div>
   <div class="nf"><div class="nfh"><div><b>NFS-e nº ${n.numero}</b><span class="note">Emitida em ${fmtHora(n.emitidaEm)}</span></div><div><span class="lbl">Código de verificação</span><br><b class="mono" style="font-size:14px">${n.cod}</b></div></div>
   <div class="blk"><span class="lbl">Prestador</span><b>${esc(EMPRESA.nome)}</b><span>CNPJ ${esc(EMPRESA.cnpj)} · ${esc(EMPRESA.cidade)}</span></div>
-  <div class="blk"><span class="lbl">Tomador</span><b>${esc(c.nome)}</b><span>CNPJ ${esc(c.cnpj)} · ${esc(c.end)}</span></div>
+  <div class="blk"><span class="lbl">Tomador</span><b>${esc(c.nome)}</b><span>${docRot(c.cnpj)} ${esc(c.cnpj)} · ${esc(c.end)}</span></div>
   <div class="blk"><span class="lbl">Serviço · item 7.13 da LC 116/2003</span><span>${esc(n.desc||b.desc)}</span></div>
   <div class="tot"><div><span class="lbl">Valor</span><br><b>${BRL(b.valor)}</b></div><div><span class="lbl">Alíquota ISS</span><br><b>${String(n.aliquota).replace(".",",")}%</b></div><div><span class="lbl">ISS</span><br><b>${BRL(iss)}</b></div><div><span class="lbl">Valor líquido</span><br><b>${BRL(b.valor)}</b></div></div></div>
   ${docBtns("nfse",b.id)}</div>`}
@@ -890,15 +897,15 @@ async function copiar(btn){const el=document.getElementById(btn.dataset.copy);co
   try{await navigator.clipboard.writeText(t);toast("Copiado")}catch(_){const r=document.createRange();r.selectNodeContents(el);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);toast("Texto selecionado. Use copiar do aparelho.")}}
 
 // ---------- Exportação ----------
-const DATASETS=[["clientes","Empresas (clientes)","Nome, CNPJ, endereço, e-mail, situação e valores em aberto"],["certificados","Certificados","Serviço, validade e situação de cada certificado"],["visitas","Visitas e ordens de serviço","Técnico, data, áreas e assinatura do cliente"],["cobrancas","Cobranças","Valor, vencimento, forma e situação"],["nfse","Notas fiscais (NFS-e)","Número, tomador, valor e ISS"]];
+const DATASETS=[["clientes","Empresas (clientes)","Nome, CPF/CNPJ, endereço, e-mail, situação e valores em aberto"],["certificados","Certificados","Serviço, validade e situação de cada certificado"],["visitas","Visitas e ordens de serviço","Técnico, data, áreas e assinatura do cliente"],["cobrancas","Cobranças","Valor, vencimento, forma e situação"],["nfse","Notas fiscais (NFS-e)","Número, tomador, valor e ISS"]];
 function tabelas(){const sit=id=>{const p=piorStatus(id);return p?LABEL[p]:"Sem certificados"};
   return {
   clientes:db.clientes.map(c=>{const ks=db.certs.filter(k=>k.cli===c.id).sort((a,b)=>a.venc.localeCompare(b.venc));const prox=ks.find(k=>dias(k.venc)>=0);
-    return {"Empresa":c.nome,"Nome fantasia":c.fantasia||"","CNPJ":c.cnpj,"Inscrição municipal":c.im||"","Endereço":c.end,"Cidade":c.cidade||"","UF":c.uf||"","CEP":c.cep||"","Responsável":c.resp||"","Telefone":c.tel||"","E-mail":c.email||"","Segmento":c.seg||"","Observações":c.obs||"","Situação":sit(c.id),"Certificados":ks.length,"Próximo vencimento":prox?fmt(prox.venc):"","Valor em aberto (R$)":(db.cobrancas||[]).filter(b=>b.cli===c.id&&b.status!=="paga").reduce((t,b)=>t+b.valor,0)}}),
-  certificados:db.certs.map(k=>({"Empresa":cli(k.cli).nome,"CNPJ":cli(k.cli).cnpj,"Serviço":k.tipo,"Praga-alvo":k.praga,"Produtos":k.prod,"Execução":fmt(k.exec),"Validade":fmt(k.venc),"Situação":LABEL[status(k.venc)],"Dias para vencer":dias(k.venc)})),
+    return {"Empresa":c.nome,"Nome fantasia":c.fantasia||"","CPF/CNPJ":c.cnpj,"Inscrição municipal":c.im||"","Endereço":c.end,"Cidade":c.cidade||"","UF":c.uf||"","CEP":c.cep||"","Responsável":c.resp||"","Telefone":c.tel||"","E-mail":c.email||"","Segmento":c.seg||"","Observações":c.obs||"","Situação":sit(c.id),"Certificados":ks.length,"Próximo vencimento":prox?fmt(prox.venc):"","Valor em aberto (R$)":(db.cobrancas||[]).filter(b=>b.cli===c.id&&b.status!=="paga").reduce((t,b)=>t+b.valor,0)}}),
+  certificados:db.certs.map(k=>({"Empresa":cli(k.cli).nome,"CPF/CNPJ":cli(k.cli).cnpj,"Serviço":k.tipo,"Praga-alvo":k.praga,"Produtos":k.prod,"Execução":fmt(k.exec),"Validade":fmt(k.venc),"Situação":LABEL[status(k.venc)],"Dias para vencer":dias(k.venc)})),
   visitas:(db.visitas||[]).map(v=>({"OS":v.os,"Empresa":cli(v.cli).nome,"Data e hora":fmtHora(v.data),"Técnico":v.tecnico,"Serviço":v.tipo,"Praga-alvo":v.praga,"Produtos":v.prod,"Áreas tratadas":v.areas||"","Assinatura":v.status==="assinada"?"Assinada":"Pendente","Assinado por":v.assinatura?.nome||"","Assinado em":v.assinatura?fmtHora(v.assinatura.em):"","Código":v.assinatura?.cod||""})),
-  cobrancas:(db.cobrancas||[]).map(b=>({"Empresa":cli(b.cli).nome,"CNPJ":cli(b.cli).cnpj,"Descrição":b.desc,"Valor (R$)":b.valor,"Vencimento":fmt(b.venc),"Forma":b.forma,"Situação":LCOB[stCob(b)],"Pago em":b.pagoEm?fmt(b.pagoEm):"","NFS-e":b.nfse?.numero||""})),
-  nfse:(db.cobrancas||[]).filter(b=>b.nfse).map(b=>({"Número":b.nfse.numero,"Emissão":fmtHora(b.nfse.emitidaEm),"Tomador":cli(b.cli).nome,"CNPJ":cli(b.cli).cnpj,"Discriminação":b.nfse.desc||b.desc,"Valor (R$)":b.valor,"Alíquota ISS (%)":b.nfse.aliquota,"ISS (R$)":Math.round(b.valor*b.nfse.aliquota)/100,"Código de verificação":b.nfse.cod}))}}
+  cobrancas:(db.cobrancas||[]).map(b=>({"Empresa":cli(b.cli).nome,"CPF/CNPJ":cli(b.cli).cnpj,"Descrição":b.desc,"Valor (R$)":b.valor,"Vencimento":fmt(b.venc),"Forma":b.forma,"Situação":LCOB[stCob(b)],"Pago em":b.pagoEm?fmt(b.pagoEm):"","NFS-e":b.nfse?.numero||""})),
+  nfse:(db.cobrancas||[]).filter(b=>b.nfse).map(b=>({"Número":b.nfse.numero,"Emissão":fmtHora(b.nfse.emitidaEm),"Tomador":cli(b.cli).nome,"CPF/CNPJ":cli(b.cli).cnpj,"Discriminação":b.nfse.desc||b.desc,"Valor (R$)":b.valor,"Alíquota ISS (%)":b.nfse.aliquota,"ISS (R$)":Math.round(b.valor*b.nfse.aliquota)/100,"Código de verificação":b.nfse.cod}))}}
 function openExport(){modal(`<div class="sheet">${cab("Exportar dados","Escolha o que vai na planilha")}
   <div class="exp">${DATASETS.map(([k,l,d])=>`<label class="check"><input type="checkbox" data-ds="${k}" checked> ${l}<small>${d}</small></label>`).join("")}</div>
   <div class="expbtns"><button class="btn" id="exXlsx">Planilha Excel (.xlsx)</button><button class="btn ghost" id="exCsv">CSV das empresas</button><button class="btn ghost" id="exJson">Backup completo (.json)</button></div>
