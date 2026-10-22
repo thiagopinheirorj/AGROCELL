@@ -196,3 +196,16 @@ begin
 end $$;
 revoke all on function public.registrar_acesso() from public, anon;
 grant execute on function public.registrar_acesso() to authenticated;
+
+-- Evento manual no registro de atividade (usado ao restaurar um backup). Só o administrador.
+create or replace function public.registrar_evento(p_acao text, p_resumo text) returns void
+language plpgsql security definer set search_path = '' as $$
+declare u public.perfis;
+begin
+  select * into u from public.perfis where id = auth.uid() and ativo and papel = 'admin';
+  if not found then raise exception 'Somente o administrador registra eventos'; end if;
+  insert into public.auditoria(usuario_id, usuario_nome, papel, acao, tipo, resumo)
+  values (u.id, u.nome, u.papel, left(coalesce(p_acao, 'evento'), 40), 'sistema', left(coalesce(p_resumo, ''), 300));
+end $$;
+revoke all on function public.registrar_evento(text, text) from public, anon;
+grant execute on function public.registrar_evento(text, text) to authenticated;

@@ -35,6 +35,32 @@ Painel com semáforo e filtros · cadastro de clientes (máscara e validação d
 - **Exclusão definitiva** (só admin; técnico só exclui fotos): cliente (apaga também certificados, OS, fotos, cobranças, PDFs e acessos do cliente, com confirmação digitando EXCLUIR), certificado (e PDF), ordem de serviço (e fotos), cobrança, foto e usuário (não exclui a si mesmo nem o único admin). Os arquivos do storage são apagados junto.
 - Mudanças de banco sempre no projeto de teste primeiro, depois no real, e atualizar `supabase/schema.sql`.
 
+### Visita sem internet (offline)
+- **Bibliotecas locais** em `assets/vendor` (supabase-js 2.45.4, jsPDF 2.5.1, SheetJS 0.18.5), sem CDN. Ao trocar um arquivo, aumentar `VERSAO` em `sw.js`.
+- **`sw.js`**: guarda o app no aparelho (página: rede primeiro, cópia se offline; demais arquivos: cópia primeiro). Nunca intercepta o Supabase.
+- **IndexedDB `agrocel-offline-<ambiente>`**: `meta` (perfil e lista de clientes, só staff, apagados em `sair()`) e `saida` (fila de visitas, com fotos como arquivos e assinatura). A fila **sobrevive** ao sair da conta; `pedirSair()` avisa quando há itens.
+- **Fluxo:** o submit da visita grava primeiro na fila (`OFF.salvarSaida`) e então chama `enviarItem()`. Se falhar, fica na fila e `enviarPendentes()` tenta de novo (evento `online`, a cada 60 s e botão). `enviarItem` é idempotente (ids fixos, foto com `path` já enviada não sobe de novo, visita já existente não duplica). O número da OS (`proxOS()`) é definido no envio.
+- **Modo offline** (`OFFLINE`): `entrarOffline()` usa a cópia do aparelho; só as abas Registrar visita e Pendentes; `save()` fica bloqueado. `reconectar()` volta ao normal quando a internet volta.
+- O cliente do Supabase usa `global.fetch` com resolução tardia para dar para simular queda de rede nos testes. Teste de ponta a ponta: `supabase/teste-offline.mjs`.
+
+### Política de privacidade e termo de uso
+- Texto-base em `TEXTO_PRIVACIDADE` e `TEXTO_TERMO` (`index.html`), aberto por `abrirPolitica()`: links na tela de login (`data-politica`) e botão **Privacidade** no cabeçalho. Versão e data em `POLITICA_VERSAO`/`POLITICA_DATA`; contato em `CONTATO_PRIVACIDADE`. **Ao mudar o texto, subir a versão e a data.**
+- Pendências: revisão jurídica, confirmar com o Fernando o e-mail de contato (hoje `agrocelrf@hotmail.com`) e o prazo de guarda, e o texto da seção 5 do termo (simulações) quando boleto, Pix e NFS-e forem reais.
+
+### Backup e restauração (admin)
+- Exportar dados > **Backup completo (.json)** grava `{formato:"agrocel-backup-v1", ambiente, exportadoEm, clientes, certs, visitas, cobrancas, docs, proprios, fotos}`. **Não inclui** fotos/PDFs (arquivos do storage), logins nem o registro de atividade.
+- Exportar dados > **Restaurar backup…**: `validarBackup` aceita só campos conhecidos com formato conferido (esquema `ESQ`; descarta o resto, evita HTML/XSS vindo do arquivo), mostra o resumo, e deixa **mesclar** (padrão, não apaga) ou **substituir tudo** (exige digitar CONFIRMAR; também exigido se o backup for de outro ambiente). Itens sem cliente existente são ignorados. A restauração é gravada pelo `save()` (diff em lotes) e registrada com `registrar_evento` (só admin).
+- Para guardar também os arquivos, seria preciso um backup do storage (não existe ainda).
+
+### Rotina de verificação de segurança
+Checklist completo (semanal, mensal, trimestral, antes de mudanças e gatilhos) em `docs/rotina-de-seguranca.pdf`. Quando o usuário pedir "rode a verificação de segurança", faça nesta ordem:
+1. `node supabase/testes-de-acesso.mjs <senha-de-teste>` (ou variável `AGROCEL_SENHA_TESTE`): restaura os dados do teste e roda 44 testes de acesso por perfil. Todos devem passar.
+2. Rodar `supabase/verificar-projetos.sql` com `execute_sql` nos dois projetos (real `xchohhtxzsgfkmnyddjh` e teste `fnwtbezcalgnihuckolc`) e comparar `policies`, `functions`, `triggers`, `rls` e `bucket`. Comparar também o `ezbr_sha256` de `list_edge_functions` dos dois. Diferença = projetos fora de sincronia.
+3. `get_advisors` (tipo security) nos dois projetos. Conhecidos e aceitos: `assinar_visita` e `registrar_acesso` executáveis por logados (de propósito, conferem o perfil por dentro).
+4. No real: administradores ativos (ideal ≥ 2), usuários que nunca entraram, últimas linhas do registro de atividade (exclusões e acessos estranhos).
+5. Salvar o relatório em texto em `C:\Users\thiag\Documents\Claude\Agrocell\Relatórios de segurança\AAAA-MM-DD.txt` (fora do repositório público, de propósito) e resumir ao usuário. Primeiro relatório: 2026-10-21.
+Pendências abertas na 1ª verificação: segundo administrador, proteção contra senhas vazadas (painel do Supabase), backup/restauração, SRI nas bibliotecas por CDN. Verificação automática agendada: o usuário preferiu não agendar (decisão de 21/10/2026).
+
 ### Login e perfis
 Três perfis (tabela `perfis`, papel `admin` | `tecnico` | `cliente`):
 - **admin**: tudo, inclusive cobranças, NFS-e, avisos, documentos da empresa e cadastro de usuários (aba "Usuários").

@@ -14,10 +14,28 @@ O app acompanha a validade de cada certificado emitido (desinsetização, desrat
 
 > **Os dados ficam no banco (Supabase), não neste repositório.** As capturas de tela abaixo usam dados fictícios. Boleto, Pix e NFS-e continuam sendo simulação.
 
+## Visita técnica sem internet
+
+- **Fotos:** dá para tirar uma de cada vez ou escolher várias; elas se acumulam na tela, com miniatura e botão para remover.
+- **Sem conexão:** o app abre sem internet (service worker `sw.js` + bibliotecas em `assets/vendor`) e a visita, com relatório, fotos e assinatura, é guardada no celular (IndexedDB). Quando a internet volta, o envio é automático; a aba **Pendentes** mostra a fila, com Enviar agora e Descartar.
+- O número da OS é definido no envio. A lista de clientes usada offline fica guardada só em aparelhos de técnico e administrador e é apagada ao sair da conta.
+- Teste: `AGROCEL_SENHA_TESTE=<senha> node supabase/teste-offline.mjs` (corta a internet do navegador de verdade).
+
+## Política de privacidade e termo de uso
+
+A tela de login tem links para a **Política de privacidade** e o **Termo de uso**, e quem já entrou encontra o botão **Privacidade** no cabeçalho. O texto descreve os dados tratados, a finalidade, os direitos do titular e as regras de uso. É um texto-base: peça a revisão de um advogado e confirme o e-mail de contato.
+
 ## Registro de atividade e exclusão de dados
 
 - **Aba Registros (administrador):** mostra quem fez o quê e quando (entradas no sistema, cadastros, alterações, assinaturas e exclusões), com busca e filtro. O botão **Baixar registros.txt** salva tudo em um arquivo de texto. Ninguém consegue apagar nem alterar esse registro, e ele nunca guarda senhas nem e-mails.
 - **Exclusão definitiva (administrador):** botões **Excluir** em cliente, certificado, ordem de serviço, cobrança e usuário. Excluir um cliente apaga também tudo o que é dele (certificados, ordens, fotos, cobranças, PDFs e os acessos dele), depois de digitar EXCLUIR. O técnico só consegue excluir fotos.
+
+## Rotina de segurança
+
+O checklist (semanal, mensal, trimestral, antes de mudanças e o que fazer em cada situação) está em `docs/rotina-de-seguranca.pdf`. Para a parte técnica:
+
+- `node supabase/testes-de-acesso.mjs <senha>` roda 44 testes de acesso por perfil no ambiente de teste (ou defina a variável `AGROCEL_SENHA_TESTE`). Todos devem passar antes de mexer no sistema real.
+- `supabase/verificar-projetos.sql` compara as regras do banco real com as do teste.
 
 ## Ambiente de teste
 

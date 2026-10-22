@@ -66,6 +66,10 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--lime);outline-of
 .who{font-size:13px;opacity:.85}
 .hbtn{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.18);color:var(--on-brand);font:700 13px var(--body);padding:6px 12px;border-radius:9px;cursor:pointer}
 .btn:disabled{opacity:.5;cursor:not-allowed}
+.politica{display:grid;gap:4px;font-size:14px;line-height:1.55}
+.politica h3{font-family:var(--display);font-size:15px;margin:12px 0 2px;color:var(--fg)}
+.politica p{margin:0}
+.politica ul{margin:0;padding-left:20px;display:grid;gap:3px}
 .hbtn:hover{background:rgba(0,0,0,.4)}
 .login{max-width:420px;margin:28px auto}
 .login h2{font-size:22px;margin:0 0 6px}
@@ -286,6 +290,7 @@ form h3 .note{font-weight:500}
     <nav class="tabs" id="tabs" role="tablist"></nav>
     <div class="role" hidden>
       <span class="who" id="who"></span>
+      <button class="hbtn" id="btnPriv">Privacidade</button>
       <button class="hbtn" id="btnConta">Minha conta</button>
       <button class="hbtn" id="btnSair">Sair</button>
     </div>
@@ -293,13 +298,14 @@ form h3 .note{font-weight:500}
 </div></header>
 
 <div class="demo gut" id="demoBar" hidden><div class="wrap">AMBIENTE DE TESTE · dados fictícios, pode mexer à vontade. Nada aqui vai para o sistema real.</div></div>
+<div class="demo gut" id="offBar" hidden><div class="wrap">Sem conexão com a internet. As visitas registradas agora ficam salvas neste aparelho e são enviadas sozinhas quando a internet voltar.</div></div>
 <main class="gut"><div class="wrap" id="app"></div></main>
 <div class="modal" id="modal" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="assets/vendor/xlsx.full.min.js"></script>
+<script src="assets/vendor/jspdf.umd.min.js"></script>
+<script src="assets/vendor/supabase.js"></script>
 <script>
 const HOJE = new Date(); HOJE.setHours(0,0,0,0);
 const iso=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
@@ -315,7 +321,7 @@ const AMBIENTES = {
   teste: {url:"https://fnwtbezcalgnihuckolc.supabase.co", key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZud3RiZXpjYWxnbmlodWNrb2xjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MTc4MTgsImV4cCI6MjEwODE5MzgxOH0.bS4YdG_L6dc_DDkED-LsQv6-OIE2eqHOmVDn-K4Fmgs"}
 };
 const AMBIENTE = /[?&]teste\b/.test(location.search) ? "teste" : "real";
-const sb = supabase.createClient(AMBIENTES[AMBIENTE].url, AMBIENTES[AMBIENTE].key);
+const sb = supabase.createClient(AMBIENTES[AMBIENTE].url, AMBIENTES[AMBIENTE].key, {global: {fetch: (...a) => fetch(...a)}});
 if(AMBIENTE === "teste"){
   document.title = "TESTE · " + document.title;
   document.getElementById("demoBar").hidden = false;
@@ -336,6 +342,7 @@ async function carregar(){
     if(data.length < 1000) break;
   }
   db = out; snap = s;
+  if(isStaff()) OFF.guardarCache().catch(() => {});
 }
 async function carregarUsuarios(){
   const {data, error} = await sb.from("perfis").select("*").order("nome");
@@ -343,6 +350,7 @@ async function carregarUsuarios(){
 }
 // Grava no banco só o que mudou desde a última leitura/gravação.
 function save(){
+  if(OFFLINE){toast("Sem internet: não dá para salvar agora."); return Promise.resolve(false)}
   const up = [], vivos = new Set();
   TABELAS.forEach(t => (db[t] = db[t] || []).forEach(o => {
     if(!o.id) o.id = t[0] + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
@@ -351,21 +359,25 @@ function save(){
   }));
   const del = [...snap.keys()].filter(k => !vivos.has(k)); del.forEach(k => snap.delete(k));
   fila = fila.then(async () => {
-    if(up.length){const {error} = await sb.from("registros").upsert(up); if(error) throw error}
-    for(const k of del){const i = k.indexOf(":"); const {error} = await sb.from("registros").delete().eq("tipo", k.slice(0,i)).eq("id", k.slice(i+1)); if(error) throw error}
+    for(let i = 0; i < up.length; i += 500){const {error} = await sb.from("registros").upsert(up.slice(i, i + 500)); if(error) throw error}
+    const porTipo = {}; del.forEach(k => {const i = k.indexOf(":"); (porTipo[k.slice(0, i)] || (porTipo[k.slice(0, i)] = [])).push(k.slice(i + 1))});
+    for(const [t, ids] of Object.entries(porTipo)) for(let i = 0; i < ids.length; i += 100){const {error} = await sb.from("registros").delete().eq("tipo", t).in("id", ids.slice(i, i + 100)); if(error) throw error}
+    if(isStaff()) OFF.guardarCache().catch(() => {});
     return true;
-  }).catch(async e => {toast("Não foi possível salvar: " + (e.message || e)); try{await carregar(); render()}catch(_){} return false});
+  }).catch(async e => {toast("Não foi possível salvar: " + (e.message || e)); try{await carregar(); if(!enviando) render()}catch(_){} return false});
   return fila;
 }
 async function entrar(session){
-  const {data:p} = await sb.from("perfis").select("*").eq("id", session.user.id).maybeSingle();
+  const {data:p, error:e0} = await sb.from("perfis").select("*").eq("id", session.user.id).maybeSingle();
+  if(e0 && esRede(e0)) return "__rede__";
   if(!p || !p.ativo){await sb.auth.signOut(); ME = null; return "Seu acesso não está ativo. Fale com a Agrocel."}
-  ME = p; modo = p.papel === "cliente" ? "cliente" : "admin"; cliAtual = p.cliente_id; tab = "painel"; filtro = null; busca = "";
-  try{await carregar(); if(isAdmin()) await carregarUsuarios()}catch(e){await sb.auth.signOut(); ME = null; return "Não foi possível carregar os dados: " + (e.message || e)}
+  ME = p; OFFLINE = false; modo = p.papel === "cliente" ? "cliente" : "admin"; cliAtual = p.cliente_id; tab = "painel"; filtro = null; busca = "";
+  try{await carregar(); if(isAdmin()) await carregarUsuarios()}catch(e){ME = null; if(esRede(e)) return "__rede__"; await sb.auth.signOut(); return "Não foi possível carregar os dados: " + (e.message || e)}
   abertos = new Set(db.clientes.slice(0,2).map(c => c.id));
+  if(isStaff()) recarregarSaida().then(() => enviarPendentes());
   return null;
 }
-async function sair(){await sb.auth.signOut(); ME = null; REGS = []; REGS_OK = false; db = novoDB(); snap = new Map(); USUARIOS = []; tab = "painel"; closeModal(); render()}
+async function sair(){await sb.auth.signOut(); OFF.limparCache().catch(() => {}); SAIDA = []; OFFLINE = false; ME = null; REGS = []; REGS_OK = false; db = novoDB(); snap = new Map(); USUARIOS = []; tab = "painel"; closeModal(); render()}
 async function chamarUsuarios(body){
   const {data, error} = await sb.functions.invoke("usuarios", {body});
   if(error){let m = error.message; try{const j = await error.context.json(); if(j.erro) m = j.erro}catch(_){} return {erro:m}}
@@ -384,8 +396,8 @@ async function reduzir(file){
     return blob ? new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", {type:"image/jpeg"}) : file;
   }catch(_){return file}
 }
-async function subir(file, cli){
-  const f = await reduzir(file);
+async function subir(file, cli, pronta){
+  const f = pronta ? file : await reduzir(file);
   const nome = f.name.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^\w.-]+/g, "_");
   const path = `${cli}/${Date.now().toString(36)}${Math.random().toString(36).slice(2,5)}-${nome}`;
   const {error} = await sb.storage.from("anexos").upload(path, f, {contentType:f.type});
@@ -431,19 +443,21 @@ function docsHTML(id){const ds=(db.docs||[]).filter(x=>x.cli===id);return ds.len
 
 function abasDoPerfil(){
   if(!ME) return [];
-  if(ME.papel==="admin") return [["painel","Painel"],["visita","Registrar visita"],["cobrancas","Cobranças"],["clientes","Clientes"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"],["usuarios","Usuários"],["registros","Registros"]];
-  if(ME.papel==="tecnico") return [["painel","Painel"],["visita","Registrar visita"],["clientes","Clientes"],["novo","Novo certificado"]];
+  if(OFFLINE) return [["visita","Registrar visita"],["pendentes","Pendentes ("+SAIDA.length+")"]];
+  if(ME.papel==="admin") return [["painel","Painel"],["visita","Registrar visita"],["cobrancas","Cobranças"],["clientes","Clientes"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"],["usuarios","Usuários"],["registros","Registros"]].concat(SAIDA.length?[["pendentes","Pendentes ("+SAIDA.length+")"]]:[]);
+  if(ME.papel==="tecnico") return [["painel","Painel"],["visita","Registrar visita"],["clientes","Clientes"],["novo","Novo certificado"]].concat(SAIDA.length?[["pendentes","Pendentes ("+SAIDA.length+")"]]:[]);
   return [["painel","Meus certificados"]];
 }
 function render(){
   const T=abasDoPerfil(), tabsEl=document.getElementById("tabs"), app=document.getElementById("app");
   document.querySelector(".role").hidden=!ME;
+  atualizarBarra();
   if(!ME){tabsEl.innerHTML="";app.innerHTML=viewLogin();wireLogin();return}
   document.getElementById("who").textContent=`${ME.nome} · ${PAPEL_NOME[ME.papel]}`;
-  if(!T.find(t=>t[0]===tab)) tab="painel";
-  tabsEl.innerHTML=T.map(([k,l])=>`<button role="tab" aria-selected="${k===tab}" data-tab="${k}">${l}</button>`).join("");
+  if(!T.find(t=>t[0]===tab)) tab=OFFLINE?"visita":"painel";
+  renderTabs();
   if(modo==="cliente"){app.innerHTML=viewCliente();return}
-  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="cobrancas"?viewCobrancas():tab==="clientes"?viewClientes():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():tab==="usuarios"?viewUsuarios():tab==="registros"?viewRegistros():viewAgrocel();
+  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="cobrancas"?viewCobrancas():tab==="clientes"?viewClientes():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():tab==="usuarios"?viewUsuarios():tab==="registros"?viewRegistros():tab==="pendentes"?viewPendentes():viewAgrocel();
   if(tab==="registros") wireRegistros();
   if(tab==="usuarios") wireUsuarios();
   if(tab==="agrocel") wireAgrocel();
@@ -463,7 +477,7 @@ function viewPainel(){
     <span class="meter"><b style="width:${n(k)/tot*100}%;background:${COR[k]}"></b></span></button>`;
   const venc=[...db.certs].sort((a,b)=>d(a.venc)-d(b.venc)).slice(0,6);
   const pros=[...db.proprios].sort((a,b)=>d(a.venc)-d(b.venc));
-  return `<section class="kpis">
+  return `${avisoSaidaHTML()}<section class="kpis">
     <div class="kpi score">${ring(pct)}<div><span class="lbl">Índice de conformidade</span>
       <div class="hint" style="margin-top:4px">${n("g")} de ${ss.length} certificados em dia, em ${db.clientes.length} clientes</div>
       ${prox?`<div class="hint" style="margin-top:6px">Próximo vencimento: <b>${fmt(prox.venc)}</b></div>`:""}</div></div>
@@ -650,56 +664,6 @@ async function fotosRender(v){
 }
 function closeModal(){if(confirmar.res){const r=confirmar.res;confirmar.res=null;r(false)}const m=document.getElementById("modal");m.hidden=true;m.innerHTML="";document.body.style.overflow=""}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
-function viewVisita(){const a=new Date();a.setSeconds(0,0);const local=new Date(a-a.getTimezoneOffset()*6e4).toISOString().slice(0,16);
-  return `<div class="card"><div class="steps"><span>1 · Serviço e cobrança</span><span>2 · Orientações</span><span>3 · Assinatura do cliente</span></div>
-  <form id="fVis">
-    <h3 class="full first">Dados da visita <span class="note mono">${proxOS()}</span></h3>
-    <label class="full">Cliente<select id="vCliente">${db.clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select></label>
-    <label>Técnico responsável<input id="vTec" value="${esc(ME.nome)}" readonly></label>
-    <label>Data e hora da visita<input id="vData" type="datetime-local" value="${local}"></label>
-    <label>Tipo de serviço<select id="vTipo">${Object.keys(VALIDADE_MESES).map(t=>`<option>${t}</option>`).join("")}</select></label>
-    <label>Praga-alvo<input id="vPraga" placeholder="Ex.: baratas e formigas"></label>
-    <label class="full">Produtos usados<input id="vProd" placeholder="Ex.: Optigard Duo (Lambda-cialotrina + Tiametoxam)"></label>
-    <label class="full">Áreas tratadas<input id="vAreas" placeholder="Ex.: cozinha, depósito, perímetro externo"></label>
-    <label class="full">Relatório da visita<textarea id="vRel" placeholder="O que foi encontrado, o que foi feito e recomendações ao cliente"></textarea></label>
-    <label class="full">Fotos <span class="note">opcional · várias de uma vez</span><input id="vFotos" type="file" accept="image/*" multiple></label>
-    <label class="check full"><input type="checkbox" id="vCert" checked> Gerar certificado válido até <input type="date" id="vVenc" class="inl" aria-label="Validade do certificado"></label>
-    ${isAdmin()?`<h3 class="full">Cobrança</h3>
-    <label>Valor do serviço (R$)<input id="vValor" inputmode="decimal" placeholder="0,00"></label>
-    <label>Vencimento<input id="vVencCob" type="date"></label>
-    <label class="full">Forma de pagamento<select id="vForma"><option>Boleto + Pix</option><option>Boleto</option><option>Pix</option><option>Não cobrar (contrato ou garantia)</option></select></label>
-    <label class="check full"><input type="checkbox" id="vGerar" checked> Gerar boleto/Pix ao concluir a visita</label>`:""}
-    <h3 class="full">Orientações ao cliente</h3>
-    <ul class="termo full">${TERMO.map(t=>`<li>${t}</li>`).join("")}</ul>
-    <h3 class="full">Confirmação do cliente</h3>
-    <div class="full radios">
-      <label class="rad"><input type="radio" name="vModo" value="agora" checked><span><b>Assinar agora</b>O responsável assina com o dedo na tela deste celular ou tablet</span></label>
-      <label class="rad"><input type="radio" name="vModo" value="depois"><span><b>Cliente confirma depois</b>A ordem fica pendente na área do cliente até ele assinar</span></label>
-    </div>
-    <div class="full signform" id="vSign"><label>Nome do responsável no local<input id="vNome" autocomplete="name"></label><div class="padwrap"><canvas id="pad" aria-label="Quadro de assinatura"></canvas><span class="padhint">Assine aqui com o dedo</span><button type="button" class="clear" id="padClear">Limpar</button></div></div>
-    <button class="btn" type="submit">Concluir visita</button>
-  </form></div>`}
-function wireVisita(){const $=id=>document.getElementById(id);let pad=makePad($("pad"));$("padClear").onclick=()=>pad.clear();
-  const modo_=()=>document.querySelector('[name=vModo]:checked').value;
-  const sug=()=>{$("vVenc").value=addMeses(($("vData").value||iso(HOJE)).slice(0,10),VALIDADE_MESES[$("vTipo").value])};sug();$("vTipo").onchange=sug;$("vData").onchange=sug;
-  if($("vVencCob")){const x=new Date(HOJE);x.setDate(x.getDate()+10);$("vVencCob").value=iso(x)}
-  document.querySelectorAll('[name=vModo]').forEach(r=>r.onchange=()=>{const ag=modo_()==="agora";$("vSign").hidden=!ag;if(ag)pad=makePad($("pad"))});
-  $("fVis").onsubmit=async e=>{e.preventDefault();const ag=modo_()==="agora";
-    if(!db.clientes.length)return toast("Cadastre um cliente antes de registrar a visita.");
-    if(!$("vData").value)return toast("Informe a data da visita.");
-    if(ag&&!$("vNome").value.trim())return toast("Escreva o nome de quem está assinando.");
-    if(ag&&pad.isEmpty())return toast("Peça para o cliente assinar no quadro.");
-    const bt=$("fVis").querySelector("button[type=submit]");
-    const id="v"+Date.now();const v={id,os:proxOS(),cli:$("vCliente").value,tecnico:$("vTec").value,data:$("vData").value,tipo:$("vTipo").value,praga:$("vPraga").value||"-",prod:$("vProd").value||"-",areas:$("vAreas").value,relatorio:$("vRel").value.trim(),status:"pendente"};
-    if(ag) assinar(v,$("vNome").value.trim(),pad.data());
-    const fotos=[...$("vFotos").files];
-    if(fotos.length){bt.disabled=true;toast("Enviando fotos…");try{for(const f of fotos){const path=await subir(f,v.cli);db.fotos.push({id:"f"+Date.now()+Math.random().toString(36).slice(2,5),cli:v.cli,visita:id,path,nome:f.name,em:new Date().toISOString()})}}catch(err){bt.disabled=false;return toast("Não foi possível enviar as fotos: "+(err.message||err))}}
-    (db.visitas=db.visitas||[]).push(v);
-    if($("vCert").checked&&$("vVenc").value) db.certs.push({id:"k"+Date.now(),cli:v.cli,tipo:v.tipo,praga:v.praga,prod:v.prod,exec:v.data.slice(0,10),venc:$("vVenc").value,pdf:"",visita:id});
-    const valor=$("vValor")?parseValor($("vValor").value):0;
-    if(valor>0&&!$("vForma").value.startsWith("Não")){const b={id:"b"+Date.now(),visita:id,cli:v.cli,desc:`${v.tipo} · ${v.os}`,valor,venc:$("vVencCob").value||iso(HOJE),forma:$("vForma").value,status:"aberta"};if($("vGerar").checked)gerarCodigos(b);(db.cobrancas=db.cobrancas||[]).push(b)}
-    abertos.add(v.cli);save();tab="painel";filtro=null;render();toast(ag?`${v.os} concluída e assinada`:`${v.os} registrada, aguardando o cliente`)}}
-
 // ---------- Cadastro de clientes ----------
 let editando=null;
 const SEGMENTOS=["Posto de combustível","Mercado e padaria","Restaurante e lanchonete","Laticínio e frigorífico","Indústria","Hotel e pousada","Escola e creche","Clínica e hospital","Condomínio e residência","Outro"];
@@ -938,7 +902,10 @@ function tabelas(){const sit=id=>{const p=piorStatus(id);return p?LABEL[p]:"Sem 
 function openExport(){modal(`<div class="sheet">${cab("Exportar dados","Escolha o que vai na planilha")}
   <div class="exp">${DATASETS.map(([k,l,d])=>`<label class="check"><input type="checkbox" data-ds="${k}" checked> ${l}<small>${d}</small></label>`).join("")}</div>
   <div class="expbtns"><button class="btn" id="exXlsx">Planilha Excel (.xlsx)</button><button class="btn ghost" id="exCsv">CSV das empresas</button><button class="btn ghost" id="exJson">Backup completo (.json)</button></div>
-  <p class="note">A planilha traz uma aba para cada item marcado. O backup guarda tudo e serve para migrar para a versão definitiva.</p></div>`);
+  <p class="note">A planilha traz uma aba para cada item marcado. O backup guarda todos os dados (sem fotos, PDFs e logins).</p>
+  <div class="expbtns" style="border-top:1px solid var(--line);padding-top:14px"><label class="btn ghost" style="cursor:pointer">Restaurar backup…<input id="rsArq" type="file" accept=".json,application/json" hidden></label></div>
+  <p class="note">Restaurar lê um arquivo de backup (.json) feito aqui. Você confere o que muda antes de confirmar.</p></div>`);
+  document.getElementById("rsArq").onchange=e=>{const f=e.target.files[0];if(f)abrirRestaurar(f)};
   const sel=()=>[...document.querySelectorAll("[data-ds]:checked")].map(i=>i.dataset.ds);const dt=iso(HOJE);
   document.getElementById("exXlsx").onclick=()=>{if(typeof XLSX==="undefined")return toast("Não foi possível carregar o gerador de planilhas. Tente o CSV.");
     const ks=sel();if(!ks.length)return toast("Marque pelo menos um item.");const T=tabelas(),wb=XLSX.utils.book_new();
@@ -946,7 +913,7 @@ function openExport(){modal(`<div class="sheet">${cab("Exportar dados","Escolha 
     const out=XLSX.write(wb,{bookType:"xlsx",type:"array"});salvar(`agrocel-dados-${dt}.xlsx`,new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}))};
   document.getElementById("exCsv").onclick=()=>{const rows=tabelas().clientes;const cols=Object.keys(rows[0]||{});const q=v=>{const t=String(v??"");return /[;"\n]/.test(t)?`"${t.replace(/"/g,'""')}"`:t};
     const csv="﻿"+[cols.join(";"),...rows.map(r=>cols.map(c=>q(typeof r[c]==="number"?String(r[c]).replace(".",","):r[c])).join(";"))].join("\r\n");salvar(`agrocel-empresas-${dt}.csv`,new Blob([csv],{type:"text/csv"}))};
-  document.getElementById("exJson").onclick=()=>salvar(`agrocel-backup-${dt}.json`,new Blob([JSON.stringify({exportadoEm:new Date().toISOString(),...db},null,2)],{type:"application/json"}))}
+  document.getElementById("exJson").onclick=()=>salvar(`agrocel-backup-${dt}.json`,new Blob([JSON.stringify({formato:"agrocel-backup-v1",ambiente:AMBIENTE,exportadoEm:new Date().toISOString(),...db},null,2)],{type:"application/json"}))}
 async function salvar(nome,blob){
   if(window.claude&&typeof window.claude.use==="function"){const dl=await window.claude.use("downloads").catch(()=>null);
     if(dl){try{await dl.save({filename:nome,data:blob});toast("Arquivo salvo")}catch(e){if(e&&e.code!=="declined")toast("Não foi possível salvar o arquivo nesta tela.")}return}
@@ -954,6 +921,138 @@ async function salvar(nome,blob){
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=nome;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Download iniciado")}
 
 function toast(t){const el=document.getElementById("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2400)}
+
+// ---------- Restaurar backup (somente administrador) ----------
+// O arquivo vem de fora, então nada entra sem passar por esta validação: só campos conhecidos, com formato conferido.
+const RE_ID = /^[\w-]{1,40}$/, RE_DATA = /^\d{4}-\d{2}-\d{2}$/, RE_PATH = /^[\w-]+\/[\w.\-]+$/;
+const RE_HORA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})?$/;
+const V = {
+  txt: (n = 500) => v => typeof v === "string" && v.length <= n,
+  id: v => typeof v === "string" && RE_ID.test(v),
+  data: v => typeof v === "string" && RE_DATA.test(v),
+  hora: v => typeof v === "string" && RE_HORA.test(v),
+  num: v => typeof v === "number" && isFinite(v) && v >= 0 && v < 1e9,
+  em: lista => v => lista.includes(v),
+  rx: (r, n = 500) => v => typeof v === "string" && v.length <= n && r.test(v),
+};
+const T3 = V.txt(300), T1 = V.txt(1000);
+// campo: [validador, obrigatório?, esquema aninhado?]
+const ESQ = {
+  clientes: {id:[V.id,1], nome:[T3,1], fantasia:[T3], seg:[V.txt(100)], cnpj:[V.rx(/^[\d./-]{0,20}$/)], im:[V.txt(60)], cep:[V.rx(/^[\d-]{0,10}$/)],
+    rua:[T3], num:[V.txt(30)], comp:[V.txt(100)], bairro:[T3], cidade:[T3], uf:[V.txt(10)], resp:[T3], tel:[V.rx(/^[\d() +-]{0,25}$/)], email:[T3], obs:[T1], end:[V.txt(600)]},
+  certs: {id:[V.id,1], cli:[V.id,1], tipo:[T3,1], praga:[T3], prod:[T1], exec:[V.data], venc:[V.data,1], pdf:[V.rx(RE_PATH)], visita:[V.id]},
+  docs: {id:[V.id,1], cli:[V.id,1], nome:[T3,1], data:[V.data], pdf:[V.rx(RE_PATH)]},
+  visitas: {id:[V.id,1], os:[V.rx(/^OS-\d{4}-\d{4}$/),1], cli:[V.id,1], tecnico:[T3], data:[V.hora,1], tipo:[T3], praga:[T3], prod:[T1], areas:[T1], relatorio:[V.txt(5000)],
+    status:[V.em(["pendente","assinada"]),1],
+    assinatura:[null,0,{nome:T3, img:V.rx(/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/, 800000), em:V.hora, cod:V.rx(/^[\w-]{4,20}$/)}]},
+  cobrancas: {id:[V.id,1], visita:[V.id], cli:[V.id,1], desc:[T3,1], valor:[V.num,1], venc:[V.data], forma:[V.txt(60)], status:[V.em(["aberta","paga"]),1],
+    geradaEm:[V.hora], pagoEm:[V.data], linha:[V.rx(/^[\d. ]{20,80}$/)], pix:[V.rx(/^[\w.\-]{10,400}$/)],
+    nfse:[null,0,{numero:V.rx(/^\d{1,10}$/), emitidaEm:V.hora, aliquota:V.num, cod:V.rx(/^[\w-]{4,20}$/), desc:T3}]},
+  proprios: {id:[V.id,1], nome:[T3,1], venc:[V.data,1]},
+  fotos: {id:[V.id,1], cli:[V.id,1], visita:[V.id], path:[V.rx(RE_PATH),1], nome:[T3], em:[V.hora]},
+};
+function limparItem(t, o){
+  if(!o || typeof o !== "object" || Array.isArray(o)) return {erro: "não é um registro"};
+  const out = {};
+  for(const [k, [val, req, sub]] of Object.entries(ESQ[t])){
+    const x = o[k];
+    if(x === undefined || x === null || x === ""){if(req) return {erro: `falta "${k}"`}; continue}
+    if(sub){
+      if(typeof x !== "object" || Array.isArray(x)) return {erro: `"${k}" inválido`};
+      const so = {};
+      for(const [k2, v2] of Object.entries(sub)){const y = x[k2]; if(y === undefined || y === null || y === "") continue; if(!v2(y)) return {erro: `"${k}.${k2}" inválido`}; so[k2] = y}
+      out[k] = so; continue;
+    }
+    if(!val(x)) return {erro: `"${k}" inválido`};
+    out[k] = x;
+  }
+  if(t === "visitas" && out.status === "assinada" && !(out.assinatura && out.assinatura.nome && out.assinatura.img)) return {erro: "ordem assinada sem assinatura"};
+  for(const f of ["path", "pdf"]) if(out[f] && !out[f].startsWith(out.cli + "/")) return {erro: `"${f}" fora da pasta do cliente`};
+  return {ok: out};
+}
+function validarBackup(j){
+  if(!j || typeof j !== "object" || Array.isArray(j)) return {erro: "O arquivo não é um backup do app."};
+  if(j.formato && j.formato !== "agrocel-backup-v1") return {erro: "Versão de backup desconhecida."};
+  const limpo = {}, ign = []; let total = 0;
+  for(const t of TABELAS){
+    const arr = j[t];
+    if(arr === undefined){limpo[t] = []; continue}
+    if(!Array.isArray(arr)) return {erro: `A lista "${TIPO_REG[t]}" do backup está num formato inválido.`};
+    if(arr.length > 20000) return {erro: `Backup grande demais (${TIPO_REG[t]}).`};
+    const vistos = new Set(); limpo[t] = [];
+    arr.forEach((o, i) => {
+      const r = limparItem(t, o);
+      if(r.erro){ign.push(`${TIPO_REG[t]} nº ${i + 1}: ${r.erro}`); return}
+      if(vistos.has(r.ok.id)){ign.push(`${TIPO_REG[t]} ${r.ok.id}: repetido no arquivo`); return}
+      vistos.add(r.ok.id); limpo[t].push(r.ok); total++;
+    });
+  }
+  if(!total) return {erro: "O backup não tem nenhum dado aproveitável."};
+  return {limpo, ign, ambiente: j.ambiente || null, exportadoEm: typeof j.exportadoEm === "string" ? j.exportadoEm : null};
+}
+function abrirRestaurar(file){
+  if(!isAdmin()) return;
+  if(file.size > 30 * 1024 * 1024) return toast("Arquivo grande demais para um backup (máximo 30 MB).");
+  file.text().then(txt => {
+    let j; try{j = JSON.parse(txt)}catch(_){return toast("Não consegui ler o arquivo: ele não é um backup válido.")}
+    const v = validarBackup(j); if(v.erro) return toast(v.erro);
+    mostrarRestaurar(file.name, v);
+  }).catch(() => toast("Não foi possível abrir o arquivo."));
+}
+function resumoRestauracao(v){
+  return TABELAS.map(t => {
+    const ids = new Set(db[t].map(o => o.id)), nov = new Set(v.limpo[t].map(o => o.id));
+    const n = v.limpo[t].length, ja = v.limpo[t].filter(o => ids.has(o.id)).length;
+    return {t, n, ja, novos: n - ja, soAqui: db[t].filter(o => !nov.has(o.id)).length};
+  }).filter(r => r.n || r.soAqui);
+}
+function mostrarRestaurar(nome, v){
+  const linhas = resumoRestauracao(v), outro = !!v.ambiente && v.ambiente !== AMBIENTE;
+  const nomeAmb = a => a === "teste" ? "TESTE" : "REAL";
+  modal(`<div class="sheet">${cab("Restaurar backup", esc(nome))}
+  ${outro ? `<div class="simu" style="background:var(--red-bg);color:var(--red)">Atenção: este backup foi feito no ambiente ${nomeAmb(v.ambiente)}, e você está no ambiente ${nomeAmb(AMBIENTE)}.</div>` : ""}
+  <p class="note" style="margin:0">${v.exportadoEm ? "Backup de " + esc(fmtHora(v.exportadoEm)) + ". " : ""}Confira o que será feito:</p>
+  <table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="text-align:left"><th>Item</th><th>No arquivo</th><th>Novos</th><th>Já existem</th><th>Só aqui hoje</th></tr>
+  ${linhas.map(r => `<tr><td>${esc(TIPO_REG[r.t])}</td><td>${r.n}</td><td>${r.novos}</td><td>${r.ja}</td><td>${r.soAqui}</td></tr>`).join("")}</table>
+  ${v.ign.length ? `<p class="note" style="color:var(--amber)"><b>${v.ign.length} item(ns) do arquivo serão ignorados</b> por dados inválidos: ${esc(v.ign.slice(0, 3).join("; "))}${v.ign.length > 3 ? "…" : ""}</p>` : ""}
+  <div class="radios">
+    <label class="rad"><input type="radio" name="rsModo" value="mesclar" checked><span><b>Mesclar (recomendado)</b>Adiciona o que falta e atualiza o que já existe com os dados do arquivo. Não apaga nada.</span></label>
+    <label class="rad"><input type="radio" name="rsModo" value="substituir"><span><b>Substituir tudo</b>Deixa o sistema igual ao arquivo. O que só existe aqui hoje é apagado.</span></label></div>
+  <p class="note">Fotos e PDFs não fazem parte do backup: se os arquivos foram apagados, os links ficam sem arquivo. Os logins também não voltam: recrie em Criar acesso.</p>
+  <label id="rsWrap" style="display:grid;gap:5px;font-size:12px;font-weight:700;color:var(--muted)" hidden>Digite CONFIRMAR para continuar<input id="rsTxt" autocomplete="off"></label>
+  <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="rsOk">Restaurar</button><button class="btn ghost" id="rsNo">Cancelar</button></div></div>`);
+  const $ = id => document.getElementById(id), modo = () => document.querySelector("[name=rsModo]:checked").value;
+  const exige = () => outro || modo() === "substituir";
+  const atualiza = () => {$("rsWrap").hidden = !exige(); $("rsOk").disabled = exige() && $("rsTxt").value.trim().toUpperCase() !== "CONFIRMAR"};
+  document.querySelectorAll("[name=rsModo]").forEach(r => r.onchange = atualiza);
+  $("rsTxt").oninput = atualiza; atualiza();
+  $("rsNo").onclick = closeModal;
+  $("rsOk").onclick = async () => {$("rsOk").disabled = true; await aplicarBackup(nome, v, modo())};
+}
+async function aplicarBackup(nome, v, modo){
+  const rel = {novos: 0, atualizados: 0, apagados: 0, ignorados: v.ign.length};
+  const clientes = new Set(modo === "substituir" ? v.limpo.clientes.map(c => c.id) : [...db.clientes.map(c => c.id), ...v.limpo.clientes.map(c => c.id)]);
+  const copia = {}; TABELAS.forEach(t => copia[t] = db[t]);
+  try{
+    for(const t of TABELAS){
+      let lista = v.limpo[t];
+      if(t !== "clientes" && t !== "proprios"){const a = lista.length; lista = lista.filter(o => clientes.has(o.cli)); rel.ignorados += a - lista.length}
+      const ids = new Set(db[t].map(o => o.id));
+      lista.forEach(o => ids.has(o.id) ? rel.atualizados++ : rel.novos++);
+      if(modo === "substituir"){const nov = new Set(lista.map(o => o.id)); rel.apagados += db[t].filter(o => !nov.has(o.id)).length; db[t] = lista.slice()}
+      else{const mapa = new Map(db[t].map(o => [o.id, o])); lista.forEach(o => mapa.set(o.id, o)); db[t] = [...mapa.values()]}
+    }
+    toast("Restaurando…");
+    if(!await save()) return;
+    const resumo = `Modo ${modo}: ${rel.novos} novos, ${rel.atualizados} atualizados, ${rel.apagados} apagados, ${rel.ignorados} ignorados`;
+    await sb.rpc("registrar_evento", {p_acao: "restaurou backup", p_resumo: resumo});
+    REGS_OK = false; closeModal(); render();
+    toast(`Backup restaurado: ${rel.novos} novos, ${rel.atualizados} atualizados, ${rel.apagados} apagados`);
+  }catch(e){
+    TABELAS.forEach(t => db[t] = copia[t]);
+    toast("Não foi possível restaurar: " + (e.message || e)); try{await carregar(); render()}catch(_){}
+  }
+}
 
 // ---------- Exclusão de cadastros (LGPD: eliminação) e registro de atividade ----------
 // A exclusão é definitiva. Cada exclusão e cada alteração ficam no registro de atividade (aba Registros, só admin).
@@ -1099,6 +1198,348 @@ function wireRegistros(){
   $("rgTxt").onclick = () => salvar("registros.txt", new Blob([textoRegistros()], {type: "text/plain;charset=utf-8"}));
 }
 
+// ---------- Política de privacidade e termo de uso ----------
+// Texto-base, escrito a partir do que o app realmente faz. Revise com um advogado antes de tratá-lo como definitivo.
+const POLITICA_VERSAO = "1", POLITICA_DATA = "22 de outubro de 2026";
+const CONTATO_PRIVACIDADE = {email: "agrocelrf@hotmail.com", fone: "(48) 3653-1256"};
+const TEXTO_PRIVACIDADE = () => `
+<h3>1. Quem é responsável pelos dados</h3>
+<p>A <b>Agrocel – Soluções no campo e na cidade</b>, de Rio Fortuna/SC, é a responsável (controladora) pelos dados tratados neste sistema. Dúvidas e pedidos sobre seus dados: <b>${esc(CONTATO_PRIVACIDADE.email)}</b> ou ${esc(CONTATO_PRIVACIDADE.fone)}.</p>
+<h3>2. Quais dados tratamos</h3>
+<ul>
+<li><b>Quem usa o sistema:</b> nome, e-mail, perfil de acesso e a senha (guardada de forma embaralhada, nunca em texto aberto). Também registramos quando você entra e o que faz no sistema.</li>
+<li><b>Clientes da Agrocel:</b> razão social, nome fantasia, CNPJ, endereço, e-mail e telefone, e o nome do responsável no local.</li>
+<li><b>Serviços:</b> ordens de serviço, certificados, relatórios e fotos das visitas, e a assinatura desenhada na tela, com nome, data, hora e código de verificação.</li>
+<li><b>Financeiro:</b> valores, vencimentos e situação das cobranças.</li>
+</ul>
+<h3>3. Para que usamos e em que base legal</h3>
+<ul>
+<li>Executar o serviço contratado e emitir os certificados e comprovantes (execução de contrato).</li>
+<li>Cumprir exigências legais e da fiscalização sanitária (obrigação legal e regulatória).</li>
+<li>Avisar sobre vencimentos e fazer a cobrança do serviço (execução de contrato).</li>
+<li>Manter a segurança do sistema e identificar acessos indevidos, por meio do registro de atividade (legítimo interesse).</li>
+</ul>
+<p>Não vendemos dados e não os usamos para propaganda de terceiros.</p>
+<h3>4. Quem acessa e com quem compartilhamos</h3>
+<ul>
+<li><b>Dentro do sistema:</b> o administrador vê tudo; o técnico vê clientes, certificados, visitas e fotos; cada cliente vê <b>somente</b> os dados da própria empresa.</li>
+<li><b>Hospedagem:</b> o banco de dados e os arquivos ficam no Supabase, em servidores no Brasil (São Paulo). A página do aplicativo é entregue pelo GitHub Pages, que não guarda os dados do sistema.</li>
+<li><b>Bibliotecas externas:</b> a página carrega bibliotecas de redes de distribuição (cdnjs e jsDelivr), que podem registrar o endereço de internet (IP) de quem acessa.</li>
+<li><b>No seu aparelho:</b> para funcionar sem internet, o aparelho de técnicos e administradores guarda a lista de clientes e as visitas que ainda não foram enviadas. A lista é apagada quando a pessoa sai da conta; as visitas ficam guardadas até serem enviadas.</li>
+<li><b>Autoridades:</b> só quando a lei exigir.</li>
+</ul>
+<h3>5. Como protegemos</h3>
+<ul>
+<li>Conexão criptografada (HTTPS) e senhas guardadas de forma embaralhada.</li>
+<li>Acesso por perfil, conferido no banco de dados, e não só na tela.</li>
+<li>Fotos e PDFs em área privada, abertos por links que expiram em poucos minutos.</li>
+<li>Registro de atividade que ninguém consegue alterar ou apagar.</li>
+<li>Se houver incidente de segurança com dados pessoais, avisaremos as pessoas afetadas e a ANPD, nos termos da lei.</li>
+</ul>
+<h3>6. Por quanto tempo guardamos</h3>
+<p>Guardamos os dados enquanto durar a relação com o cliente e pelo tempo necessário para cumprir obrigações legais e sanitárias. Depois disso, eliminamos ou anonimizamos. Você pode pedir a exclusão antes, quando a lei permitir.</p>
+<h3>7. Seus direitos</h3>
+<p>Pela LGPD, você pode pedir: confirmação de que tratamos seus dados, acesso, correção, anonimização ou eliminação de dados desnecessários, portabilidade, informação sobre com quem compartilhamos, e a revogação de consentimento quando ele for a base do tratamento. Escreva para <b>${esc(CONTATO_PRIVACIDADE.email)}</b>. Respondemos em até 15 dias.</p>
+<h3>8. Crianças e adolescentes</h3>
+<p>O sistema é voltado a empresas e não é destinado a menores de idade.</p>
+<h3>9. Mudanças neste texto</h3>
+<p>Podemos atualizar esta política. A versão e a data ficam no topo desta janela.</p>`;
+const TEXTO_TERMO = () => `
+<h3>1. O que é e quem pode usar</h3>
+<p>O <b>Agrocel Certificados</b> é um sistema para acompanhar a validade de certificados de controle de pragas, registrar visitas técnicas e reunir os documentos de cada cliente. Só pode usar quem foi cadastrado pela Agrocel, com e-mail e senha próprios.</p>
+<h3>2. Sua conta</h3>
+<ul>
+<li>O acesso é pessoal e não pode ser emprestado. Cada pessoa usa o próprio login.</li>
+<li>Troque a senha provisória no primeiro acesso, em <b>Minha conta</b>, e use uma senha que só você conheça.</li>
+<li>Avise a Agrocel se perder o celular ou suspeitar que alguém usou seu acesso.</li>
+<li>O que for feito com o seu login é de sua responsabilidade.</li>
+</ul>
+<h3>3. Uso correto</h3>
+<ul>
+<li>Use o sistema apenas para os serviços da Agrocel e de seus clientes.</li>
+<li>Não tente ver dados de outras empresas, burlar o acesso nem sobrecarregar o sistema.</li>
+<li>Cadastre só os dados necessários. Evite fotografar pessoas e não escreva dados pessoais desnecessários nos relatórios.</li>
+<li>Confira as informações antes de salvar, pois certificados e ordens de serviço têm valor para a fiscalização.</li>
+</ul>
+<h3>4. Assinatura na tela</h3>
+<p>A assinatura feita com o dedo na ordem de serviço é uma assinatura eletrônica simples. Ela fica registrada com o nome de quem assinou, a data, a hora e um código de verificação. Ao assinar, a pessoa declara que o serviço foi realizado e que recebeu as orientações apresentadas.</p>
+<h3>5. Versão em avaliação</h3>
+<p>Esta versão do sistema está em avaliação. Os boletos, os códigos Pix e as notas fiscais mostrados aqui são <b>simulações, sem valor de cobrança ou fiscal</b>.</p>
+<h3>6. Disponibilidade e backups</h3>
+<p>Trabalhamos para manter o sistema disponível, mas não garantimos funcionamento sem interrupções. O administrador pode exportar e restaurar backups dos dados. Fotos, PDFs e logins não fazem parte do backup em arquivo.</p>
+<h3>7. Suspensão e encerramento</h3>
+<p>A Agrocel pode desativar um acesso em caso de uso indevido, de saída da pessoa da empresa ou do fim da relação com o cliente. Os dados são tratados conforme a Política de privacidade.</p>
+<h3>8. Contato e lei aplicável</h3>
+<p>Dúvidas: <b>${esc(CONTATO_PRIVACIDADE.email)}</b> ou ${esc(CONTATO_PRIVACIDADE.fone)}. Este termo segue a lei brasileira.</p>`;
+function abrirPolitica(qual){
+  const abas = [["privacidade", "Política de privacidade", TEXTO_PRIVACIDADE], ["termo", "Termo de uso", TEXTO_TERMO]];
+  const atual = abas.find(a => a[0] === qual) || abas[0];
+  modal(`<div class="sheet">${cab(atual[1], "Versão " + POLITICA_VERSAO + " · " + POLITICA_DATA)}
+  <div style="display:flex;gap:8px;flex-wrap:wrap">${abas.map(a => `<button class="${a[0] === atual[0] ? "btn" : "btn ghost"} sm" data-politica="${a[0]}">${a[1]}</button>`).join("")}</div>
+  <div class="politica">${atual[2]()}</div>
+  <p class="note">Texto-base em revisão. Em caso de dúvida, fale com ${esc(CONTATO_PRIVACIDADE.email)}.</p></div>`);
+}
+
+// ---------- Visitas sem internet (fila guardada no aparelho) ----------
+// A visita é gravada primeiro no aparelho (IndexedDB), com fotos e assinatura, e só então enviada.
+// Se não houver internet, ela fica na fila e é enviada sozinha quando a conexão voltar.
+let OFFLINE = false, SAIDA = [], enviando = false, FOTOS_SEL = [];
+const esRede = e => navigator.onLine === false || /failed to fetch|networkerror|network request failed|load failed|fetch failed|timeout|econn|offline/i.test(String((e && (e.message || e.details)) || e || ""));
+const OFF = {
+  _db: null,
+  abrir(){
+    if(OFF._db) return Promise.resolve(OFF._db);
+    return new Promise((res, rej) => {
+      if(!window.indexedDB) return rej(new Error("Este navegador não guarda dados no aparelho."));
+      const r = indexedDB.open("agrocel-offline-" + AMBIENTE, 1);
+      r.onupgradeneeded = () => {const d = r.result; d.createObjectStore("meta"); d.createObjectStore("saida", {keyPath: "idLocal"})};
+      r.onsuccess = () => {OFF._db = r.result; res(r.result)};
+      r.onerror = () => rej(r.error);
+    });
+  },
+  _op(loja, modo, fn){
+    return OFF.abrir().then(d => new Promise((res, rej) => {
+      const t = d.transaction(loja, modo), req = fn(t.objectStore(loja));
+      t.oncomplete = () => res(req && "result" in req ? req.result : undefined);
+      t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+    }));
+  },
+  ler(chave){return OFF._op("meta", "readonly", s => s.get(chave))},
+  gravar(chave, val){return OFF._op("meta", "readwrite", s => s.put(val, chave))},
+  apagar(chave){return OFF._op("meta", "readwrite", s => s.delete(chave))},
+  // Cópia mínima para abrir o app sem internet: quem é a pessoa e a lista de clientes. Apagada ao sair da conta.
+  guardarCache(){
+    if(!ME || ME.papel === "cliente") return Promise.resolve();
+    return OFF.gravar("perfil", {id: ME.id, nome: ME.nome, email: ME.email, papel: ME.papel, ativo: true, em: Date.now()}).then(() => OFF.gravar("clientes", db.clientes));
+  },
+  async limparCache(){await OFF.apagar("perfil"); await OFF.apagar("clientes")},
+  salvarSaida(it){return OFF._op("saida", "readwrite", s => s.put(it))},
+  removerSaida(id){return OFF._op("saida", "readwrite", s => s.delete(id))},
+  async listarSaida(uid){const todos = await OFF._op("saida", "readonly", s => s.getAll()); return (todos || []).filter(i => i.userId === uid).sort((a, b) => a.criadoEm - b.criadoEm)},
+};
+async function recarregarSaida(){
+  try{SAIDA = ME ? await OFF.listarSaida(ME.id) : []}catch(_){SAIDA = []}
+  renderTabs(); atualizarAviso();
+}
+function renderTabs(){
+  if(!ME) return;
+  document.getElementById("tabs").innerHTML = abasDoPerfil().map(([k, l]) => `<button role="tab" aria-selected="${k === tab}" data-tab="${k}">${l}</button>`).join("");
+  const at = document.querySelector("#tabs [aria-selected=true]"); if(at && at.scrollIntoView) at.scrollIntoView({inline: "center", block: "nearest"});
+}
+function avisoSaidaHTML(){
+  const n = SAIDA.length; if(!n) return "";
+  const bloq = SAIDA.filter(i => i.bloqueada).length;
+  return `<div id="saidaAviso" class="simu" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px"><span>${n} visita${n === 1 ? "" : "s"} salva${n === 1 ? "" : "s"} no celular, aguardando envio${bloq ? ` (${bloq} com problema)` : ""}.</span><button class="btn sm" data-tab="pendentes">Ver e enviar</button></div>`;
+}
+function atualizarAviso(){
+  const el = document.getElementById("saidaAviso"); if(!el) return;
+  if(!SAIDA.length){el.remove(); return}
+  el.outerHTML = avisoSaidaHTML();
+}
+function atualizarBarra(){
+  const b = document.getElementById("offBar"); if(!b) return;
+  b.hidden = !(OFFLINE || navigator.onLine === false);
+}
+
+// Envia uma visita da fila. É seguro repetir: ids fixos, fotos já enviadas não sobem de novo, visita já gravada não duplica.
+async function enviarItem(it){
+  if(navigator.onLine === false) throw new Error("Sem internet.");
+  await carregar();
+  if(!db.clientes.some(c => c.id === it.v.cli)){const e = new Error("O cliente desta visita não existe mais."); e.permanente = true; throw e}
+  for(const f of it.fotos){
+    if(!f.path){f.path = await subir(f.blob, it.v.cli, true); try{await OFF.salvarSaida(it)}catch(_){}}
+  }
+  const ja = db.visitas.find(x => x.id === it.v.id);
+  if(ja) return ja.os;
+  const v = {...it.v, os: proxOS()};
+  db.visitas.push(v);
+  it.fotos.forEach(f => {if(!db.fotos.some(x => x.id === f.id)) db.fotos.push({id: f.id, cli: v.cli, visita: v.id, path: f.path, nome: f.nome, em: f.em})});
+  if(it.cert) db.certs.push({id: it.cert.id, cli: v.cli, tipo: v.tipo, praga: v.praga, prod: v.prod, exec: v.data.slice(0, 10), venc: it.cert.venc, pdf: "", visita: v.id});
+  if(it.cob){
+    const b = {id: it.cob.id, visita: v.id, cli: v.cli, desc: `${v.tipo} · ${v.os}`, valor: it.cob.valor, venc: it.cob.venc, forma: it.cob.forma, status: "aberta"};
+    if(it.cob.gerar) gerarCodigos(b);
+    db.cobrancas.push(b);
+  }
+  if(!await save()) throw new Error("O servidor não confirmou a gravação.");
+  return v.os;
+}
+async function enviarPendentes(manual){
+  if(enviando || !ME || OFFLINE) return;
+  if(navigator.onLine === false){if(manual) toast("Sem internet agora. Tentamos de novo quando a conexão voltar."); return}
+  enviando = true; let ok = 0, falhou = 0;
+  try{
+    await recarregarSaida();
+    for(const it of [...SAIDA]){
+      if(it.bloqueada && !manual) continue;
+      try{
+        await enviarItem(it); await OFF.removerSaida(it.idLocal); ok++;
+      }catch(e){
+        falhou++; it.erro = String(e.message || e); it.tentativas = (it.tentativas || 0) + 1; if(e.permanente) it.bloqueada = true;
+        try{await OFF.salvarSaida(it)}catch(_){}
+        if(esRede(e)) break;
+      }
+    }
+  }finally{enviando = false}
+  await recarregarSaida();
+  if(ok) toast(`${ok} visita${ok === 1 ? " enviada" : "s enviadas"}`);
+  else if(falhou && manual) toast("Não consegui enviar agora. A visita continua salva no celular.");
+  if(tab !== "visita") render();
+}
+async function descartarSaida(idLocal){
+  const it = SAIDA.find(i => i.idLocal === idLocal); if(!it) return;
+  if(!await confirmar("Descartar visita", esc(fmtHora(it.v.data)), "A visita salva no celular será apagada, junto com as fotos e a assinatura. Ela <b>não</b> foi enviada. Não dá para desfazer.", "Descartar")) return;
+  try{await OFF.removerSaida(idLocal)}catch(e){return toast("Não foi possível descartar: " + (e.message || e))}
+  await recarregarSaida(); render(); toast("Visita descartada");
+}
+async function pedirSair(){
+  await recarregarSaida();
+  const n = SAIDA.length;
+  if(n && !await confirmar("Sair da conta", "", `Há ${n} visita${n === 1 ? " salva" : "s salvas"} neste aparelho que ainda ${n === 1 ? "não foi enviada" : "não foram enviadas"}. Elas continuam guardadas, mas só são enviadas quando você entrar de novo com a sua conta. Sair agora?`, "Sair")) return;
+  sair();
+}
+function viewPendentes(){
+  const l = SAIDA;
+  return `<div class="card" style="margin-bottom:20px"><h2 style="font-size:20px;margin-bottom:6px">Visitas salvas no celular</h2>
+  <p class="note" style="margin-bottom:12px">Ficam guardadas neste aparelho até serem enviadas. Quando houver internet, o envio é automático.${OFFLINE ? " Agora o aparelho está sem conexão." : ""}</p>
+  <button class="btn" data-enviartodos${OFFLINE || !l.length ? " disabled" : ""}>Enviar agora</button></div>
+  <section class="panel"><div class="clist">${l.map(it => {const c = db.clientes.find(x => x.id === it.v.cli); return `<div class="cl" style="grid-template-columns:minmax(0,1fr) auto"><span class="nm"><b>${esc(c ? (c.fantasia || c.nome) : "Cliente")} · ${esc(it.v.tipo)}</b><small style="font-family:var(--body)">${esc(fmtHora(it.v.data))} · ${it.fotos.length} foto${it.fotos.length === 1 ? "" : "s"} · ${it.v.status === "assinada" ? "assinada" : "sem assinatura ainda"}</small>${it.erro ? `<span class="meta" style="color:var(--amber)">${it.bloqueada ? "Precisa de atenção: " : "Ainda não enviada: "}${esc(it.erro)}</span>` : ""}</span><span class="uacts"><button class="dl" data-descartar="${it.idLocal}">Descartar</button></span></div>`}).join("") || '<div class="empty">Nada pendente. Tudo foi enviado.</div>'}</div></section>`;
+}
+
+// Abrir o app sem internet: usa a pessoa e a lista de clientes guardadas no aparelho.
+async function entrarOffline(){
+  try{
+    const p = await OFF.ler("perfil"); if(!p || p.papel === "cliente") return false;
+    const cl = (await OFF.ler("clientes")) || [];
+    ME = p; OFFLINE = true; modo = "admin"; cliAtual = null; tab = "visita"; filtro = null; busca = "";
+    db = novoDB(); db.clientes = cl; snap = new Map();
+    return true;
+  }catch(_){return false}
+}
+async function iniciar(){
+  let sess = null, rede = false;
+  try{const {data, error} = await sb.auth.getSession(); sess = data.session; if(error && esRede(error)) rede = true}catch(e){rede = esRede(e)}
+  if(sess){const m = await entrar(sess); if(m === "__rede__") rede = true; else if(m) toast(m)}
+  if(!ME && (rede || navigator.onLine === false)){if(await entrarOffline()) await recarregarSaida()}
+  atualizarBarra(); render();
+}
+// A internet voltou com o app aberto em modo offline.
+async function reconectar(){
+  const antes = tab;
+  try{
+    const {data} = await sb.auth.getSession();
+    if(!data.session){ME = null; OFFLINE = false; render(); toast("A internet voltou, mas a sua sessão expirou. Entre de novo para enviar as visitas salvas."); return}
+    const m = await entrar(data.session);
+    if(m === "__rede__"){OFFLINE = true; return}
+    if(m){toast(m); render(); return}
+    tab = antes === "visita" ? "visita" : "painel";
+    if(tab === "visita"){renderTabs(); atualizarBarra()} else render();
+    atualizarBarra();
+  }catch(_){}
+}
+window.addEventListener("offline", atualizarBarra);
+window.addEventListener("online", () => {atualizarBarra(); if(OFFLINE) reconectar(); else enviarPendentes()});
+setInterval(() => {if(ME && !OFFLINE && SAIDA.some(i => !i.bloqueada) && navigator.onLine !== false) enviarPendentes()}, 60000);
+
+// ---------- Registrar visita ----------
+function viewVisita(){
+  const a = new Date(); a.setSeconds(0, 0); const local = new Date(a - a.getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
+  if(!db.clientes.length) return `${avisoSaidaHTML()}<div class="card"><h2 style="font-size:20px;margin-bottom:8px">Registrar visita</h2><p class="note">${OFFLINE ? "Este aparelho ainda não tem a lista de clientes. Abra o app uma vez com internet para baixá-la." : "Cadastre um cliente antes de registrar a visita (aba Clientes)."}</p></div>`;
+  return `${avisoSaidaHTML()}<div class="card"><div class="steps"><span>1 · Serviço e cobrança</span><span>2 · Orientações</span><span>3 · Assinatura do cliente</span></div>
+  <form id="fVis">
+    <h3 class="full first">Dados da visita <span class="note mono">${OFFLINE ? "número definido ao enviar" : proxOS()}</span></h3>
+    <label class="full">Cliente<select id="vCliente">${db.clientes.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select></label>
+    <label>Técnico responsável<input id="vTec" value="${esc(ME.nome)}" readonly></label>
+    <label>Data e hora da visita<input id="vData" type="datetime-local" value="${local}"></label>
+    <label>Tipo de serviço<select id="vTipo">${Object.keys(VALIDADE_MESES).map(t => `<option>${t}</option>`).join("")}</select></label>
+    <label>Praga-alvo<input id="vPraga" placeholder="Ex.: baratas e formigas"></label>
+    <label class="full">Produtos usados<input id="vProd" placeholder="Ex.: Optigard Duo (Lambda-cialotrina + Tiametoxam)"></label>
+    <label class="full">Áreas tratadas<input id="vAreas" placeholder="Ex.: cozinha, depósito, perímetro externo"></label>
+    <label class="full">Relatório da visita<textarea id="vRel" placeholder="O que foi encontrado, o que foi feito e recomendações ao cliente"></textarea></label>
+    <div class="full" style="display:grid;gap:8px"><span style="font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">Fotos do serviço <span class="note" style="text-transform:none;letter-spacing:0;font-weight:500">opcional · pode tirar uma de cada vez</span></span>
+      <div class="fotos" id="vFotoLista"></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button type="button" class="btn ghost sm" id="vFotoAdd">Adicionar fotos</button><span class="note" id="vFotoCont">Nenhuma foto</span></div>
+      <input id="vFotos" type="file" accept="image/*" multiple hidden></div>
+    <label class="check full"><input type="checkbox" id="vCert" checked> Gerar certificado válido até <input type="date" id="vVenc" class="inl" aria-label="Validade do certificado"></label>
+    ${isAdmin() ? `<h3 class="full">Cobrança</h3>
+    <label>Valor do serviço (R$)<input id="vValor" inputmode="decimal" placeholder="0,00"></label>
+    <label>Vencimento<input id="vVencCob" type="date"></label>
+    <label class="full">Forma de pagamento<select id="vForma"><option>Boleto + Pix</option><option>Boleto</option><option>Pix</option><option>Não cobrar (contrato ou garantia)</option></select></label>
+    <label class="check full"><input type="checkbox" id="vGerar" checked> Gerar boleto/Pix ao concluir a visita</label>` : ""}
+    <h3 class="full">Orientações ao cliente</h3>
+    <ul class="termo full">${TERMO.map(t => `<li>${t}</li>`).join("")}</ul>
+    <h3 class="full">Confirmação do cliente</h3>
+    <div class="full radios">
+      <label class="rad"><input type="radio" name="vModo" value="agora" checked><span><b>Assinar agora</b>O responsável assina com o dedo na tela deste celular ou tablet</span></label>
+      <label class="rad"><input type="radio" name="vModo" value="depois"><span><b>Cliente confirma depois</b>A ordem fica pendente na área do cliente até ele assinar</span></label>
+    </div>
+    <div class="full signform" id="vSign"><label>Nome do responsável no local<input id="vNome" autocomplete="name"></label><div class="padwrap"><canvas id="pad" aria-label="Quadro de assinatura"></canvas><span class="padhint">Assine aqui com o dedo</span><button type="button" class="clear" id="padClear">Limpar</button></div></div>
+    <p class="note full">Sem internet? Pode concluir normalmente: a visita fica salva no celular e é enviada sozinha quando a conexão voltar.</p>
+    <button class="btn" type="submit">Concluir visita</button>
+  </form></div>`;
+}
+function desenharFotos(){
+  const box = document.getElementById("vFotoLista"); if(!box) return;
+  (desenharFotos.urls || []).forEach(u => URL.revokeObjectURL(u)); desenharFotos.urls = [];
+  box.innerHTML = FOTOS_SEL.map((f, i) => {
+    const u = URL.createObjectURL(f); desenharFotos.urls.push(u);
+    return `<div style="position:relative"><a href="${u}" target="_blank" rel="noopener"><img src="${u}" alt="Foto ${i + 1}"></a><button type="button" class="dl" data-fotorm="${i}" aria-label="Remover foto ${i + 1}" style="position:absolute;top:4px;right:4px;padding:2px 7px">✕</button></div>`;
+  }).join("");
+  const n = FOTOS_SEL.length; document.getElementById("vFotoCont").textContent = n ? `${n} foto${n === 1 ? "" : "s"}` : "Nenhuma foto";
+}
+function wireVisita(){
+  const $ = id => document.getElementById(id); if(!$("fVis")) return;
+  let pad = makePad($("pad")); $("padClear").onclick = () => pad.clear();
+  const modo_ = () => document.querySelector("[name=vModo]:checked").value;
+  const sug = () => {$("vVenc").value = addMeses(($("vData").value || iso(HOJE)).slice(0, 10), VALIDADE_MESES[$("vTipo").value])}; sug(); $("vTipo").onchange = sug; $("vData").onchange = sug;
+  if($("vVencCob")){const x = new Date(HOJE); x.setDate(x.getDate() + 10); $("vVencCob").value = iso(x)}
+  document.querySelectorAll("[name=vModo]").forEach(r => r.onchange = () => {const ag = modo_() === "agora"; $("vSign").hidden = !ag; if(ag) pad = makePad($("pad"))});
+  FOTOS_SEL = []; desenharFotos();
+  $("vFotoAdd").onclick = () => $("vFotos").click();
+  $("vFotos").onchange = e => {
+    const novas = [...e.target.files].filter(f => f.type.startsWith("image/")); e.target.value = "";
+    if(FOTOS_SEL.length + novas.length > 30) toast("No máximo 30 fotos por visita.");
+    FOTOS_SEL.push(...novas.slice(0, Math.max(0, 30 - FOTOS_SEL.length))); desenharFotos();
+  };
+  $("vFotoLista").onclick = e => {const b = e.target.closest("[data-fotorm]"); if(b){FOTOS_SEL.splice(+b.dataset.fotorm, 1); desenharFotos()}};
+
+  $("fVis").onsubmit = async e => {
+    e.preventDefault(); const ag = modo_() === "agora";
+    if(!db.clientes.length) return toast("Cadastre um cliente antes de registrar a visita.");
+    if(!$("vData").value) return toast("Informe a data da visita.");
+    if(ag && !$("vNome").value.trim()) return toast("Escreva o nome de quem está assinando.");
+    if(ag && pad.isEmpty()) return toast("Peça para o cliente assinar no quadro.");
+    const bt = $("fVis").querySelector("button[type=submit]"); bt.disabled = true; toast("Salvando a visita…");
+    const sel = $("vCliente").value, selo = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    const v = {id: "v" + selo, os: null, cli: sel, tecnico: $("vTec").value, data: $("vData").value, tipo: $("vTipo").value, praga: $("vPraga").value || "-", prod: $("vProd").value || "-", areas: $("vAreas").value, relatorio: $("vRel").value.trim(), status: "pendente"};
+    if(ag) assinar(v, $("vNome").value.trim(), pad.data());
+    const fotos = [];
+    for(const f of FOTOS_SEL){const b = await reduzir(f); fotos.push({id: "f" + selo + fotos.length, nome: f.name, blob: b, em: new Date().toISOString()})}
+    const valor = $("vValor") ? parseValor($("vValor").value) : 0;
+    const it = {idLocal: "s" + selo, userId: ME.id, criadoEm: Date.now(), v, fotos, tentativas: 0,
+      cert: $("vCert").checked && $("vVenc").value ? {id: "k" + selo, venc: $("vVenc").value} : null,
+      cob: valor > 0 && $("vForma") && !$("vForma").value.startsWith("Não") ? {id: "b" + selo, valor, venc: $("vVencCob").value || iso(HOJE), forma: $("vForma").value, gerar: $("vGerar").checked} : null};
+    let guardada = true; try{await OFF.salvarSaida(it)}catch(_){guardada = false}
+    if(OFFLINE || navigator.onLine === false){
+      if(!guardada){bt.disabled = false; return toast("Sem internet e não consegui guardar a visita neste aparelho. Tente de novo quando houver conexão.")}
+      await recarregarSaida(); tab = "pendentes"; render();
+      return toast("Sem internet: visita salva no celular. Ela será enviada sozinha quando a conexão voltar.");
+    }
+    enviando = true;
+    try{
+      const os = await enviarItem(it);
+      if(guardada) await OFF.removerSaida(it.idLocal).catch(() => {});
+      enviando = false; await recarregarSaida(); abertos.add(v.cli); tab = "painel"; filtro = null; render();
+      toast(ag ? `${os} concluída e assinada` : `${os} registrada, aguardando o cliente`);
+    }catch(err){
+      enviando = false;
+      if(!guardada){bt.disabled = false; return toast("Não foi possível enviar: " + (err.message || err))}
+      it.erro = String(err.message || err); it.tentativas = 1; if(err.permanente) it.bloqueada = true;
+      await OFF.salvarSaida(it).catch(() => {}); await recarregarSaida(); tab = "pendentes"; render();
+      toast("Não consegui enviar agora. A visita ficou salva no celular e será enviada quando a conexão voltar.");
+    }
+  };
+}
+
 // ---------- Login, usuários e conta ----------
 function viewLogin(){
   return `<div class="card login"><h2>Entrar</h2><p class="note">Use o e-mail e a senha fornecidos pela Agrocel.</p>
@@ -1108,7 +1549,8 @@ function viewLogin(){
     <p class="note hint-err" id="lMsg"></p>
     <button class="btn" type="submit">Entrar</button>
   </form>
-  <p class="note" style="margin-top:16px">Esqueceu a senha? Peça uma nova ao técnico ou ao administrador. <a href="#" id="lPrimeiro">Primeiro acesso do sistema</a></p></div>`;
+  <p class="note" style="margin-top:14px">Ao entrar, você confirma que leu a <a href="#" data-politica="privacidade">Política de privacidade</a> e o <a href="#" data-politica="termo">Termo de uso</a>.</p>
+  <p class="note" style="margin-top:10px">Esqueceu a senha? Peça uma nova ao técnico ou ao administrador. <a href="#" id="lPrimeiro">Primeiro acesso do sistema</a></p></div>`;
 }
 function wireLogin(){
   const $=id=>document.getElementById(id);
@@ -1211,6 +1653,9 @@ function wireUsuarios(){
 }
 
 document.addEventListener("click",e=>{
+  const pol=e.target.closest("[data-politica]"); if(pol){e.preventDefault();abrirPolitica(pol.dataset.politica);return}
+  if(e.target.closest("[data-enviartodos]")){enviarPendentes(true);return}
+  const dsc=e.target.closest("[data-descartar]"); if(dsc){descartarSaida(dsc.dataset.descartar);return}
   const t=e.target.closest("[data-tab]"); if(t){tab=t.dataset.tab;if(tab==="registros")REGS_OK=false;render();return}
   const f=e.target.closest("[data-f]"); if(f){filtro=filtro===f.dataset.f?null:f.dataset.f;render();return}
   const pf=e.target.closest("[data-pdf]"); if(pf){pf.disabled=true;salvarPDF(pf.dataset.pdf,pf.dataset.id).finally(()=>pf.disabled=false);return}
@@ -1236,14 +1681,13 @@ document.addEventListener("click",e=>{
   if(e.target.closest("[data-close]")||e.target.id==="modal"){closeModal();return}
   const o=e.target.closest("[data-open]"); if(o){const id=o.dataset.open;abertos.has(id)?abertos.delete(id):abertos.add(id);renderLista()}
 });
-document.getElementById("btnSair").onclick=sair;
+document.getElementById("btnSair").onclick=pedirSair;
 document.getElementById("btnConta").onclick=modalConta;
+document.getElementById("btnPriv").onclick=()=>abrirPolitica("privacidade");
 document.querySelector("#live span").textContent="Monitorando · "+HOJE.toLocaleDateString("pt-BR");
 document.getElementById("app").innerHTML='<div class="empty">Carregando…</div>';
-(async()=>{
-  try{const {data}=await sb.auth.getSession();if(data.session){const m=await entrar(data.session);if(m)toast(m)}}catch(e){toast("Não foi possível conectar ao servidor.")}
-  render();
-})();
+iniciar();
+if("serviceWorker" in navigator && (location.protocol === "https:" || ["127.0.0.1", "localhost"].includes(location.hostname))) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
 </body>
 </html>

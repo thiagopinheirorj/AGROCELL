@@ -76,6 +76,7 @@ footer{padding:10px 36px 0;font-size:11px;color:#5a6b5e}
 <li>Criação do acesso de um cliente direto na ficha da empresa, por técnico ou administrador.</li>
 <li>Redefinir senha, desativar e reativar usuários; cada pessoa troca a própria senha em Minha conta.</li>
 <li>Usuário desativado não entra mais, mesmo com a senha certa.</li>
+<li><b>Política de privacidade e termo de uso:</b> links na tela de login e botão Privacidade no cabeçalho. Explicam quais dados são tratados, para quê, com quem são compartilhados, por quanto tempo ficam, os direitos do titular e as regras de uso (conta pessoal, assinatura na tela, versão em avaliação).</li>
 </ul></div>
 
 <div class="area"><h3>Cadastro de clientes <span class="chip ok">Pronto</span> <span class="perf">técnico e administrador</span></h3>
@@ -105,8 +106,10 @@ footer{padding:10px 36px 0;font-size:11px;color:#5a6b5e}
 <div class="area"><h3>Visita técnica e ordem de serviço <span class="chip ok">Pronto</span> <span class="perf">técnico e administrador</span></h3>
 <ul>
 <li>Registro no local: cliente, data e hora, serviço, praga-alvo, produtos usados e áreas tratadas.</li>
-<li>Relatório da visita em texto livre e fotos (várias de uma vez, reduzidas automaticamente para o celular não travar).</li>
+<li>Relatório da visita em texto livre.</li>
+<li>Fotos do serviço: dá para tirar uma de cada vez ou escolher várias. Elas se acumulam na tela, com miniatura e botão para remover, e são reduzidas automaticamente para não pesar.</li>
 <li>Fotos podem ser adicionadas depois, abrindo a ordem de serviço.</li>
+<li><b>Funciona sem internet:</b> o app abre sem conexão e a visita (relatório, fotos e assinatura) fica salva no celular. Quando a internet volta, o envio é automático. A aba Pendentes mostra o que está na fila, e dá para enviar na hora ou descartar. O número da OS é definido no envio.</li>
 <li>Ordem de serviço numerada (OS-2026-0001, 0002…), com as orientações pós-aplicação e o termo de compromisso na tela.</li>
 <li>Assinatura do cliente com o dedo, na hora, ou o cliente confirma depois na área dele.</li>
 <li>Comprovante com nome, data, hora e código de verificação; sai em PDF.</li>
@@ -131,6 +134,7 @@ footer{padding:10px 36px 0;font-size:11px;color:#5a6b5e}
 <ul>
 <li>Nota, cobrança e ordem de serviço em PDF, com logo, rodapé e assinatura do cliente.</li>
 <li>Planilha Excel com cinco abas (empresas, certificados, visitas, cobranças, notas), CSV das empresas e backup completo em JSON.</li>
+<li><b>Restaurar backup:</b> importa o arquivo de backup. Mostra o que muda antes de confirmar e permite <b>mesclar</b> (adiciona e atualiza, sem apagar) ou <b>substituir tudo</b> (exige digitar CONFIRMAR). Dados inválidos no arquivo são descartados e backup de outro ambiente (teste x real) dispara um aviso. Fotos, PDFs e logins não fazem parte do backup.</li>
 </ul></div>
 
 <div class="area"><h3>Avisos de vencimento <span class="chip pr">Envio previsto</span> <span class="perf">administrador</span></h3>
@@ -186,6 +190,7 @@ footer{padding:10px 36px 0;font-size:11px;color:#5a6b5e}
 <tr><td>Nome, e-mail e perfil de quem usa o sistema</td><td>Login, aba Usuários</td><td>O próprio usuário e o administrador</td></tr>
 <tr><td>Assinatura desenhada na tela, nome, data, hora e código</td><td>Ordem de serviço, comprovante em PDF</td><td>Técnico, administrador e o cliente da ordem</td></tr>
 <tr><td>Fotos e relatórios das visitas</td><td>Ordem de serviço</td><td>Técnico, administrador e o cliente da ordem</td></tr>
+<tr><td>Cópia no aparelho: lista de clientes e visitas ainda não enviadas</td><td>Modo sem internet</td><td>Quem usa o aparelho de técnico ou administrador; a lista é apagada ao sair da conta</td></tr>
 <tr><td>CNPJ, endereço, certificados, cobranças</td><td>Todo o app</td><td>Conforme o perfil (ver seção 1)</td></tr>
 </table>
 <p class="legenda">CNPJ e razão social são dados de empresa. Nome, telefone, e-mail, assinatura e imagem de pessoas são dados pessoais e precisam de cuidado.</p>
@@ -200,7 +205,7 @@ footer{padding:10px 36px 0;font-size:11px;color:#5a6b5e}
 <li><b>Chaves secretas fora do código:</b> o repositório público só tem a chave pública, que não dá acesso aos dados sozinha.</li>
 <li><b>Usuário desativado perde o acesso</b> na hora, mesmo com a senha certa.</li>
 <li><b>Ambiente de teste separado,</b> com dados fictícios, para nunca testar com dados reais.</li>
-<li><b>Backup sob demanda:</b> o administrador exporta todos os dados quando quiser.</li>
+<li><b>Backup e restauração:</b> o administrador exporta todos os dados e restaura um backup quando precisar. O arquivo é conferido campo a campo antes de entrar, e a restauração fica no registro de atividade.</li>
 <li><b>Registro de atividade:</b> quem entrou, criou, alterou, assinou ou excluiu, e quando. Ninguém consegue apagar nem alterar esse registro.</li>
 <li><b>Eliminação de dados:</b> o administrador exclui cliente, certificado, ordem de serviço, cobrança e usuário de forma definitiva, junto com os arquivos.</li>
 </ul></div>
@@ -208,11 +213,11 @@ footer{padding:10px 36px 0;font-size:11px;color:#5a6b5e}
 <div class="area"><h3>O que ainda precisa ser feito</h3>
 <table>
 <tr><th>Cuidado</th><th>Situação</th><th>O que fazer</th></tr>
-<tr><td>Política de privacidade e termo de uso no app</td><td><span class="chip pr">Falta</span></td><td>Texto simples, link na tela de login, explicando quais dados, para quê e por quanto tempo</td></tr>
+<tr><td>Política de privacidade e termo de uso no app</td><td><span class="chip si">Rascunho pronto</span></td><td>Texto-base no app (login e cabeçalho). Falta a revisão de um advogado e confirmar o e-mail de contato e o prazo de guarda</td></tr>
 <tr><td>Contrato com cláusulas de LGPD (Agrocel e desenvolvedor)</td><td><span class="chip pr">Falta</span></td><td>Definir papéis, finalidade, sigilo, o que acontece se encerrar o contrato (ex.: devolução e eliminação dos dados)</td></tr>
 <tr><td>Base legal registrada</td><td><span class="chip pr">Falta</span></td><td>Registrar por escrito, por exemplo, execução de contrato e exigência da fiscalização sanitária. Confirmar com advogado</td></tr>
 <tr><td>Prazo de guarda e eliminação</td><td><span class="chip pr">Falta</span></td><td>Definir por quanto tempo guardar certificados, fotos e assinaturas. A exclusão já existe no app (aba Clientes); falta decidir o prazo e quem executa</td></tr>
-<tr><td>Canal para o titular pedir acesso, correção ou exclusão</td><td><span class="chip pr">Falta</span></td><td>Um e-mail de contato. Pequenas empresas podem ficar dispensadas de nomear encarregado, mas precisam de um canal (confirmar)</td></tr>
+<tr><td>Canal para o titular pedir acesso, correção ou exclusão</td><td><span class="chip si">Parcial</span></td><td>O e-mail de contato já consta na política (a confirmar com o Fernando). Pequenas empresas podem ficar dispensadas de nomear encarregado, mas precisam de um canal (confirmar)</td></tr>
 <tr><td>Proteção contra senhas vazadas no login</td><td><span class="chip si">Verificar</span></td><td>Ativar no painel do Supabase (pode depender do plano). O Supabase já avisa que está desligada</td></tr>
 <tr><td>Definir quem lê o registro de atividade e com que frequência</td><td><span class="chip pr">Falta</span></td><td>Entra na rotina de verificação de segurança: olhar o registro com regularidade</td></tr>
 <tr><td>Segundo fator de login para administradores</td><td><span class="chip pr">Falta</span></td><td>Código no celular além da senha</td></tr>
@@ -230,10 +235,11 @@ footer{padding:10px 36px 0;font-size:11px;color:#5a6b5e}
 <li>Não escreva dados pessoais desnecessários nos campos de observação e relatório.</li>
 <li>Deixe o celular com bloqueio de tela e saia da conta em aparelhos de outras pessoas.</li>
 <li>Nunca use dados reais no ambiente de teste.</li>
+<li>Envie as visitas da aba Pendentes antes de passar o celular para outra pessoa.</li>
 <li>Se perder o celular ou suspeitar de acesso indevido, avise o administrador para desativar o usuário e trocar as senhas.</li>
 </ul></div>
 
-<div class="box"><b>Próximo passo: rotina de verificação de segurança.</b> Uma revisão periódica, com lista fixa: usuários ativos e perfis corretos, senhas provisórias antigas, alertas de segurança do banco, testes de acesso por perfil, backups e atualizações. Ela será criada a seguir e passa a fazer parte deste documento.</div>
+<div class="box"><b>Rotina de verificação de segurança: pronta.</b> Há 44 testes automáticos de acesso por perfil, uma comparação das regras entre o sistema real e o de teste e um checklist por frequência (semanal, mensal, trimestral e por situação). Os detalhes e o resultado da primeira verificação estão no documento <b>Rotina de segurança</b>.</div>
 
 <h2>4. O que falta e depende de decisão</h2>
 <div class="box">

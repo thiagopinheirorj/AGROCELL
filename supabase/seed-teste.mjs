@@ -10,7 +10,7 @@ import { fileURLToPath } from "url";
 
 const URL_ = "https://fnwtbezcalgnihuckolc.supabase.co";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZud3RiZXpjYWxnbmlodWNrb2xjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MTc4MTgsImV4cCI6MjEwODE5MzgxOH0.bS4YdG_L6dc_DDkED-LsQv6-OIE2eqHOmVDn-K4Fmgs";
-const senha = process.argv[2];
+const senha = process.argv[2] || process.env.AGROCEL_SENHA_TESTE;
 if (!senha || senha.length < 8) { console.error("Informe a senha (mínimo 8 caracteres): node supabase/seed-teste.mjs <senha>"); process.exit(1); }
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 
