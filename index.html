@@ -780,6 +780,7 @@ function docDados(tipo,id){
   if(tipo==="os"){const v=vis(id);if(!v)return null;const c=cli(v.cli);
     return {arq:`ordem-servico-${v.os}.pdf`,titulo:`Ordem de serviço ${v.os}`,sub:"Termo de compromisso e comprovante de execução",
       linhas:[["Cliente",c.nome],[docRot(c.cnpj),c.cnpj],["Endereço",c.end],["Data e hora",fmtHora(v.data)],["Técnico",v.tecnico],["Serviço",`${v.tipo} · ${v.praga}`],["Produtos",v.prod],["Contato no local",(c.resp||"-")+(c.tel?" · "+c.tel:"")],["Áreas tratadas",v.areas||"-"]],
+      relatorio:v.relatorio||"",fotosDe:v.id,
       lista:{t:"Orientações e termo de compromisso",itens:TERMO,obs:"Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima."},
       assinatura:v.assinatura||null};}
   const b=cob(id);if(!b)return null;const c=cli(b.cli);
@@ -790,8 +791,24 @@ function docDados(tipo,id){
   return {arq:`nfse-${n.numero}.pdf`,titulo:`NFS-e nº ${n.numero}`,sub:"Nota Fiscal de Serviço Eletrônica",aviso:"Simulação: documento sem validade fiscal.",
     linhas:[["Emitida em",fmtHora(n.emitidaEm)],["Código de verificação",n.cod],["Prestador",EMPRESA.nome],["CNPJ do prestador",EMPRESA.cnpj],["Município",EMPRESA.cidade],["Tomador",c.nome],[docRot(c.cnpj)+" do tomador",c.cnpj],["Endereço do tomador",c.end],["Serviço","7.13 · Dedetização, desinsetização, desratização e congêneres"],["Discriminação",n.desc||b.desc]],
     totais:[["Valor do serviço",BRL(b.valor)],["Alíquota ISS",String(n.aliquota).replace(".",",")+"%"],["ISS",BRL(b.valor*n.aliquota/100)],["Valor líquido",BRL(b.valor)]]};}
+// Baixa as fotos da visita e reduz para JPEG (até 1000 px) para caberem no PDF.
+async function fotosParaPDF(vid){
+  const fs=(db.fotos||[]).filter(f=>f.visita===vid);if(!fs.length)return [];
+  const {data}=await sb.storage.from("anexos").createSignedUrls(fs.map(f=>f.path),300);
+  const url={};(data||[]).forEach(x=>{if(x.signedUrl)url[x.path]=x.signedUrl});
+  const out=[];
+  for(const f of fs){if(!url[f.path])continue;
+    let bu=null;
+    try{bu=URL.createObjectURL(await (await fetch(url[f.path])).blob());
+      const im=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=bu});
+      const k=Math.min(1,1000/Math.max(im.naturalWidth,im.naturalHeight)),cv=document.createElement("canvas");cv.width=Math.round(im.naturalWidth*k);cv.height=Math.round(im.naturalHeight*k);
+      const cx=cv.getContext("2d");cx.fillStyle="#fff";cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(im,0,0,cv.width,cv.height);
+      out.push({d:cv.toDataURL("image/jpeg",.8),w:cv.width,h:cv.height})}catch(_){}
+    finally{if(bu)URL.revokeObjectURL(bu)}}
+  return out}
 async function gerarPDF(tipo,id){
   const D=docDados(tipo,id);if(!D)return;
+  const fotos=D.fotosDe?await fotosParaPDF(D.fotosDe):[];
   if(typeof window.jspdf==="undefined")return toast("Não foi possível carregar o gerador de PDF. Verifique a internet.");
   const {jsPDF}=window.jspdf,doc=new jsPDF({unit:"mm",format:"a4"}),W=210,M=18;let y=0;
   doc.setFillColor(0,65,7);doc.rect(0,0,W,30,"F");
@@ -807,6 +824,17 @@ async function gerarPDF(tipo,id){
     doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(90,107,94);doc.text(k,M,y);
     doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(18,32,22);doc.text(txt,M+42,y);
     y+=Math.max(6,txt.length*4.8)+1.4});
+  if(D.relatorio){y+=3;if(y>250){doc.addPage();y=24}
+    doc.setFont("helvetica","bold");doc.setFontSize(10.5);doc.setTextColor(18,32,22);doc.text("Relatório da visita",M,y);y+=6;
+    doc.setFont("helvetica","normal");doc.setFontSize(9.5);
+    doc.splitTextToSize(D.relatorio,W-2*M).forEach(l=>{if(y>275){doc.addPage();y=24}doc.text(l,M,y);y+=4.6});y+=4}
+  if(fotos.length){y+=3;if(y>235){doc.addPage();y=24}
+    doc.setFont("helvetica","bold");doc.setFontSize(10.5);doc.setTextColor(18,32,22);doc.text("Fotos do atendimento",M,y);y+=6;
+    const cw=(W-2*M-6)/2,CH=63;let col=0;
+    fotos.forEach(p=>{if(col===0&&y+CH>278){doc.addPage();y=24}
+      const s=Math.min(cw/p.w,CH/p.h);try{doc.addImage(p.d,"JPEG",M+col*(cw+6),y,p.w*s,p.h*s)}catch(_){}
+      col++;if(col===2){col=0;y+=CH+6}});
+    if(col===1)y+=CH+6;y+=2}
   if(D.totais){y+=4;doc.setDrawColor(219,228,215);doc.line(M,y,W-M,y);y+=8;const cw=(W-2*M)/4;
     D.totais.forEach(([k,v],i)=>{const x=M+i*cw;doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(90,107,94);doc.text(k,x,y);
       doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(18,32,22);doc.text(v,x,y+6)});y+=16}
