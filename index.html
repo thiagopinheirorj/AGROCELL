@@ -627,8 +627,38 @@ function compHTML(v,extra,previa){const c=cli(v.cli);const ok=v.status==="assina
   <div class="termo"><b>Orientações e termo de compromisso</b><ul>${TERMO.map(t=>`<li>${t}</li>`).join("")}</ul><p>Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima.</p></div>
   ${ok?`<div class="sig"><img src="${v.assinatura.img}" alt="Assinatura de ${esc(v.assinatura.nome)}"><div><b>${esc(v.assinatura.nome)}</b><span>Assinado eletronicamente em ${fmtHora(v.assinatura.em)}</span><span class="mono">Código de verificação ${v.assinatura.cod}</span></div></div>${previa?"":docBtns("os",v.id)}`
   :previa?`<p class="note">Aguardando a assinatura do cliente.</p>`:`<div class="signform"><label>Nome de quem assina<input id="sNome" autocomplete="name"></label><div class="padwrap"><canvas id="pad" aria-label="Quadro de assinatura"></canvas><span class="padhint">Assine aqui com o dedo</span><button type="button" class="clear" id="padClear">Limpar</button></div><button class="btn" id="sOk">Confirmar e assinar</button></div>`}
+  ${isStaff()&&!previa?`<div><button class="btn ghost" data-zap="${v.id}">Enviar pelo WhatsApp</button><p class="note" style="margin:6px 0 0">Abre o WhatsApp com a mensagem pronta e a OS em PDF anexada. É só escolher o contato e enviar.</p></div>`:""}
   ${isAdmin()&&!previa?`<button class="dl" data-delvis="${v.id}" style="justify-self:start">Excluir ordem de serviço</button>`:""}
   </div>`}
+// ---------- Enviar a OS pelo WhatsApp (gratuito: menu de compartilhar do celular ou link wa.me) ----------
+const MSG_SERVICO={
+  "Desinsetização":{oque:" de controle de insetos (desinsetização)",dica:"Lembramos de não lavar as áreas tratadas por 72 horas."},
+  "Desratização":{oque:" de controle de roedores (desratização)",dica:"Mantenha alimentos e lixo bem protegidos para evitar novas infestações."},
+  "Higienização de reservatório":{oque:" de higienização do reservatório de água",dica:"Mantenha o reservatório sempre tampado e fechado."},
+  "Outro":{oque:"",dica:""}};
+function msgZap(v,c){
+  const nome=(c.resp||"").trim()||c.fantasia||c.nome, m=MSG_SERVICO[v.tipo]||MSG_SERVICO.Outro;
+  const cert=(db.certs||[]).find(k=>k.visita===v.id);
+  const venc=cert?cert.venc:addMeses(v.data.slice(0,10),VALIDADE_MESES[v.tipo]||12);
+  return `Olá, ${nome}! Aqui é da ${EMPRESA.nome.replace(/ \(exemplo\)/,"")}.\n\nSegue em anexo a ordem de serviço ${v.os}, do serviço${m.oque} feito em ${fmt(v.data.slice(0,10))}.\n\n• Data do serviço: ${fmt(v.data.slice(0,10))}\n• Próximo vencimento: ${fmt(venc)}\n\n${m.dica?m.dica+" ":""}Para manter a validade, agende a próxima aplicação antes dessa data. Qualquer dúvida, estamos à disposição.`}
+function foneZap(t){const n=String(t||"").replace(/\D/g,"");if(/^55\d{10,11}$/.test(n))return n;return /^\d{10,11}$/.test(n)?"55"+n:""}
+let ZAP=null; // PDF já pronto da OS aberta (o menu de compartilhar exige resposta rápida ao toque)
+const zapChave=v=>`${v.id}|${db.fotos.filter(f=>f.visita===v.id).length}|${v.status}`;
+async function prepararZap(v){
+  if(!isStaff())return;const k=zapChave(v);if(ZAP&&ZAP.k===k)return;ZAP=null;
+  try{const r=await gerarPDF("os",v.id);if(r)ZAP={k,file:new File([r.doc.output("blob")],r.arq,{type:"application/pdf"})}}catch(_){}}
+async function enviarZap(id){
+  const v=vis(id);if(!v)return;const c=cli(v.cli),txt=msgZap(v,c);
+  if(!ZAP||ZAP.k!==zapChave(v)){toast("Preparando a OS…");await prepararZap(v)}
+  const file=ZAP&&ZAP.file;
+  if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],text:txt,title:"Ordem de serviço "+v.os});return}
+    catch(e){if(e&&e.name==="AbortError")return}}
+  if(file)await salvar(file.name,file);
+  const f=foneZap(c.tel);
+  window.open(`https://wa.me/${f}?text=${encodeURIComponent(txt)}`,"_blank","noopener");
+  toast(file?"Anexe o PDF baixado na conversa do WhatsApp.":"Não consegui gerar o PDF. Use Salvar em PDF e anexe no WhatsApp.");
+}
 // Prévia da OS ainda não enviada (sem internet ou salva para depois): usa as fotos guardadas no aparelho.
 function previaOS(it){
   const m=document.getElementById("modal");
@@ -649,7 +679,7 @@ function makePad(cv){const ctx=cv.getContext("2d");let drawing=false,empty=true,
 function assinar(v,nome,img){v.status="assinada";v.assinatura={nome,img,em:new Date().toISOString(),cod:Math.random().toString(16).slice(2,10).toUpperCase().padEnd(8,"0")}}
 function openComp(id,extra){const v=vis(id);if(!v)return;const m=document.getElementById("modal");
   m.innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-label="Ordem de serviço ${v.os}">${compHTML(v,extra)}</div>`;m.hidden=false;document.body.style.overflow="hidden";
-  fotosRender(v);
+  fotosRender(v);prepararZap(v);
   const add=document.getElementById("fFotoAdd");
   if(add)add.onchange=async()=>{const fs=[...add.files];if(!fs.length)return;toast("Enviando fotos…");
     try{await anexarFotos(v,fs);fotosRender(v);toast(`${fs.length} foto${fs.length===1?"":"s"} adicionada${fs.length===1?"":"s"}`)}catch(err){toast("Não foi possível enviar: "+(err.message||err))}};
@@ -1753,6 +1783,7 @@ document.addEventListener("click",e=>{
   const cy=e.target.closest("[data-copy]"); if(cy){copiar(cy);return}
   const fb=e.target.closest("[data-fcob]"); if(fb){filtroCob=fb.dataset.fcob;render();return}
   const cp=e.target.closest("[data-comp]"); if(cp){openComp(cp.dataset.comp);return}
+  const zp=e.target.closest("[data-zap]"); if(zp){zp.disabled=true;enviarZap(zp.dataset.zap).finally(()=>zp.disabled=false);return}
   if(e.target.closest("[data-close]")||e.target.id==="modal"){closeModal();return}
   const o=e.target.closest("[data-open]"); if(o){const id=o.dataset.open;abertos.has(id)?abertos.delete(id):abertos.add(id);renderLista()}
 });

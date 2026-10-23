@@ -41,6 +41,7 @@ Painel com semáforo e filtros · cadastro de clientes (máscara e validação d
 - **IndexedDB `agrocel-offline-<ambiente>`**: `meta` (perfil e lista de clientes, só staff, apagados em `sair()`) e `saida` (fila de visitas, com fotos como arquivos e assinatura). A fila **sobrevive** ao sair da conta; `pedirSair()` avisa quando há itens.
 - **Fluxo:** o submit da visita grava primeiro na fila (`OFF.salvarSaida`) e então chama `enviarItem()`. Se falhar, fica na fila e `enviarPendentes()` tenta de novo (evento `online`, a cada 60 s e botão). `enviarItem` é idempotente (ids fixos, foto com `path` já enviada não sobe de novo, visita já existente não duplica). O número da OS (`proxOS()`) é definido no envio.
 - **Botões do formulário:** **Gerar OS** (grava na fila, envia e abre a OS com as fotos e o aviso "na sequência será gerado o documento oficial"; sem internet abre a prévia `previaOS`) e **Salvar para enviar depois** (grava na fila com `retido: true`; o envio automático ignora esses itens, só o botão **Enviar agora** em Pendentes os envia; a assinatura não é obrigatória).
+- **WhatsApp (gratuito, manual):** botão **Enviar pelo WhatsApp** na OS (`data-zap`, só staff). `msgZap` monta o texto por tipo de serviço (`MSG_SERVICO`) com data do serviço e próximo vencimento (certificado da visita, ou data + `VALIDADE_MESES`). O PDF da OS é pré-gerado ao abrir a OS (`prepararZap`/`ZAP`) e enviado por `navigator.share` com arquivo; sem suporte, baixa o PDF e abre `wa.me/55<tel>?text=…`. Não envia sozinho. Pendente: citar o WhatsApp na política de privacidade (subir `POLITICA_VERSAO`/`POLITICA_DATA`). Envio automático exigiria a API oficial da Meta (paga por mensagem).
 - **Modo offline** (`OFFLINE`): `entrarOffline()` usa a cópia do aparelho; só as abas Registrar visita e Pendentes; `save()` fica bloqueado. `reconectar()` volta ao normal quando a internet volta.
 - O cliente do Supabase usa `global.fetch` com resolução tardia para dar para simular queda de rede nos testes. Teste de ponta a ponta: `supabase/teste-offline.mjs`.
 
@@ -87,6 +88,9 @@ Como os dados funcionam:
 3. **NFS-e real** (prefeitura ou API de notas), após confirmar o ISS com o contador.
 4. Avisos por WhatsApp.
 5. Versão multiempresa (cada dedetizadora com login, logo e clientes próprios).
+
+## Histórico de versões (`versao.txt`)
+A cada nova versão (cada commit que muda o app para o usuário), **atualize `versao.txt`** na raiz do app: nova entrada no topo, com número, data e o que mudou em linguagem simples, e atualize a linha "Versão atual". Novidade sobe o 2º número (0.5.0); correção sobe o 3º (0.4.2). O arquivo vai no mesmo commit da mudança. Versão atual: 0.5.0.
 
 ## Como trabalhar aqui
 - Edite `index.html`; teste abrindo no navegador (Playwright/Chromium já está disponível no ambiente cloud).

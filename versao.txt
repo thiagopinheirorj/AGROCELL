@@ -1,0 +1,45 @@
+AGROCEL CERTIFICADOS · HISTÓRICO DE VERSÕES
+Versão atual: 0.5.0 (23/10/2026)
+
+Regra: a cada nova versão publicada, este arquivo ganha uma entrada no topo.
+Novidade = sobe o 2º número (0.5.0). Correção ou ajuste = sobe o 3º número (0.4.2).
+
+------------------------------------------------------------
+0.5.0 · 23/10/2026 · Novidade
+- Botão "Enviar pelo WhatsApp" na ordem de serviço (técnico e administrador).
+- A mensagem é montada conforme o serviço feito (desinsetização, desratização, reservatório) e traz a data do serviço e a data do próximo vencimento.
+- A OS segue em PDF anexado: no celular pelo menu de compartilhar; no computador o PDF é baixado e o WhatsApp abre com a mensagem pronta.
+
+0.4.1 · 23/10/2026 · Correção
+- O PDF da ordem de serviço agora inclui o relatório da visita e as fotos do atendimento.
+
+0.4.0 · 23/10/2026 · Novidade
+- Tela da visita com dois botões: "Gerar OS" e "Salvar para enviar depois".
+- Ao gerar a OS, ela aparece com as fotos e o aviso de que o documento oficial será gerado na sequência.
+- Sem internet, aparece a prévia da OS.
+- Visita salva para depois só é enviada quando o técnico toca em "Enviar agora" (aba Pendentes).
+
+0.3.2 · 22/10/2026 · Novidade
+- Cadastro de cliente preenche o endereço pelo CEP (consulta ao ViaCEP).
+
+0.3.1 · 22/10/2026 · Novidade
+- Cadastro de cliente aceita CPF ou CNPJ.
+
+0.3.0 · 22/10/2026 · Novidade
+- Visita sem internet: fica salva no celular e é enviada quando a conexão volta.
+- Restaurar backup (mesclar ou substituir tudo).
+- Política de privacidade e termo de uso no app.
+- Rotina de verificação de segurança.
+- Bibliotecas do app passam a ficar locais (sem CDN).
+
+0.2.0 · 21/10/2026 · Novidade
+- Login com três perfis: cliente, técnico e administrador (Supabase).
+- Ambiente de teste (sandbox) com dados fictícios, aberto com ?teste.
+- Registro de atividade (quem fez o quê) e exclusão definitiva de cadastros.
+- PDF de funcionalidades com LGPD.
+
+0.1.0 · 19/10/2026 · Primeira versão (demonstração com dados fictícios)
+- Painel com semáforo de validade, cadastro de clientes e certificados.
+- Registro de visita técnica com ordem de serviço e assinatura na tela.
+- Cobranças com boleto e Pix (simulação) e NFS-e (simulação).
+- PDF da nota, da cobrança e da ordem de serviço; exportação em Excel, CSV e JSON.
