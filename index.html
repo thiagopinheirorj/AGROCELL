@@ -176,6 +176,7 @@ form .full{grid-column:1/-1}
 .modal{position:fixed;inset:0;background:rgba(5,15,8,.6);z-index:30;display:flex;padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow-y:auto}
 .mbox{margin:auto;background:var(--surface);color:var(--fg);border-radius:18px;max-width:640px;width:100%;box-shadow:0 30px 80px -20px rgba(0,0,0,.5);overflow:hidden}
 .sheet{padding:0 20px 20px;display:grid;gap:16px}
+.docaviso{border:1px solid var(--line);border-left:4px solid var(--lime);border-radius:10px;padding:10px 14px;background:var(--surface-2);font-size:13.5px;line-height:1.45}
 .sh-h{display:flex;gap:14px;align-items:center;background:var(--brand);color:var(--on-brand);margin:0 -20px;padding:12px 20px}
 .sh-h img{height:46px;width:auto}.sh-h div{flex:1;min-width:0}.sh-h b{display:block;font-family:var(--display);font-size:17px}.sh-h span{font-size:12.5px;opacity:.8}
 .x{background:rgba(255,255,255,.14);border:0;color:var(--on-brand);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:15px;flex:none}
@@ -616,17 +617,27 @@ function painelOS(){
   const vs=[...(db.visitas||[])].sort((a,b)=>b.data.localeCompare(a.data)).slice(0,5);const pend=(db.visitas||[]).filter(v=>v.status!=="assinada").length;
   return `<section class="panel"><div class="ph"><h2>Ordens de serviço</h2>${pend?`<span class="chip s-a"><i></i>${pend} aguardando</span>`:""}</div>
   <div class="mini">${vs.length?vs.map(v=>`<button class="vlink" data-comp="${v.id}"><span><b>${v.os}</b><small>${esc(cli(v.cli).nome.replace(/ \(.*\)/,""))}</small></span>${v.status==="assinada"?'<span class="chip s-g"><i></i>Assinada</span>':'<span class="chip s-a"><i></i>Pendente</span>'}</button>`).join(""):'<span class="note">Nenhuma visita registrada ainda. Use “Registrar visita” no próximo atendimento.</span>'}</div></section>`}
-function compHTML(v){const c=cli(v.cli);const ok=v.status==="assinada";
-  return `<div class="sheet"><div class="sh-h"><img src="${LOGO}" alt="Agrocel"><div><b>Ordem de serviço ${v.os}</b><span>Termo de compromisso e comprovante de execução</span></div><button class="x" data-close aria-label="Fechar">✕</button></div>
+function compHTML(v,extra,previa){const c=cli(v.cli);const ok=v.status==="assinada";
+  return `<div class="sheet"><div class="sh-h"><img src="${LOGO}" alt="Agrocel"><div><b>${previa?"Ordem de serviço · prévia":"Ordem de serviço "+v.os}</b><span>Termo de compromisso e comprovante de execução</span></div><button class="x" data-close aria-label="Fechar">✕</button></div>
+  ${extra||""}
   <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>${docRot(c.cnpj)}</dt><dd class="mono">${esc(c.cnpj)}</dd><dt>Data e hora</dt><dd>${fmtHora(v.data)}</dd><dt>Técnico</dt><dd>${esc(v.tecnico)}</dd><dt>Serviço</dt><dd>${esc(v.tipo)} · ${esc(v.praga)}</dd><dt>Produtos</dt><dd>${esc(v.prod)}</dd><dt>Contato</dt><dd>${esc(c.resp||"-")}${c.tel?" · "+esc(c.tel):""}</dd><dt>Áreas tratadas</dt><dd>${esc(v.areas||"-")}</dd></dl>
   ${v.relatorio?`<div><div class="sec-t">Relatório da visita</div><p style="margin:6px 0 0;white-space:pre-wrap">${esc(v.relatorio)}</p></div>`:""}
   <div id="fotosBox"></div>
-  ${isStaff()?`<label class="dl" style="justify-self:start;cursor:pointer">Adicionar fotos<input id="fFotoAdd" type="file" accept="image/*" multiple hidden></label>`:""}
+  ${isStaff()&&!previa?`<label class="dl" style="justify-self:start;cursor:pointer">Adicionar fotos<input id="fFotoAdd" type="file" accept="image/*" multiple hidden></label>`:""}
   <div class="termo"><b>Orientações e termo de compromisso</b><ul>${TERMO.map(t=>`<li>${t}</li>`).join("")}</ul><p>Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima.</p></div>
-  ${ok?`<div class="sig"><img src="${v.assinatura.img}" alt="Assinatura de ${esc(v.assinatura.nome)}"><div><b>${esc(v.assinatura.nome)}</b><span>Assinado eletronicamente em ${fmtHora(v.assinatura.em)}</span><span class="mono">Código de verificação ${v.assinatura.cod}</span></div></div>${docBtns("os",v.id)}`
-  :`<div class="signform"><label>Nome de quem assina<input id="sNome" autocomplete="name"></label><div class="padwrap"><canvas id="pad" aria-label="Quadro de assinatura"></canvas><span class="padhint">Assine aqui com o dedo</span><button type="button" class="clear" id="padClear">Limpar</button></div><button class="btn" id="sOk">Confirmar e assinar</button></div>`}
-  ${isAdmin()?`<button class="dl" data-delvis="${v.id}" style="justify-self:start">Excluir ordem de serviço</button>`:""}
+  ${ok?`<div class="sig"><img src="${v.assinatura.img}" alt="Assinatura de ${esc(v.assinatura.nome)}"><div><b>${esc(v.assinatura.nome)}</b><span>Assinado eletronicamente em ${fmtHora(v.assinatura.em)}</span><span class="mono">Código de verificação ${v.assinatura.cod}</span></div></div>${previa?"":docBtns("os",v.id)}`
+  :previa?`<p class="note">Aguardando a assinatura do cliente.</p>`:`<div class="signform"><label>Nome de quem assina<input id="sNome" autocomplete="name"></label><div class="padwrap"><canvas id="pad" aria-label="Quadro de assinatura"></canvas><span class="padhint">Assine aqui com o dedo</span><button type="button" class="clear" id="padClear">Limpar</button></div><button class="btn" id="sOk">Confirmar e assinar</button></div>`}
+  ${isAdmin()&&!previa?`<button class="dl" data-delvis="${v.id}" style="justify-self:start">Excluir ordem de serviço</button>`:""}
   </div>`}
+// Prévia da OS ainda não enviada (sem internet ou salva para depois): usa as fotos guardadas no aparelho.
+function previaOS(it){
+  const m=document.getElementById("modal");
+  m.innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-label="Prévia da ordem de serviço">${compHTML(it.v,avisoDocOficial(it,null),true)}</div>`;m.hidden=false;document.body.style.overflow="hidden";
+  const box=document.getElementById("fotosBox");
+  if(box&&it.fotos.length)box.innerHTML=`<div class="sec-t" style="margin-bottom:8px">Fotos da visita</div><div class="fotos">${it.fotos.map((f,i)=>{const u=URL.createObjectURL(f.blob);return `<div><a href="${u}" target="_blank" rel="noopener"><img src="${u}" alt="Foto ${i+1}"></a></div>`}).join("")}</div>`;
+}
+function avisoDocOficial(it,os){
+  return `<div class="docaviso"><b>${os?esc(os)+" gerada.":"OS pronta para envio."}</b> Confira os dados e as fotos do atendimento abaixo. <b>Na sequência será gerado o documento oficial</b>${it.cert?` (certificado válido até ${esc(it.cert.venc.split("-").reverse().join("/"))})`:""}.${os?"":" O número da OS é definido quando a visita for enviada."}</div>`}
 function makePad(cv){const ctx=cv.getContext("2d");let drawing=false,empty=true,last=[0,0];const wrap=cv.parentElement;
   function reset(){const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cv.width=Math.max(1,r.width*dpr);cv.height=Math.max(1,r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.lineWidth=2.4;ctx.lineCap="round";ctx.lineJoin="round";ctx.strokeStyle=ctx.fillStyle="#10301a";empty=true;wrap.classList.remove("has")}
   reset();
@@ -636,8 +647,8 @@ function makePad(cv){const ctx=cv.getContext("2d");let drawing=false,empty=true,
   cv.onpointerup=cv.onpointercancel=()=>drawing=false;
   return {clear:reset,isEmpty:()=>empty,data:()=>cv.toDataURL("image/png")}}
 function assinar(v,nome,img){v.status="assinada";v.assinatura={nome,img,em:new Date().toISOString(),cod:Math.random().toString(16).slice(2,10).toUpperCase().padEnd(8,"0")}}
-function openComp(id){const v=vis(id);if(!v)return;const m=document.getElementById("modal");
-  m.innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-label="Ordem de serviço ${v.os}">${compHTML(v)}</div>`;m.hidden=false;document.body.style.overflow="hidden";
+function openComp(id,extra){const v=vis(id);if(!v)return;const m=document.getElementById("modal");
+  m.innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-label="Ordem de serviço ${v.os}">${compHTML(v,extra)}</div>`;m.hidden=false;document.body.style.overflow="hidden";
   fotosRender(v);
   const add=document.getElementById("fFotoAdd");
   if(add)add.onchange=async()=>{const fs=[...add.files];if(!fs.length)return;toast("Enviando fotos…");
@@ -1394,7 +1405,7 @@ async function enviarPendentes(manual){
   try{
     await recarregarSaida();
     for(const it of [...SAIDA]){
-      if(it.bloqueada && !manual) continue;
+      if((it.bloqueada || it.retido) && !manual) continue;
       try{
         await enviarItem(it); await OFF.removerSaida(it.idLocal); ok++;
       }catch(e){
@@ -1426,7 +1437,7 @@ function viewPendentes(){
   return `<div class="card" style="margin-bottom:20px"><h2 style="font-size:20px;margin-bottom:6px">Visitas salvas no celular</h2>
   <p class="note" style="margin-bottom:12px">Ficam guardadas neste aparelho até serem enviadas. Quando houver internet, o envio é automático.${OFFLINE ? " Agora o aparelho está sem conexão." : ""}</p>
   <button class="btn" data-enviartodos${OFFLINE || !l.length ? " disabled" : ""}>Enviar agora</button></div>
-  <section class="panel"><div class="clist">${l.map(it => {const c = db.clientes.find(x => x.id === it.v.cli); return `<div class="cl" style="grid-template-columns:minmax(0,1fr) auto"><span class="nm"><b>${esc(c ? (c.fantasia || c.nome) : "Cliente")} · ${esc(it.v.tipo)}</b><small style="font-family:var(--body)">${esc(fmtHora(it.v.data))} · ${it.fotos.length} foto${it.fotos.length === 1 ? "" : "s"} · ${it.v.status === "assinada" ? "assinada" : "sem assinatura ainda"}</small>${it.erro ? `<span class="meta" style="color:var(--amber)">${it.bloqueada ? "Precisa de atenção: " : "Ainda não enviada: "}${esc(it.erro)}</span>` : ""}</span><span class="uacts"><button class="dl" data-descartar="${it.idLocal}">Descartar</button></span></div>`}).join("") || '<div class="empty">Nada pendente. Tudo foi enviado.</div>'}</div></section>`;
+  <section class="panel"><div class="clist">${l.map(it => {const c = db.clientes.find(x => x.id === it.v.cli); return `<div class="cl" style="grid-template-columns:minmax(0,1fr) auto"><span class="nm"><b>${esc(c ? (c.fantasia || c.nome) : "Cliente")} · ${esc(it.v.tipo)}</b><small style="font-family:var(--body)">${esc(fmtHora(it.v.data))} · ${it.fotos.length} foto${it.fotos.length === 1 ? "" : "s"} · ${it.v.status === "assinada" ? "assinada" : "sem assinatura ainda"}${it.retido ? " · salva para enviar depois" : ""}</small>${it.erro ? `<span class="meta" style="color:var(--amber)">${it.bloqueada ? "Precisa de atenção: " : "Ainda não enviada: "}${esc(it.erro)}</span>` : ""}</span><span class="uacts"><button class="dl" data-descartar="${it.idLocal}">Descartar</button></span></div>`}).join("") || '<div class="empty">Nada pendente. Tudo foi enviado.</div>'}</div></section>`;
 }
 
 // Abrir o app sem internet: usa a pessoa e a lista de clientes guardadas no aparelho.
@@ -1462,7 +1473,7 @@ async function reconectar(){
 }
 window.addEventListener("offline", atualizarBarra);
 window.addEventListener("online", () => {atualizarBarra(); if(OFFLINE) reconectar(); else enviarPendentes()});
-setInterval(() => {if(ME && !OFFLINE && SAIDA.some(i => !i.bloqueada) && navigator.onLine !== false) enviarPendentes()}, 60000);
+setInterval(() => {if(ME && !OFFLINE && SAIDA.some(i => !i.bloqueada && !i.retido) && navigator.onLine !== false) enviarPendentes()}, 60000);
 
 // ---------- Registrar visita ----------
 function viewVisita(){
@@ -1497,8 +1508,11 @@ function viewVisita(){
       <label class="rad"><input type="radio" name="vModo" value="depois"><span><b>Cliente confirma depois</b>A ordem fica pendente na área do cliente até ele assinar</span></label>
     </div>
     <div class="full signform" id="vSign"><label>Nome do responsável no local<input id="vNome" autocomplete="name"></label><div class="padwrap"><canvas id="pad" aria-label="Quadro de assinatura"></canvas><span class="padhint">Assine aqui com o dedo</span><button type="button" class="clear" id="padClear">Limpar</button></div></div>
-    <p class="note full">Sem internet? Pode concluir normalmente: a visita fica salva no celular e é enviada sozinha quando a conexão voltar.</p>
-    <button class="btn" type="submit">Concluir visita</button>
+    <p class="note full">Sem internet? Pode gerar a OS normalmente: a visita fica salva no celular e é enviada sozinha quando a conexão voltar. Para guardar sem enviar agora, use <b>Salvar para enviar depois</b>.</p>
+    <div class="full" style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn" type="submit" id="vBtnOS">Gerar OS</button>
+      <button class="btn ghost" type="submit" id="vBtnSalvar">Salvar para enviar depois</button>
+    </div>
   </form></div>`;
 }
 function desenharFotos(){
@@ -1526,26 +1540,34 @@ function wireVisita(){
   };
   $("vFotoLista").onclick = e => {const b = e.target.closest("[data-fotorm]"); if(b){FOTOS_SEL.splice(+b.dataset.fotorm, 1); desenharFotos()}};
 
+  let acao = "gerar"; $("vBtnSalvar").onclick = () => {acao = "depois"}; $("vBtnOS").onclick = () => {acao = "gerar"};
   $("fVis").onsubmit = async e => {
-    e.preventDefault(); const ag = modo_() === "agora";
+    e.preventDefault(); const depois = acao === "depois"; acao = "gerar";
+    const ag = modo_() === "agora";
     if(!db.clientes.length) return toast("Cadastre um cliente antes de registrar a visita.");
     if(!$("vData").value) return toast("Informe a data da visita.");
-    if(ag && !$("vNome").value.trim()) return toast("Escreva o nome de quem está assinando.");
-    if(ag && pad.isEmpty()) return toast("Peça para o cliente assinar no quadro.");
-    const bt = $("fVis").querySelector("button[type=submit]"); bt.disabled = true; toast("Salvando a visita…");
+    if(!depois && ag && !$("vNome").value.trim()) return toast("Escreva o nome de quem está assinando.");
+    if(!depois && ag && pad.isEmpty()) return toast("Peça para o cliente assinar no quadro.");
+    const assina = ag && $("vNome").value.trim() && !pad.isEmpty();
+    const bts = [...$("fVis").querySelectorAll("button[type=submit]")], bt = {set disabled(x){bts.forEach(b => b.disabled = x)}}; bt.disabled = true; toast(depois ? "Salvando no celular…" : "Gerando a OS…");
     const sel = $("vCliente").value, selo = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
     const v = {id: "v" + selo, os: null, cli: sel, tecnico: $("vTec").value, data: $("vData").value, tipo: $("vTipo").value, praga: $("vPraga").value || "-", prod: $("vProd").value || "-", areas: $("vAreas").value, relatorio: $("vRel").value.trim(), status: "pendente"};
-    if(ag) assinar(v, $("vNome").value.trim(), pad.data());
+    if(assina) assinar(v, $("vNome").value.trim(), pad.data());
     const fotos = [];
     for(const f of FOTOS_SEL){const b = await reduzir(f); fotos.push({id: "f" + selo + fotos.length, nome: f.name, blob: b, em: new Date().toISOString()})}
     const valor = $("vValor") ? parseValor($("vValor").value) : 0;
-    const it = {idLocal: "s" + selo, userId: ME.id, criadoEm: Date.now(), v, fotos, tentativas: 0,
+    const it = {idLocal: "s" + selo, userId: ME.id, criadoEm: Date.now(), v, fotos, tentativas: 0, retido: depois,
       cert: $("vCert").checked && $("vVenc").value ? {id: "k" + selo, venc: $("vVenc").value} : null,
       cob: valor > 0 && $("vForma") && !$("vForma").value.startsWith("Não") ? {id: "b" + selo, valor, venc: $("vVencCob").value || iso(HOJE), forma: $("vForma").value, gerar: $("vGerar").checked} : null};
     let guardada = true; try{await OFF.salvarSaida(it)}catch(_){guardada = false}
+    if(depois){
+      if(!guardada){bt.disabled = false; return toast("Não consegui guardar a visita neste aparelho. Tente de novo.")}
+      await recarregarSaida(); tab = "pendentes"; render();
+      return toast("Visita salva no celular. Ela só será enviada quando você tocar em Enviar agora.");
+    }
     if(OFFLINE || navigator.onLine === false){
       if(!guardada){bt.disabled = false; return toast("Sem internet e não consegui guardar a visita neste aparelho. Tente de novo quando houver conexão.")}
-      await recarregarSaida(); tab = "pendentes"; render();
+      await recarregarSaida(); tab = "pendentes"; render(); previaOS(it);
       return toast("Sem internet: visita salva no celular. Ela será enviada sozinha quando a conexão voltar.");
     }
     enviando = true;
@@ -1553,7 +1575,8 @@ function wireVisita(){
       const os = await enviarItem(it);
       if(guardada) await OFF.removerSaida(it.idLocal).catch(() => {});
       enviando = false; await recarregarSaida(); abertos.add(v.cli); tab = "painel"; filtro = null; render();
-      toast(ag ? `${os} concluída e assinada` : `${os} registrada, aguardando o cliente`);
+      openComp(v.id, avisoDocOficial(it, os));
+      toast(assina ? `${os} gerada e assinada` : `${os} gerada, aguardando o cliente`);
     }catch(err){
       enviando = false;
       if(!guardada){bt.disabled = false; return toast("Não foi possível enviar: " + (err.message || err))}
