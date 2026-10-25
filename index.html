@@ -277,6 +277,47 @@ form h3 .note{font-weight:500}
   .dots{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Relatórios */
+.relgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-bottom:20px}
+.rel-sub{padding:12px 16px 0;color:var(--muted);font-size:13px}
+.cols{display:flex;align-items:flex-end;gap:6px;height:190px;padding:10px 16px 12px}
+.cols .bc{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+.cols .bv{font:700 11px var(--mono);color:var(--muted);white-space:nowrap}
+.cols .barra{width:100%;max-width:34px;border-radius:7px 7px 3px 3px;background:var(--lime);display:flex;flex-direction:column-reverse;overflow:hidden;min-height:2px}
+.cols .barra i{display:block;width:100%}
+.cols .bl{font:700 11px var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.legenda{display:flex;gap:14px;flex-wrap:wrap;padding:0 16px 14px;font-size:12.5px;color:var(--muted)}
+.legenda i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.tipos{display:grid;gap:14px;padding:16px}
+.tipo .th{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;font-size:14px}
+.tipo .th span{color:var(--muted);font-size:12.5px}
+.stack{display:flex;height:16px;border-radius:99px;overflow:hidden;background:var(--line)}
+.stack i{display:block;min-width:0}
+.tipo .tn{display:flex;gap:14px;margin-top:6px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.tipo .tn b{color:var(--fg)}
+.nren{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 16px;align-items:center;padding:13px 16px;border-bottom:1px solid var(--line)}
+.nren:last-child{border-bottom:0}
+.nren b{display:block}.nren small{color:var(--muted);font-size:12.5px}
+.nren .dv{font:700 12.5px var(--mono);color:var(--red);white-space:nowrap;text-align:right}
+@media (max-width:900px){.relgrid{grid-template-columns:minmax(0,1fr)}.nren{grid-template-columns:minmax(0,1fr) auto}.nren a.dl{grid-column:1/-1;justify-self:start}.cols{gap:3px;padding:10px 10px 12px}.cols .bv{font-size:9px}.cols .bl{font-size:9px;letter-spacing:0}.kpi .money{font-size:19px}.kpis .kpi .num{font-size:32px}.tipo .th{flex-wrap:wrap}}
+.rform{display:grid;grid-template-columns:minmax(0,1fr) 190px auto;gap:12px;align-items:end;padding:14px 16px}
+.rform label{display:grid;gap:5px;font-size:12.5px;font-weight:700;color:var(--muted)}
+.rform.col{grid-template-columns:minmax(0,1fr)}.rtwo{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px}
+.rq{display:flex;gap:6px}
+.rctl{margin-bottom:20px}
+.rlist{list-style:none;margin:0;padding:0}
+.rp{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:start;padding:14px 16px;border-bottom:1px solid var(--line)}
+.rn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 13px var(--display);background:var(--g-brand,var(--brand));color:var(--on-brand);border:1px solid rgba(255,255,255,.14)}
+.rb b{font-size:15px}.rb span{display:block;font-size:13px;color:var(--muted);margin-top:2px}.rb .chip{display:inline-flex;margin:0 0 0 6px;font-size:11px}
+.rb .ro{font-style:italic}
+.ra{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.ra .dl[disabled]{opacity:.35;cursor:default}
+.rbar{display:flex;gap:10px;flex-wrap:wrap;padding:14px 16px}
+.rbar .btn[disabled]{opacity:.5;cursor:default}
+.rbar a.btn{text-decoration:none;display:inline-flex;align-items:center}
+.rsug{padding:0 16px 8px;display:flex;flex-wrap:wrap;gap:6px}.rsug .note{width:100%}
+.rgrid{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+@media (max-width:900px){.rform{grid-template-columns:minmax(0,1fr)}.rgrid{grid-template-columns:minmax(0,1fr)}.rp{grid-template-columns:30px minmax(0,1fr)}.ra{grid-column:2;justify-content:flex-start}.rtwo{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body>
@@ -327,9 +368,9 @@ if(AMBIENTE === "teste"){
   document.title = "TESTE · " + document.title;
   document.getElementById("demoBar").hidden = false;
 }
-const TABELAS = ["clientes","certs","visitas","cobrancas","docs","proprios","fotos"];
+const TABELAS = ["clientes","certs","visitas","cobrancas","docs","proprios","fotos","agenda"];
 const PAPEL_NOME = {admin:"Administrador",tecnico:"Técnico",cliente:"Cliente"};
-const novoDB = () => ({clientes:[],certs:[],visitas:[],cobrancas:[],docs:[],proprios:[],fotos:[]});
+const novoDB = () => ({clientes:[],certs:[],visitas:[],cobrancas:[],docs:[],proprios:[],fotos:[],agenda:[]});
 let ME = null, db = novoDB(), snap = new Map(), fila = Promise.resolve(), USUARIOS = [];
 const isAdmin = () => !!ME && ME.papel === "admin";
 const isStaff = () => !!ME && ME.papel !== "cliente";
@@ -445,7 +486,7 @@ function docsHTML(id){const ds=(db.docs||[]).filter(x=>x.cli===id);return ds.len
 function abasDoPerfil(){
   if(!ME) return [];
   if(OFFLINE) return [["visita","Registrar visita"],["pendentes","Pendentes ("+SAIDA.length+")"]];
-  if(ME.papel==="admin") return [["painel","Painel"],["visita","Registrar visita"],["cobrancas","Cobranças"],["clientes","Clientes"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"],["usuarios","Usuários"],["registros","Registros"]].concat(SAIDA.length?[["pendentes","Pendentes ("+SAIDA.length+")"]]:[]);
+  if(ME.papel==="admin") return [["painel","Painel"],["visita","Registrar visita"],["cobrancas","Cobranças"],["relatorios","Relatórios"],["rota","Rota do dia"],["clientes","Clientes"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"],["usuarios","Usuários"],["registros","Registros"]].concat(SAIDA.length?[["pendentes","Pendentes ("+SAIDA.length+")"]]:[]);
   if(ME.papel==="tecnico") return [["painel","Painel"],["visita","Registrar visita"],["clientes","Clientes"],["novo","Novo certificado"]].concat(SAIDA.length?[["pendentes","Pendentes ("+SAIDA.length+")"]]:[]);
   return [["painel","Meus certificados"]];
 }
@@ -458,10 +499,11 @@ function render(){
   if(!T.find(t=>t[0]===tab)) tab=OFFLINE?"visita":"painel";
   renderTabs();
   if(modo==="cliente"){app.innerHTML=viewCliente();return}
-  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="cobrancas"?viewCobrancas():tab==="clientes"?viewClientes():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():tab==="usuarios"?viewUsuarios():tab==="registros"?viewRegistros():tab==="pendentes"?viewPendentes():viewAgrocel();
+  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="cobrancas"?viewCobrancas():tab==="relatorios"?viewRelatorios():tab==="rota"?viewRota():tab==="clientes"?viewClientes():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():tab==="usuarios"?viewUsuarios():tab==="registros"?viewRegistros():tab==="pendentes"?viewPendentes():viewAgrocel();
   if(tab==="registros") wireRegistros();
   if(tab==="usuarios") wireUsuarios();
   if(tab==="agrocel") wireAgrocel();
+  if(tab==="rota") wireRota();
   if(tab==="novo") wireNovo();
   if(tab==="visita") wireVisita();
   if(tab==="clientes") wireClientes();
@@ -566,6 +608,131 @@ function wireNovo(){
     abertos.add(id); save(); tab="painel"; filtro=null; render(); toast("Certificado salvo");
   };
 }
+
+// ---------- Relatórios e indicadores (somente administrador: inclui faturamento) ----------
+let relMeses=12;
+const MES_ABR=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const mesesLista=n=>{const o=[];for(let i=n-1;i>=0;i--){const x=new Date(HOJE.getFullYear(),HOJE.getMonth()-i,1);o.push(x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0"))}return o};
+const rotMes=ym=>MES_ABR[+ym.slice(5)-1];
+const periodoTxt=ms=>MES_ABR[+ms[0].slice(5)-1]+"/"+ms[0].slice(0,4)+" a "+MES_ABR[+ms[ms.length-1].slice(5)-1]+"/"+ms[ms.length-1].slice(0,4);
+const compacto=v=>v>=1000?(v/1000).toFixed(1).replace(".",",")+" mil":String(Math.round(v));
+// situação atual: o certificado mais recente de cada cliente e tipo (renovação substitui o anterior)
+function certsAtuais(){const m=new Map();db.certs.forEach(k=>{const key=k.cli+"|"+k.tipo,a=m.get(key);if(!a||k.venc>a.venc)m.set(key,k)});return [...m.values()].filter(k=>cli(k.cli))}
+function colunasHTML(meses,series,fmtv,aria){
+  const tot=meses.map((_,i)=>series.reduce((t,s)=>t+s.v[i],0)),max=Math.max(...tot,1);
+  return `<div class="cols" role="img" aria-label="${esc(aria)}">${meses.map((m,i)=>`<div class="bc" title="${esc(fmtv.full(tot[i]))}"><span class="bv">${tot[i]?fmtv.curto(tot[i]):""}</span>
+    <div class="barra" style="height:${Math.max(tot[i]/max*78,tot[i]?3:1)}%;${series.length>1?"background:none":""}">${series.map(s=>`<i style="height:${tot[i]?s.v[i]/tot[i]*100:0}%;background:${s.cor}"></i>`).join("")}</div>
+    <span class="bl">${rotMes(m)}</span></div>`).join("")}</div>`}
+function viewRelatorios(){
+  const meses=mesesLista(relMeses),idx=new Map(meses.map((m,i)=>[m,i]));
+  const vs=new Array(meses.length).fill(0),fat=meses.map(()=>0),rec=meses.map(()=>0);
+  (db.visitas||[]).forEach(v=>{const i=idx.get((v.data||"").slice(0,7));if(i!==undefined)vs[i]++});
+  (db.cobrancas||[]).forEach(b=>{const v=vis(b.visita),i=idx.get(((v&&v.data)||b.venc||"").slice(0,7));if(i===undefined)return;fat[i]+=b.valor;if(b.status==="paga")rec[i]+=b.valor});
+  const totV=vs.reduce((a,b)=>a+b,0),totF=fat.reduce((a,b)=>a+b,0),totR=rec.reduce((a,b)=>a+b,0);
+  const atuais=certsAtuais(),tipos={};
+  atuais.forEach(k=>{const t=tipos[k.tipo]||(tipos[k.tipo]={r:0,a:0,g:0});t[status(k.venc)]++});
+  const nren=atuais.filter(k=>dias(k.venc)<0).sort((a,b)=>a.venc.localeCompare(b.venc));
+  const F=[[6,"6 meses"],[12,"12 meses"]];
+  const tiposHTML=Object.entries(tipos).sort((a,b)=>(b[1].r+b[1].a+b[1].g)-(a[1].r+a[1].a+a[1].g)).map(([t,n])=>{const tot=n.r+n.a+n.g;
+    return `<div class="tipo"><div class="th"><b>${esc(t)}</b><span>${tot} certificado${tot===1?"":"s"} em vigor ou vencidos</span></div>
+      <div class="stack" role="img" aria-label="${esc(t)}: ${n.r} vencidos, ${n.a} vencem em 30 dias, ${n.g} em dia">${[["r",n.r],["a",n.a],["g",n.g]].map(([s,q])=>q?`<i style="width:${q/tot*100}%;background:${COR[s]}"></i>`:"").join("")}</div>
+      <div class="tn"><span><b>${n.r}</b> vencido${n.r===1?"":"s"}</span><span><b>${n.a}</b> vence${n.a===1?"":"m"} em 30 dias</span><span><b>${n.g}</b> em dia</span></div></div>`}).join("");
+  const linhaNren=k=>{const c=cli(k.cli),n=-dias(k.venc),f=foneZap(c.tel),nome=(c.resp||"").trim()||c.fantasia||c.nome;
+    const msg=`Olá, ${nome}! Aqui é da ${EMPRESA.nome.replace(/ \(exemplo\)/,"")}. O certificado de ${k.tipo.toLowerCase()} do seu estabelecimento venceu em ${fmt(k.venc)}. Podemos agendar a renovação?`;
+    return `<div class="nren"><div><b>${esc(c.nome.replace(/ \(.*\)/,""))}</b><small>${esc(k.tipo)} · venceu em ${fmt(k.venc)}${c.tel?" · "+esc(c.tel):""}</small></div>
+      <span class="dv">há ${n} dia${n===1?"":"s"}</span>${f?`<a class="dl" target="_blank" rel="noopener" href="https://wa.me/${f}?text=${encodeURIComponent(msg)}">Chamar no WhatsApp</a>`:"<span></span>"}</div>`};
+  return `<section class="kpis">
+    <div class="kpi static"><span class="lbl"><i style="background:var(--lime)"></i>Visitas no período</span><span class="num">${totV}</span><span class="hint">últimos ${relMeses} meses</span></div>
+    <div class="kpi static"><span class="lbl"><i style="background:var(--lime)"></i>Faturado</span><span class="money">${BRL(totF)}</span><span class="hint">cobranças geradas nas visitas</span></div>
+    <div class="kpi static"><span class="lbl"><i style="background:var(--green)"></i>Recebido</span><span class="money" style="color:var(--green)">${BRL(totR)}</span><span class="hint">${totF?Math.round(totR/totF*100):0}% do faturado</span></div>
+    <div class="kpi static k-r"><span class="lbl"><i style="background:var(--red)"></i>Sem renovar</span><span class="num" style="color:var(--red)">${nren.length}</span><span class="hint">cliente${nren.length===1?"":"s"} com certificado vencido</span></div>
+  </section>
+  <div class="filters" style="margin:-6px 0 16px"><span class="note" style="align-self:center;margin-right:6px">Período</span>${F.map(([k,l])=>`<button data-relm="${k}" aria-pressed="${relMeses===k}">${l}</button>`).join("")}</div>
+  <div class="relgrid">
+    <section class="panel"><div class="ph"><h2>Visitas por mês</h2><span class="note">${periodoTxt(meses)}</span></div>
+      ${colunasHTML(meses,[{v:vs,cor:"var(--lime)"}],{curto:String,full:n=>n+" visita"+(n===1?"":"s")},"Visitas por mês, últimos "+relMeses+" meses: "+vs.join(", "))}</section>
+    <section class="panel"><div class="ph"><h2>Faturamento por mês</h2><span class="note">${periodoTxt(meses)}</span></div>
+      ${colunasHTML(meses,[{v:rec,cor:"var(--green)"},{v:fat.map((x,i)=>x-rec[i]),cor:"var(--amber)"}],{curto:compacto,full:BRL},"Faturamento por mês em reais, últimos "+relMeses+" meses")}
+      <div class="legenda"><span><i style="background:var(--green)"></i>Recebido</span><span><i style="background:var(--amber)"></i>A receber</span><span>Valores em R$; passe o cursor para ver o total.</span></div></section>
+  </div>
+  <section class="panel" style="margin-bottom:20px"><div class="ph"><h2>Vencimentos por tipo de serviço</h2><span class="note">situação atual, considerando a renovação mais recente</span></div>
+    ${tiposHTML?`<div class="tipos">${tiposHTML}</div>`:'<div class="empty">Nenhum certificado cadastrado.</div>'}</section>
+  <section class="panel"><div class="ph"><h2>Clientes que não renovaram</h2><span class="note">certificado vencido e sem um mais novo do mesmo serviço</span></div>
+    ${nren.length?nren.map(linhaNren).join(""):'<div class="empty">Todos os clientes estão com os certificados em vigor.</div>'}</section>`}
+
+// ---------- Rota do dia (somente administrador: o banco também só libera o tipo 'agenda' ao admin) ----------
+let rotaDia=iso(HOJE), rotaTec="", ROTA=null;
+const tecnicosRota=()=>{const l=USUARIOS.filter(u=>u.ativo&&u.papel!=="cliente").sort((a,b)=>(a.papel==="tecnico"?0:1)-(b.papel==="tecnico"?0:1)).map(u=>u.nome);return l.length?l:(ME?[ME.nome]:[])};
+const agDe=(dia,tec)=>(db.agenda||[]).filter(a=>a.dia===dia&&a.tecnico===tec&&cli(a.cli)).sort((a,b)=>a.ordem-b.ordem);
+function endCli(c){const e=c.end||compEnd(c);return c.cidade&&!e.toLowerCase().includes(c.cidade.toLowerCase())?e+" · "+c.cidade+(c.uf?"/"+c.uf:""):e}
+const mapaBusca=c=>"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(endCli(c).replace(/ · /g,", "));
+function rotaCompleta(ps){const q=ps.map(a=>endCli(cli(a.cli)).replace(/ · /g,", "));if(!q.length)return "";
+  return "https://www.google.com/maps/dir/?api=1&travelmode=driving&destination="+encodeURIComponent(q[q.length-1])+(q.length>1?"&waypoints="+encodeURIComponent(q.slice(0,-1).slice(0,9).join("|")):"")}
+const diaExtenso=s=>d(s).toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"});
+function viewRota(){
+  const tecs=tecnicosRota(); if(!tecs.includes(rotaTec)) rotaTec=tecs.find(t=>agDe(rotaDia,t).length)||tecs[0]||"";
+  const ps=agDe(rotaDia,rotaTec), ja=new Set(ps.map(a=>a.cli));
+  const sug=db.clientes.filter(c=>!ja.has(c.id)&&["r","a"].includes(piorStatus(c.id))).sort((a,b)=>(piorStatus(a.id)==="r"?0:1)-(piorStatus(b.id)==="r"?0:1)).slice(0,6);
+  const item=(a,i)=>{const c=cli(a.cli);return `<li class="rp"><span class="rn">${i+1}</span>
+    <div class="rb"><b>${esc(c.nome.replace(/ \(.*\)/,""))}</b>${a.hora?` <span class="chip s-g"><i></i>${esc(a.hora)}</span>`:""}
+      <span>${esc(endCli(c)||"Endereço não cadastrado")}</span>
+      ${c.tel||c.resp?`<span>${esc(c.resp||"")}${c.resp&&c.tel?" · ":""}${esc(c.tel||"")}</span>`:""}
+      ${a.obs?`<span class="ro">${esc(a.obs)}</span>`:""}</div>
+    <div class="ra"><button class="dl" data-rmov="${a.id}" data-dir="-1" ${i===0?"disabled":""} aria-label="Subir na ordem">↑</button><button class="dl" data-rmov="${a.id}" data-dir="1" ${i===ps.length-1?"disabled":""} aria-label="Descer na ordem">↓</button>
+      <a class="dl" target="_blank" rel="noopener" href="${esc(mapaBusca(c))}">Mapa</a><button class="dl" data-rdel="${a.id}">Remover</button></div></li>`};
+  const url=rotaCompleta(ps);
+  return `<section class="panel rctl"><div class="ph"><h2>Rota do dia</h2><span class="note">Visível só para o administrador</span></div>
+    <div class="rform"><label>Técnico<select id="rTec">${tecs.map(t=>`<option ${t===rotaTec?"selected":""}>${esc(t)}</option>`).join("")}</select></label>
+    <label>Dia<input id="rDia" type="date" value="${rotaDia}"></label>
+    <div class="rq"><button class="dl" data-rquick="0">Hoje</button><button class="dl" data-rquick="1">Amanhã</button></div></div></section>
+  <div class="relgrid rgrid">
+    <section class="panel"><div class="ph"><h2>${esc(diaExtenso(rotaDia))}</h2><span class="note">${ps.length} parada${ps.length===1?"":"s"} · ${esc(rotaTec)}</span></div>
+      ${ps.length?`<ol class="rlist">${ps.map(item).join("")}</ol>`:'<div class="empty">Nenhum cliente nesta rota. Adicione ao lado.</div>'}
+      <div class="rbar"><button class="btn" data-pdf="rota" data-id="${esc(rotaDia+"|"+rotaTec)}" ${ps.length?"":"disabled"}>Gerar PDF da rota</button>
+        <button class="btn ghost" id="rEnviar" ${ps.length?"":"disabled"}>Enviar ao técnico</button>
+        ${url?`<a class="btn ghost" target="_blank" rel="noopener" href="${esc(url)}">Abrir rota no mapa</a>`:""}</div></section>
+    <section class="panel"><div class="ph"><h2>Adicionar cliente</h2></div>
+      <form id="rAdd" class="rform col"><label>Cliente<select id="rCli" required><option value="">Escolha…</option>${[...db.clientes].sort((a,b)=>a.nome.localeCompare(b.nome)).filter(c=>!ja.has(c.id)).map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select></label>
+      <div class="rtwo"><label>Horário (opcional)<input id="rHora" type="time"></label><label>Observação (opcional)<input id="rObs" maxlength="200" placeholder="Ex.: falar com o gerente"></label></div>
+      <button class="btn" type="submit">Adicionar à rota</button></form>
+      ${sug.length?`<div class="rsug"><div class="note" style="margin-bottom:8px">Sugestões: certificado vencido ou perto de vencer</div>${sug.map(c=>{const p=piorStatus(c.id);return `<button class="dl" data-radd="${c.id}"><span style="color:${COR[p]}">●</span> ${esc(c.nome.replace(/ \(.*\)/,""))}</button>`}).join("")}</div>`:""}
+      <p class="note" style="padding:8px 16px 16px">O mapa abre no Google Maps só quando você clica em “Mapa” ou “Abrir rota no mapa”.</p></section>
+  </div>`}
+function renderRota(){const a=document.getElementById("app");if(!a)return;a.innerHTML=viewRota();wireRota()}
+function rotaAdd(cid,hora,obs){
+  if(agDe(rotaDia,rotaTec).some(a=>a.cli===cid)) return toast("Este cliente já está na rota.");
+  const ps=agDe(rotaDia,rotaTec);
+  (db.agenda=db.agenda||[]).push({id:"a"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),cli:cid,dia:rotaDia,tecnico:rotaTec,ordem:(ps.length?ps[ps.length-1].ordem:0)+1,...(hora?{hora}:{}),...(obs?{obs}:{})});
+  save();renderRota();toast("Cliente adicionado à rota");
+}
+function wireRota(){
+  const $=id=>document.getElementById(id);
+  $("rTec").onchange=()=>{rotaTec=$("rTec").value;renderRota()};
+  $("rDia").onchange=()=>{if($("rDia").value){rotaDia=$("rDia").value;renderRota()}};
+  $("rAdd").onsubmit=e=>{e.preventDefault();if(!$("rCli").value)return toast("Escolha o cliente.");rotaAdd($("rCli").value,$("rHora").value,$("rObs").value.trim())};
+  const b=$("rEnviar");if(b){b.onclick=()=>{b.disabled=true;enviarRota().finally(()=>b.disabled=false)};prepararRota()}
+}
+const rotaChave=()=>rotaDia+"|"+rotaTec+"|"+agDe(rotaDia,rotaTec).map(a=>a.id+a.ordem+(a.hora||"")+(a.obs||"")).join(",");
+async function prepararRota(){const k=rotaChave();if(ROTA&&ROTA.k===k)return;ROTA=null;
+  try{const r=await gerarPDF("rota",rotaDia+"|"+rotaTec);if(r&&k===rotaChave())ROTA={k,file:new File([r.doc.output("blob")],r.arq,{type:"application/pdf"})}}catch(_){}}
+async function enviarRota(){
+  if(!ROTA||ROTA.k!==rotaChave()){toast("Preparando a rota…");await prepararRota()}
+  const file=ROTA&&ROTA.file,n=agDe(rotaDia,rotaTec).length;
+  const txt=`Olá, ${rotaTec.split(" ")[0]}! Segue a rota de ${fmt(rotaDia)} (${n} parada${n===1?"":"s"}), com endereços e ordem das visitas.`;
+  if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],text:txt,title:"Rota de "+fmt(rotaDia)});return}catch(e){if(e&&e.name==="AbortError")return}}
+  if(file)await salvar(file.name,file);
+  window.open("https://wa.me/?text="+encodeURIComponent(txt),"_blank","noopener");
+  toast(file?"Escolha o técnico no WhatsApp e anexe o PDF baixado.":"Não consegui gerar o PDF. Use “Gerar PDF da rota”.");
+}
+function rotaClick(e){
+  const m=e.target.closest("[data-rmov]");if(m){const ps=agDe(rotaDia,rotaTec),i=ps.findIndex(a=>a.id===m.dataset.rmov),j=i+ +m.dataset.dir;
+    if(i<0||j<0||j>=ps.length)return true;const t=ps[i].ordem;ps[i].ordem=ps[j].ordem;ps[j].ordem=t;save();renderRota();return true}
+  const x=e.target.closest("[data-rdel]");if(x){db.agenda=db.agenda.filter(a=>a.id!==x.dataset.rdel);save();renderRota();return true}
+  const q=e.target.closest("[data-rquick]");if(q){const t=new Date(HOJE);t.setDate(t.getDate()+ +q.dataset.rquick);rotaDia=iso(t);renderRota();return true}
+  const s=e.target.closest("[data-radd]");if(s){rotaAdd(s.dataset.radd,"","");return true}
+  return false}
+
 
 function viewAvisos(){
   const lista=[];
@@ -813,6 +980,10 @@ function docDados(tipo,id){
       relatorio:v.relatorio||"",fotosDe:v.id,
       lista:{t:"Orientações e termo de compromisso",itens:TERMO,obs:"Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima."},
       assinatura:v.assinatura||null};}
+  if(tipo==="rota"){const [dia,tec]=id.split("|"),ps=agDe(dia,tec);if(!ps.length)return null;
+    return {arq:"rota-"+dia+"-"+tec.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\w]+/g,"-").toLowerCase()+".pdf",titulo:"Rota do dia",sub:fmt(dia)+" · "+tec,
+      linhas:[["Técnico",tec],["Data",diaExtenso(dia)],["Paradas",String(ps.length)]],
+      paradas:ps.map((a,i)=>{const c=cli(a.cli);return {n:i+1,hora:a.hora||"",nome:c.nome,end:endCli(c)||"Endereço não cadastrado",contato:[c.resp,c.tel].filter(Boolean).join(" · "),obs:a.obs||""}})};}
   const b=cob(id);if(!b)return null;const c=cli(b.cli);
   if(tipo==="cobranca") return {arq:`cobranca-${b.id}.pdf`,titulo:`Cobrança ${BRL(b.valor)}`,sub:b.desc,aviso:"Simulação: os códigos abaixo não são pagáveis.",
     linhas:[["Pagador",c.nome],[docRot(c.cnpj),c.cnpj],["Beneficiário",EMPRESA.nome],["CNPJ do beneficiário",EMPRESA.cnpj],["Valor",BRL(b.valor)],["Vencimento",fmt(b.venc)],["Forma",b.forma],["Situação",LCOB[stCob(b)]]],
@@ -854,6 +1025,16 @@ async function gerarPDF(tipo,id){
     doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(90,107,94);doc.text(k,M,y);
     doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(18,32,22);doc.text(txt,M+42,y);
     y+=Math.max(6,txt.length*4.8)+1.4});
+  if(D.paradas){y+=3;if(y>250){doc.addPage();y=24}
+    doc.setFont("helvetica","bold");doc.setFontSize(10.5);doc.setTextColor(18,32,22);doc.text("Paradas, na ordem de visita",M,y);y+=8;
+    D.paradas.forEach(p=>{const ln=doc.splitTextToSize(p.end,W-2*M-14),ob=p.obs?doc.splitTextToSize("Obs.: "+p.obs,W-2*M-14):[];
+      const h=6+ln.length*4.6+(p.contato?4.8:0)+ob.length*4.6+9;if(y+h>278){doc.addPage();y=24}
+      doc.setFillColor(0,65,7);doc.circle(M+4,y-1.3,4.2,"F");doc.setTextColor(242,248,238);doc.setFont("helvetica","bold");doc.setFontSize(9.5);doc.text(String(p.n),M+4,y+0.1,{align:"center"});
+      doc.setTextColor(18,32,22);doc.setFontSize(10.5);doc.text(p.nome+(p.hora?"   ·   "+p.hora:""),M+13,y);y+=5.4;
+      doc.setFont("helvetica","normal");doc.setFontSize(9.5);doc.text(ln,M+13,y);y+=ln.length*4.6;
+      doc.setTextColor(90,107,94);if(p.contato){doc.text("Contato: "+p.contato,M+13,y);y+=4.8}
+      if(ob.length){doc.setFont("helvetica","italic");doc.text(ob,M+13,y);y+=ob.length*4.6}
+      y+=3;doc.setDrawColor(219,228,215);doc.line(M,y,W-M,y);y+=7;doc.setTextColor(18,32,22)})}
   if(D.relatorio){y+=3;if(y>250){doc.addPage();y=24}
     doc.setFont("helvetica","bold");doc.setFontSize(10.5);doc.setTextColor(18,32,22);doc.text("Relatório da visita",M,y);y+=6;
     doc.setFont("helvetica","normal");doc.setFontSize(9.5);
@@ -1042,6 +1223,7 @@ const ESQ = {
     geradaEm:[V.hora], pagoEm:[V.data], linha:[V.rx(/^[\d. ]{20,80}$/)], pix:[V.rx(/^[\w.\-]{10,400}$/)],
     nfse:[null,0,{numero:V.rx(/^\d{1,10}$/), emitidaEm:V.hora, aliquota:V.num, cod:V.rx(/^[\w-]{4,20}$/), desc:T3}]},
   proprios: {id:[V.id,1], nome:[T3,1], venc:[V.data,1]},
+  agenda: {id:[V.id,1], cli:[V.id,1], dia:[V.data,1], hora:[V.rx(/^\d{2}:\d{2}$/)], tecnico:[T3,1], obs:[T1], ordem:[V.num,1]},
   fotos: {id:[V.id,1], cli:[V.id,1], visita:[V.id], path:[V.rx(RE_PATH),1], nome:[T3], em:[V.hora]},
 };
 function limparItem(t, o){
@@ -1255,7 +1437,7 @@ async function carregarRegistros(){
   REGS = out; REGS_OK = true;
 }
 const fmtReg = r => new Date(r.em).toLocaleString("pt-BR", {day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit"});
-const TIPO_REG = {clientes:"Cliente", certs:"Certificado", visitas:"Ordem de serviço", cobrancas:"Cobrança", docs:"Documento", proprios:"Documento da empresa", fotos:"Foto", usuarios:"Usuário", acesso:"Acesso"};
+const TIPO_REG = {clientes:"Cliente", certs:"Certificado", visitas:"Ordem de serviço", cobrancas:"Cobrança", docs:"Documento", proprios:"Documento da empresa", fotos:"Foto", agenda:"Rota do dia", usuarios:"Usuário", acesso:"Acesso"};
 function regsFiltrados(){
   const q = regBusca.trim().toLowerCase();
   return REGS.filter(r => (!regAcao || r.acao === regAcao) && (!q || (r.usuario_nome + " " + r.resumo + " " + r.acao + " " + (r.campos || "")).toLowerCase().includes(q)));
@@ -1781,6 +1963,8 @@ document.addEventListener("click",e=>{
   const ux=e.target.closest("[data-uexcluir]"); if(ux){excluirUsuario(ux.dataset.uexcluir);return}
   const dp=e.target.closest("[data-delprop]"); if(dp){db.proprios=db.proprios.filter(p=>p.id!==dp.dataset.delprop);save();render();return}
   const cy=e.target.closest("[data-copy]"); if(cy){copiar(cy);return}
+  if(tab==="rota"&&isAdmin()&&rotaClick(e))return;
+  const rm=e.target.closest("[data-relm]"); if(rm){relMeses=+rm.dataset.relm;render();return}
   const fb=e.target.closest("[data-fcob]"); if(fb){filtroCob=fb.dataset.fcob;render();return}
   const cp=e.target.closest("[data-comp]"); if(cp){openComp(cp.dataset.comp);return}
   const zp=e.target.closest("[data-zap]"); if(zp){zp.disabled=true;enviarZap(zp.dataset.zap).finally(()=>zp.disabled=false);return}

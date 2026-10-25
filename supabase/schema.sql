@@ -13,7 +13,8 @@ create table public.perfis (
 );
 
 create table public.registros (
-  tipo text not null check (tipo in ('clientes','certs','visitas','cobrancas','docs','proprios','fotos')),
+  -- 'agenda' (rota do dia) é só do administrador: as políticas abaixo não a liberam a técnico nem a cliente.
+  tipo text not null check (tipo in ('clientes','certs','visitas','cobrancas','docs','proprios','fotos','agenda')),
   id text not null,
   cli text,
   data jsonb not null,
@@ -137,6 +138,7 @@ language sql immutable set search_path = '' as $$
     when 'docs' then 'Documento: ' || coalesce(p_data->>'nome','?')
     when 'proprios' then 'Documento da empresa: ' || coalesce(p_data->>'nome','?')
     when 'fotos' then 'Foto: ' || coalesce(p_data->>'nome','?')
+    when 'agenda' then 'Rota do dia ' || coalesce(p_data->>'dia','?') || ' (' || coalesce(p_data->>'tecnico','?') || ')'
     else p_tipo end
 $$;
 
@@ -209,3 +211,12 @@ begin
 end $$;
 revoke all on function public.registrar_evento(text, text) from public, anon;
 grant execute on function public.registrar_evento(text, text) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Migração 0.6.0 (rota do dia). Em um banco que já existe, rode só este bloco.
+-- Ele permite o tipo 'agenda' em registros. Depois rode de novo a função app_priv.resumo_registro acima
+-- (create or replace), que já traz a linha de 'agenda'. Aplicada no projeto de teste em 25/10/2026.
+-- ---------------------------------------------------------------------------
+-- alter table public.registros drop constraint registros_tipo_check;
+-- alter table public.registros add constraint registros_tipo_check
+--   check (tipo in ('clientes','certs','visitas','cobrancas','docs','proprios','fotos','agenda'));
