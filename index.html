@@ -1716,15 +1716,24 @@ window.addEventListener("online", () => {atualizarBarra(); if(OFFLINE) reconecta
 setInterval(() => {if(ME && !OFFLINE && SAIDA.some(i => !i.bloqueada && !i.retido) && navigator.onLine !== false) enviarPendentes()}, 60000);
 
 // ---------- Registrar visita ----------
+// Técnico: só registra visita de hoje até 3 dias atrás, nunca com data no futuro (administrador não tem esse limite).
+const DIAS_RETROATIVOS = 3, MSG_DATA_TEC = `Visitas só podem ser registradas de hoje até ${DIAS_RETROATIVOS} dias atrás, e nunca com data no futuro.`;
+function limitesVisita(){
+  if(!ME || ME.papel !== "tecnico") return null;
+  const f = x => new Date(x - x.getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
+  const agora = new Date(); agora.setSeconds(0, 0);
+  const ini = new Date(HOJE); ini.setDate(ini.getDate() - DIAS_RETROATIVOS);
+  return {min: f(ini), max: f(agora)};
+}
 function viewVisita(){
-  const a = new Date(); a.setSeconds(0, 0); const local = new Date(a - a.getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
+  const a = new Date(); a.setSeconds(0, 0); const local = new Date(a - a.getTimezoneOffset() * 6e4).toISOString().slice(0, 16); const lim = limitesVisita();
   if(!db.clientes.length) return `${avisoSaidaHTML()}<div class="card"><h2 style="font-size:20px;margin-bottom:8px">Registrar visita</h2><p class="note">${OFFLINE ? "Este aparelho ainda não tem a lista de clientes. Abra o app uma vez com internet para baixá-la." : "Cadastre um cliente antes de registrar a visita (aba Clientes)."}</p></div>`;
   return `${avisoSaidaHTML()}<div class="card"><div class="steps"><span>1 · Serviço e cobrança</span><span>2 · Orientações</span><span>3 · Assinatura do cliente</span></div>
   <form id="fVis">
     <h3 class="full first">Dados da visita <span class="note mono">${OFFLINE ? "número definido ao enviar" : proxOS()}</span></h3>
     <label class="full">Cliente<select id="vCliente">${db.clientes.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select></label>
     <label>Técnico responsável<input id="vTec" value="${esc(ME.nome)}" readonly></label>
-    <label>Data e hora da visita<input id="vData" type="datetime-local" value="${local}"></label>
+    <label>Data e hora da visita${lim ? ` <span class="note">hoje e até ${DIAS_RETROATIVOS} dias atrás</span>` : ""}<input id="vData" type="datetime-local" value="${local}"${lim ? ` min="${lim.min}" max="${lim.max}"` : ""}></label>
     <label>Tipo de serviço<select id="vTipo">${Object.keys(VALIDADE_MESES).map(t => `<option>${t}</option>`).join("")}</select></label>
     <label>Praga-alvo<input id="vPraga" placeholder="Ex.: baratas e formigas"></label>
     <label class="full">Produtos usados<input id="vProd" placeholder="Ex.: Optigard Duo (Lambda-cialotrina + Tiametoxam)"></label>
@@ -1767,6 +1776,7 @@ function desenharFotos(){
 function wireVisita(){
   const $ = id => document.getElementById(id); if(!$("fVis")) return;
   let pad = makePad($("pad")); $("padClear").onclick = () => pad.clear();
+  if(limitesVisita()){const renovar = () => {const l = limitesVisita(); $("vData").min = l.min; $("vData").max = l.max}; ["focus", "input"].forEach(ev => $("vData").addEventListener(ev, renovar))}
   const modo_ = () => document.querySelector("[name=vModo]:checked").value;
   const sug = () => {$("vVenc").value = addMeses(($("vData").value || iso(HOJE)).slice(0, 10), VALIDADE_MESES[$("vTipo").value])}; sug(); $("vTipo").onchange = sug; $("vData").onchange = sug;
   if($("vVencCob")){const x = new Date(HOJE); x.setDate(x.getDate() + 10); $("vVencCob").value = iso(x)}
@@ -1786,6 +1796,8 @@ function wireVisita(){
     const ag = modo_() === "agora";
     if(!db.clientes.length) return toast("Cadastre um cliente antes de registrar a visita.");
     if(!$("vData").value) return toast("Informe a data da visita.");
+    const lim = limitesVisita();
+    if(lim && ($("vData").value < lim.min || $("vData").value > lim.max)) return toast(MSG_DATA_TEC);
     if(!depois && ag && !$("vNome").value.trim()) return toast("Escreva o nome de quem está assinando.");
     if(!depois && ag && pad.isEmpty()) return toast("Peça para o cliente assinar no quadro.");
     const assina = ag && $("vNome").value.trim() && !pad.isEmpty();

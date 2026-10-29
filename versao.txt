@@ -1,10 +1,13 @@
 AGROCEL CERTIFICADOS · HISTÓRICO DE VERSÕES
-Versão atual: 0.6.0 (25/10/2026)
+Versão atual: 0.6.1 (29/10/2026)
 
 Regra: a cada nova versão publicada, este arquivo ganha uma entrada no topo.
 Novidade = sobe o 2º número (0.5.0). Correção ou ajuste = sobe o 3º número (0.4.2).
 
 ------------------------------------------------------------
+0.6.1 · 29/10/2026 · Ajuste
+- O técnico só consegue registrar visita de hoje até 3 dias atrás, e nunca com data no futuro. O campo de data já bloqueia as datas fora do prazo e o botão avisa se tentar. O administrador continua sem esse limite.
+
 0.6.0 · 25/10/2026 · Novidade
 - Nova aba "Relatórios" (só administrador): visitas por mês, faturamento por mês (recebido e a receber), vencimentos por tipo de serviço e clientes que não renovaram, com botão para chamar no WhatsApp. Período de 6 ou 12 meses.
 - Nova aba "Rota do dia" (só administrador): escolhe o técnico e o dia, monta a lista de clientes com endereço e contato, muda a ordem, abre o mapa e gera o PDF da rota para enviar ao técnico.
