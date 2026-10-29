@@ -215,7 +215,7 @@ grant execute on function public.registrar_evento(text, text) to authenticated;
 -- ---------------------------------------------------------------------------
 -- Migração 0.6.0 (rota do dia). Em um banco que já existe, rode só este bloco.
 -- Ele permite o tipo 'agenda' em registros. Depois rode de novo a função app_priv.resumo_registro acima
--- (create or replace), que já traz a linha de 'agenda'. Aplicada no projeto de teste em 25/10/2026.
+-- (create or replace), que já traz a linha de 'agenda'. Aplicada no projeto de teste em 25/10/2026 e no real em 29/10/2026.
 -- ---------------------------------------------------------------------------
 -- alter table public.registros drop constraint registros_tipo_check;
 -- alter table public.registros add constraint registros_tipo_check
