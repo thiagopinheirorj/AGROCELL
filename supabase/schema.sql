@@ -220,3 +220,9 @@ grant execute on function public.registrar_evento(text, text) to authenticated;
 -- alter table public.registros drop constraint registros_tipo_check;
 -- alter table public.registros add constraint registros_tipo_check
 --   check (tipo in ('clientes','certs','visitas','cobrancas','docs','proprios','fotos','agenda'));
+
+-- ---------------------------------------------------------------------------
+-- Sem login (papel anon) ninguém lê nem grava nas tabelas. As regras por linha já bloqueiam, mas o Supabase
+-- concede tudo ao anon por padrão; aqui tiramos de vez (defesa em profundidade). Aplicado no real em 30/10/2026.
+-- ---------------------------------------------------------------------------
+revoke all on table public.registros, public.perfis, public.auditoria from anon;
