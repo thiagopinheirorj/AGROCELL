@@ -19,7 +19,7 @@ O app acompanha a validade de cada certificado emitido (desinsetização, desrat
 - **Fotos:** dá para tirar uma de cada vez ou escolher várias; elas se acumulam na tela, com miniatura e botão para remover.
 - **Sem conexão:** o app abre sem internet (service worker `sw.js` + bibliotecas em `assets/vendor`) e a visita, com relatório, fotos e assinatura, é guardada no celular (IndexedDB). Quando a internet volta, o envio é automático; a aba **Pendentes** mostra a fila, com Enviar agora e Descartar.
 - O número da OS é definido no envio. A lista de clientes usada offline fica guardada só em aparelhos de técnico e administrador e é apagada ao sair da conta.
-- Teste: `AGROCEL_SENHA_TESTE=<senha> node supabase/teste-offline.mjs` (corta a internet do navegador de verdade).
+- Existe um teste de ponta a ponta dessa fila, que corta a internet do navegador de verdade. Ele fica fora do repositório público, junto com os demais scripts de teste.
 
 ## Política de privacidade e termo de uso
 
@@ -32,16 +32,15 @@ A tela de login tem links para a **Política de privacidade** e o **Termo de uso
 
 ## Rotina de segurança
 
-O checklist (semanal, mensal, trimestral, antes de mudanças e o que fazer em cada situação) está em `docs/rotina-de-seguranca.pdf`. Para a parte técnica:
+A rotina de verificação (semanal, mensal, trimestral, antes de mudanças e o que fazer em cada situação) e os testes de acesso por perfil ficam fora do repositório público, de propósito, e são guardados localmente pelo responsável. Na parte técnica, o que está aqui:
 
-- `node supabase/testes-de-acesso.mjs <senha>` roda 44 testes de acesso por perfil no ambiente de teste (ou defina a variável `AGROCEL_SENHA_TESTE`). Todos devem passar antes de mexer no sistema real.
 - `supabase/verificar-projetos.sql` compara as regras do banco real com as do teste.
 
 ## Ambiente de teste
 
 Para experimentar sem risco, abra o app com `?teste` no final do endereço (por exemplo `https://thiagopinheirorj.github.io/AGROCELL/?teste`). Ele usa um banco separado, com clientes, certificados, visitas e cobranças **fictícios**, e mostra uma faixa laranja "Ambiente de teste". Nada feito ali vai para o sistema real.
 
-Para restaurar o ambiente de teste ao estado inicial: `node supabase/seed-teste.mjs <senha>`.
+O script que restaura o ambiente de teste ao estado inicial também fica fora do repositório público.
 
 ## Login e perfis
 

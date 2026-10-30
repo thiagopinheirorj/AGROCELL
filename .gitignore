@@ -1,0 +1,7 @@
+# Arquivos internos: ficam só no computador, fora do repositório público (e do site).
+.claude/
+CLAUDE.md
+supabase/seed-teste.mjs
+supabase/teste-offline.mjs
+supabase/testes-de-acesso.mjs
+docs/rotina-de-seguranca.*
