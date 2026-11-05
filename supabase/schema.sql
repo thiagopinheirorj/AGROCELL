@@ -13,8 +13,9 @@ create table public.perfis (
 );
 
 create table public.registros (
-  -- 'agenda' (rota do dia) é só do administrador: as políticas abaixo não a liberam a técnico nem a cliente.
-  tipo text not null check (tipo in ('clientes','certs','visitas','cobrancas','docs','proprios','fotos','agenda')),
+  -- 'agenda' (rota do dia), 'agendamentos' (visitas marcadas) e 'leads' (CRM de prospecção): administrador e técnico.
+  -- O cliente não lê nenhum dos três.
+  tipo text not null check (tipo in ('clientes','certs','visitas','cobrancas','docs','proprios','fotos','agenda','agendamentos','leads')),
   id text not null,
   cli text,
   data jsonb not null,
@@ -48,26 +49,26 @@ create policy perfis_admin_apagar on public.perfis for delete to authenticated
 
 create policy reg_ler on public.registros for select to authenticated using (
   app_priv.papel() = 'admin'
-  or (app_priv.papel() = 'tecnico' and tipo in ('clientes','certs','visitas','docs','fotos'))
+  or (app_priv.papel() = 'tecnico' and tipo in ('clientes','certs','visitas','docs','fotos','agenda','agendamentos','leads'))
   or (app_priv.papel() = 'cliente' and cli = app_priv.cliente()
       and tipo in ('clientes','certs','visitas','docs','cobrancas','fotos'))
 );
 create policy reg_inserir on public.registros for insert to authenticated with check (
   app_priv.papel() = 'admin'
-  or (app_priv.papel() = 'tecnico' and tipo in ('clientes','certs','visitas','docs','fotos'))
+  or (app_priv.papel() = 'tecnico' and tipo in ('clientes','certs','visitas','docs','fotos','agenda','agendamentos','leads'))
 );
 create policy reg_atualizar on public.registros for update to authenticated
   using (
     app_priv.papel() = 'admin'
-    or (app_priv.papel() = 'tecnico' and tipo in ('clientes','certs','visitas','docs','fotos'))
+    or (app_priv.papel() = 'tecnico' and tipo in ('clientes','certs','visitas','docs','fotos','agenda','agendamentos','leads'))
   )
   with check (
     app_priv.papel() = 'admin'
-    or (app_priv.papel() = 'tecnico' and tipo in ('clientes','certs','visitas','docs','fotos'))
+    or (app_priv.papel() = 'tecnico' and tipo in ('clientes','certs','visitas','docs','fotos','agenda','agendamentos','leads'))
   );
 create policy reg_apagar on public.registros for delete to authenticated using (
   app_priv.papel() = 'admin'
-  or (app_priv.papel() = 'tecnico' and tipo = 'fotos')
+  or (app_priv.papel() = 'tecnico' and tipo in ('fotos','agenda','agendamentos','leads'))
 );
 
 create or replace function public.assinar_visita(p_id text, p_nome text, p_img text)
@@ -139,6 +140,8 @@ language sql immutable set search_path = '' as $$
     when 'proprios' then 'Documento da empresa: ' || coalesce(p_data->>'nome','?')
     when 'fotos' then 'Foto: ' || coalesce(p_data->>'nome','?')
     when 'agenda' then 'Rota do dia ' || coalesce(p_data->>'dia','?') || ' (' || coalesce(p_data->>'tecnico','?') || ')'
+    when 'agendamentos' then 'Visita agendada ' || coalesce(p_data->>'dia','?') || ' (' || coalesce(p_data->>'tipo','?') || ')'
+    when 'leads' then 'Lead: ' || coalesce(p_data->>'empresa','?')
     else p_tipo end
 $$;
 
@@ -226,3 +229,8 @@ grant execute on function public.registrar_evento(text, text) to authenticated;
 -- concede tudo ao anon por padrão; aqui tiramos de vez (defesa em profundidade). Aplicado no real em 30/10/2026.
 -- ---------------------------------------------------------------------------
 revoke all on table public.registros, public.perfis, public.auditoria from anon;
+
+-- ---------------------------------------------------------------------------
+-- Migração 0.7.0 (agendamento de visitas, rota do dia para a equipe e aba Leads).
+-- Em um banco que já existe, rode o arquivo supabase/migracao-0.7.0.sql (primeiro no teste, depois no real).
+-- ---------------------------------------------------------------------------

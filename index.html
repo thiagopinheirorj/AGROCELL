@@ -277,6 +277,55 @@ form h3 .note{font-weight:500}
   .dots{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Painel compacto e pendências de visita, Agenda, Leads, Scanner (0.7.0) */
+.kpis.compacto{gap:10px;margin-bottom:14px}
+.kpis.compacto .kpi{padding:10px 14px;gap:3px;border-radius:14px}
+.kpis.compacto .kpi .num{font-size:28px}
+.kpis.compacto .kpi .hint{font-size:12px}
+.kpis.compacto .meter{height:4px}
+.kpis.compacto .score{gap:12px}
+@media (max-width:560px){.kpis.compacto .score .hint{display:none}.kpis.compacto .kpi .num{font-size:26px}}
+.pend{margin-bottom:16px}
+.pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.pcol{padding:12px 16px;display:grid;gap:8px;align-content:start;border-right:1px solid var(--line);min-width:0;font-size:14px}
+.pcol:last-child{border-right:0}
+.ptit{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pit{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.pit .pi{min-width:0}.pit .pi b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}.pit .pi small{color:var(--muted);font-size:12.5px}
+@media (max-width:760px){.pgrid{grid-template-columns:1fr}.pcol{border-right:0;border-bottom:1px solid var(--line)}.pcol:last-child{border-bottom:0}}
+.agform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px 16px}
+.agform label{display:grid;gap:5px;font-size:12.5px;font-weight:700;color:var(--muted)}
+.agform .full{grid-column:1/-1}
+@media (max-width:560px){.agform{grid-template-columns:1fr}}
+.agday{padding:10px 16px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.agi{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 12px;align-items:start;padding:12px 16px;border-bottom:1px solid var(--line)}
+.agi .hr{font:700 14px var(--mono);min-width:48px;padding-top:2px}
+.agi .tx b{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.agi .tx small{color:var(--muted);font-size:12.5px;display:block;overflow-wrap:anywhere}
+.agi .acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.agban{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.t-quente{background:var(--red-bg);color:var(--red)}.t-morno{background:var(--amber-bg);color:var(--amber)}.t-frio{background:rgba(70,130,200,.16);color:#2d6cb0}
+.leadkpis .k-f .num{color:#2d6cb0}
+.lpot{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:16px;font-size:13.5px;color:var(--muted)}
+.lpot b{font:700 18px var(--display);color:var(--fg);font-variant-numeric:tabular-nums}
+.lcard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:14px 16px;font:inherit;color:inherit;cursor:pointer}
+.lcard:last-child{border-bottom:0}.lcard:hover{background:var(--surface-2)}
+.lnome{font-weight:700;overflow-wrap:anywhere}
+.ldir{grid-row:1/3;grid-column:2;display:flex;flex-direction:column;align-items:flex-end;gap:5px}.ldir small{color:var(--muted);font-weight:600}
+.lmeta{color:var(--muted);font-size:13.5px;overflow-wrap:anywhere}
+.lprox{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;border-top:1px solid var(--line);padding-top:8px;margin-top:2px;font-size:14px}
+.lprox b{font-variant-numeric:tabular-nums}.lprox b.atrasado{color:var(--red)}.lprox b.hoje{color:var(--amber)}
+.lpontos{display:inline-flex;gap:3px}.lpontos i{width:8px;height:8px;border-radius:50%;background:var(--line)}.lpontos i.on{background:var(--brand)}
+.lnovanota{display:flex;gap:8px}.lnotas{display:grid;gap:8px}
+.lnota{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px;overflow-wrap:anywhere}
+.lnota time{display:block;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.scan{border:1px dashed var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:10px;background:var(--surface-2)}
+.scan-h{display:grid;gap:2px}
+.scan-btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.scan-pages{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.scp{position:relative;aspect-ratio:3/4;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;display:grid;place-items:center}
+.scp img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.scp .n{position:absolute;left:6px;top:6px;background:var(--fg);color:var(--bg);font:700 11px var(--mono);border-radius:99px;padding:1px 7px}
+.scp .b{position:absolute;right:4px;bottom:4px;display:flex;gap:4px}.scp .b .dl{padding:2px 8px}
 /* Relatórios */
 .relgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-bottom:20px}
 .rel-sub{padding:12px 16px 0;color:var(--muted);font-size:13px}
@@ -368,9 +417,9 @@ if(AMBIENTE === "teste"){
   document.title = "TESTE · " + document.title;
   document.getElementById("demoBar").hidden = false;
 }
-const TABELAS = ["clientes","certs","visitas","cobrancas","docs","proprios","fotos","agenda"];
+const TABELAS = ["clientes","certs","visitas","cobrancas","docs","proprios","fotos","agenda","agendamentos","leads"];
 const PAPEL_NOME = {admin:"Administrador",tecnico:"Técnico",cliente:"Cliente"};
-const novoDB = () => ({clientes:[],certs:[],visitas:[],cobrancas:[],docs:[],proprios:[],fotos:[],agenda:[]});
+const novoDB = () => ({clientes:[],certs:[],visitas:[],cobrancas:[],docs:[],proprios:[],fotos:[],agenda:[],agendamentos:[],leads:[]});
 let ME = null, db = novoDB(), snap = new Map(), fila = Promise.resolve(), USUARIOS = [];
 const isAdmin = () => !!ME && ME.papel === "admin";
 const isStaff = () => !!ME && ME.papel !== "cliente";
@@ -486,8 +535,8 @@ function docsHTML(id){const ds=(db.docs||[]).filter(x=>x.cli===id);return ds.len
 function abasDoPerfil(){
   if(!ME) return [];
   if(OFFLINE) return [["visita","Registrar visita"],["pendentes","Pendentes ("+SAIDA.length+")"]];
-  if(ME.papel==="admin") return [["painel","Painel"],["visita","Registrar visita"],["cobrancas","Cobranças"],["relatorios","Relatórios"],["rota","Rota do dia"],["clientes","Clientes"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"],["usuarios","Usuários"],["registros","Registros"]].concat(SAIDA.length?[["pendentes","Pendentes ("+SAIDA.length+")"]]:[]);
-  if(ME.papel==="tecnico") return [["painel","Painel"],["visita","Registrar visita"],["clientes","Clientes"],["novo","Novo certificado"]].concat(SAIDA.length?[["pendentes","Pendentes ("+SAIDA.length+")"]]:[]);
+  if(ME.papel==="admin") return [["painel","Painel"],["agenda","Agenda"],["visita","Registrar visita"],["cobrancas","Cobranças"],["relatorios","Relatórios"],["rota","Rota do dia"],["leads","Leads"],["clientes","Clientes"],["novo","Novo certificado"],["avisos","Avisos por e-mail"],["agrocel","Documentos Agrocel"],["usuarios","Usuários"],["registros","Registros"]].concat(SAIDA.length?[["pendentes","Pendentes ("+SAIDA.length+")"]]:[]);
+  if(ME.papel==="tecnico") return [["painel","Painel"],["agenda","Agenda"],["visita","Registrar visita"],["rota","Rota do dia"],["leads","Leads"],["clientes","Clientes"],["novo","Novo certificado"]].concat(SAIDA.length?[["pendentes","Pendentes ("+SAIDA.length+")"]]:[]);
   return [["painel","Meus certificados"]];
 }
 function render(){
@@ -499,11 +548,13 @@ function render(){
   if(!T.find(t=>t[0]===tab)) tab=OFFLINE?"visita":"painel";
   renderTabs();
   if(modo==="cliente"){app.innerHTML=viewCliente();return}
-  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="cobrancas"?viewCobrancas():tab==="relatorios"?viewRelatorios():tab==="rota"?viewRota():tab==="clientes"?viewClientes():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():tab==="usuarios"?viewUsuarios():tab==="registros"?viewRegistros():tab==="pendentes"?viewPendentes():viewAgrocel();
+  app.innerHTML = tab==="painel"?viewPainel():tab==="visita"?viewVisita():tab==="cobrancas"?viewCobrancas():tab==="relatorios"?viewRelatorios():tab==="rota"?viewRota():tab==="agenda"?viewAgenda():tab==="leads"?viewLeads():tab==="clientes"?viewClientes():tab==="novo"?viewNovo():tab==="avisos"?viewAvisos():tab==="usuarios"?viewUsuarios():tab==="registros"?viewRegistros():tab==="pendentes"?viewPendentes():viewAgrocel();
   if(tab==="registros") wireRegistros();
   if(tab==="usuarios") wireUsuarios();
   if(tab==="agrocel") wireAgrocel();
   if(tab==="rota") wireRota();
+  if(tab==="agenda") wireAgenda();
+  if(tab==="leads") wireLeads();
   if(tab==="novo") wireNovo();
   if(tab==="visita") wireVisita();
   if(tab==="clientes") wireClientes();
@@ -520,14 +571,15 @@ function viewPainel(){
     <span class="meter"><b style="width:${n(k)/tot*100}%;background:${COR[k]}"></b></span></button>`;
   const venc=[...db.certs].sort((a,b)=>d(a.venc)-d(b.venc)).slice(0,6);
   const pros=[...db.proprios].sort((a,b)=>d(a.venc)-d(b.venc));
-  return `${avisoSaidaHTML()}<section class="kpis">
-    <div class="kpi score">${ring(pct)}<div><span class="lbl">Índice de conformidade</span>
+  return `<section class="kpis compacto">
+    <div class="kpi score">${ring(pct,64)}<div><span class="lbl">Índice de conformidade</span>
       <div class="hint" style="margin-top:4px">${n("g")} de ${ss.length} certificados em dia, em ${db.clientes.length} clientes</div>
       ${prox?`<div class="hint" style="margin-top:6px">Próximo vencimento: <b>${fmt(prox.venc)}</b></div>`:""}</div></div>
     ${kpi("r","Vencidos","Renovar imediatamente")}
     ${kpi("a","Vencem em 30 dias","Avisos já programados")}
     ${kpi("g","Em dia","Sem pendências")}
   </section>
+  ${pendenciasHTML()}
   <div class="grid">
     <section class="panel">
       <div class="ph"><h2>Clientes</h2><button class="dl" data-novocli>Novo cliente</button>${isAdmin()?'<button class="dl" data-export>Exportar dados</button>':""}
@@ -558,7 +610,7 @@ function listaHTML(){
     const ks=all.filter(k=>!filtro||status(k.venc)===filtro).sort((a,b)=>d(a.venc)-d(b.venc));const op=abertos.has(c.id)||!!filtro||!!q;
     return `<div class="client ${p==="r"?"vencido":""} ${op?"open":""}">
     <button class="chead" data-open="${c.id}" aria-expanded="${op}"><span class="av">${iniciais(c.nome)}</span>
-      <span class="nm"><b>${esc(c.nome)} ${c.exemplo?'<span class="tag">exemplo</span>':""}</b><small>${esc(c.cnpj)}</small></span>
+      <span class="nm"><b>${esc(c.nome)} ${c.exemplo?'<span class="tag">exemplo</span>':""}</b><small>${esc(c.cnpj||"sem CPF/CNPJ")}</small></span>
       <span class="dots">${all.map(k=>`<i style="background:${COR[status(k.venc)]}" title="${esc(k.tipo)}"></i>`).join("")}</span>
       ${p?chip(p):'<span class="chip">Sem certificados</span>'}${IC_CHEV}</button>
     ${op?`<div style="padding:0 16px 10px 68px"><button class="dl" data-edit="${c.id}">Editar cadastro</button></div>`:""}
@@ -589,6 +641,13 @@ function viewNovo(){
     <label>Data da execução<input id="fExec" type="date"></label>
     <label>Válido até<input id="fVenc" type="date"></label>
     <label class="full">PDF do certificado assinado<input id="fPdf" type="file" accept="application/pdf"></label>
+    <div class="full scan" id="scanBox">
+      <div class="scan-h"><b>Ou escaneie o documento com a câmera</b><span class="note">Tire uma foto de cada página; o app junta tudo em um PDF.</span></div>
+      <div class="scan-btns"><button type="button" class="btn ghost sm" id="scanCam">Fotografar página</button><button type="button" class="btn ghost sm" id="scanGal">Escolher imagens</button>
+        <label class="check inl"><input type="checkbox" id="scanBW" checked> Melhorar leitura (fundo branco, texto escuro)</label></div>
+      <input id="scanIn" type="file" accept="image/*" capture="environment" hidden><input id="scanIn2" type="file" accept="image/*" multiple hidden>
+      <div class="scan-pages" id="scanPages"></div><p class="note" id="scanMsg" style="margin:0"></p>
+    </div>
     <p class="note full" id="fHint"></p>
     <button class="btn" type="submit">Salvar certificado</button>
   </form></div>`;
@@ -598,12 +657,16 @@ function wireNovo(){
   const $=id=>document.getElementById(id);
   const hoje=iso(HOJE); $("fExec").value=hoje;
   const sug=()=>{const m=VALIDADE_MESES[$("fTipo").value];$("fVenc").value=addMeses($("fExec").value||hoje,m);$("fHint").textContent=`Validade sugerida: ${m} meses para ${$("fTipo").value.toLowerCase()}. Pode ajustar.`};
-  sug(); $("fTipo").onchange=sug; $("fExec").onchange=sug;
+  sug(); $("fTipo").onchange=sug; $("fExec").onchange=sug; wireScan();
   $("fCert").onsubmit=async e=>{e.preventDefault();
     const id=$("fCli").value;
     if(!$("fVenc").value) return toast("Informe a data de validade.");
     let pdf="";const f=$("fPdf").files[0];const bt=$("fCert").querySelector("button[type=submit]");
-    if(f){bt.disabled=true;toast("Enviando o PDF…");try{pdf=await subir(f,id)}catch(err){bt.disabled=false;return toast("Não foi possível enviar o PDF: "+(err.message||err))}}
+    let arq=f;
+    if(!arq&&SCAN.length){bt.disabled=true;toast("Montando o PDF do documento…");
+      try{arq=await scanPDF($("scanBW").checked)}catch(err){bt.disabled=false;return toast("Não foi possível montar o PDF: "+(err.message||err))}
+      if(arq.size>10*1024*1024){bt.disabled=false;return toast("O PDF ficou grande demais (máximo 10 MB). Tire menos páginas.")}}
+    if(arq){bt.disabled=true;toast("Enviando o PDF…");try{pdf=await subir(arq,id)}catch(err){bt.disabled=false;return toast("Não foi possível enviar o PDF: "+(err.message||err))}}
     db.certs.push({id:"k"+Date.now(),pdf,cli:id,tipo:$("fTipo").value,praga:$("fPraga").value||"-",prod:$("fProd").value||"-",exec:$("fExec").value,venc:$("fVenc").value});
     abertos.add(id); save(); tab="painel"; filtro=null; render(); toast("Certificado salvo");
   };
@@ -660,9 +723,334 @@ function viewRelatorios(){
   <section class="panel"><div class="ph"><h2>Clientes que não renovaram</h2><span class="note">certificado vencido e sem um mais novo do mesmo serviço</span></div>
     ${nren.length?nren.map(linhaNren).join(""):'<div class="empty">Todos os clientes estão com os certificados em vigor.</div>'}</section>`}
 
-// ---------- Rota do dia (somente administrador: o banco também só libera o tipo 'agenda' ao admin) ----------
+// ---------- Agendamento de visitas (equipe: administrador e técnico) ----------
+// Guarda em registros do tipo 'agendamentos'. Ao registrar a visita a partir de um agendamento, ele vira "realizada" quando a OS é enviada.
+let agFiltro="proximas", agEdit=null, agForm=null, agPre=null;
+const agTodos=()=>(db.agendamentos||[]).filter(a=>cli(a.cli));
+const agOrdem=(a,b)=>(a.dia+(a.hora||"99:99")).localeCompare(b.dia+(b.hora||"99:99"));
+const agSit=a=>a.status!=="agendada"?a.status:dias(a.dia)<0?"atrasada":dias(a.dia)===0?"hoje":"futura";
+const agHoraTxt=a=>a.hora?` às ${a.hora}`:"";
+function agChip(a){const m={atrasada:["s-r","Atrasada"],hoje:["s-a","Hoje"],futura:["s-g","Agendada"],realizada:["s-g","Realizada"],cancelada:["","Cancelada"]}[agSit(a)];
+  return `<span class="chip ${m[0]}"><i></i>${m[1]}</span>`}
+function agBanner(){
+  if(!agPre) return "";
+  const c=cli(agPre.cli);
+  return `<div class="simu agban"><span>Visita agendada para ${fmt(agPre.dia)}${agPre.hora?" às "+esc(agPre.hora):""}${c?" · "+esc(c.nome.replace(/ \(.*\)/,"")):""}. Ao gerar a OS, o agendamento será marcado como realizado.</span><button type="button" class="dl" id="agLimpar">Desvincular</button></div>`;
+}
+function viewAgenda(){
+  const e=agEdit?(db.agendamentos||[]).find(a=>a.id===agEdit):null, o=e||agForm||{};
+  const tecs=tecnicosRota(), amanha=new Date(HOJE); amanha.setDate(amanha.getDate()+1);
+  const dia=o.dia||iso(amanha), tec=o.tecnico||(tecs.includes(ME.nome)?ME.nome:tecs[0]||"");
+  const todos=agTodos().sort(agOrdem);
+  const F=[["proximas","Próximas"],["hoje","Hoje"],["semana","7 dias"],["feitas","Realizadas e canceladas"],["todas","Todas"]];
+  let vis=todos.filter(a=>agFiltro==="proximas"?a.status==="agendada":agFiltro==="hoje"?(a.status==="agendada"&&a.dia===iso(HOJE)):agFiltro==="semana"?(a.status==="agendada"&&dias(a.dia)<=7):agFiltro==="feitas"?a.status!=="agendada":true);
+  if(agFiltro==="feitas") vis=vis.slice().reverse();
+  const temAg=new Set(todos.filter(a=>a.status==="agendada").map(a=>a.cli));
+  const sug=certsAtuais().filter(k=>["r","a"].includes(status(k.venc))&&!temAg.has(k.cli)).sort((a,b)=>a.venc.localeCompare(b.venc)).slice(0,6);
+  let diaAtual="";
+  const item=a=>{const c=cli(a.cli),s=agSit(a),fone=foneZap(c.tel);
+    const cab=a.dia!==diaAtual?(diaAtual=a.dia,`<div class="agday">${esc(diaExtenso(a.dia))}</div>`):"";
+    const msg=`Olá, ${(c.resp||"").trim()||c.fantasia||c.nome}! Sua visita de ${(a.tipo||"serviço").toLowerCase()} está agendada para ${fmt(a.dia)}${agHoraTxt(a)}. Qualquer imprevisto, é só avisar.`;
+    return `${cab}<div class="agi"><span class="hr">${esc(a.hora||"--:--")}</span>
+      <div class="tx"><b>${esc(c.nome.replace(/ \(.*\)/,""))} ${agChip(a)}</b><small>${esc(a.tipo||"Visita")}${a.tecnico?" · "+esc(a.tecnico):""}${endCli(c)?" · "+esc(endCli(c)):""}</small>${a.obs?`<small>${esc(a.obs)}</small>`:""}</div><span></span>
+      <div class="acts">${a.status==="agendada"?`<button class="btn sm" data-agreg="${a.id}">Registrar visita</button><button class="dl" data-agedit="${a.id}">Remarcar</button>${fone?`<a class="dl" target="_blank" rel="noopener" href="https://wa.me/${fone}?text=${encodeURIComponent(msg)}">Avisar o cliente</a>`:""}<button class="dl" data-agcancel="${a.id}">Cancelar</button>`
+        :a.status==="cancelada"?`<button class="dl" data-agreabrir="${a.id}">Reabrir</button><button class="dl" data-agdel="${a.id}">Excluir</button>`
+        :`${a.visita&&vis_(a.visita)?`<button class="dl" data-comp="${a.visita}">Ver ordem de serviço</button>`:""}<button class="dl" data-agdel="${a.id}">Excluir</button>`}</div></div>`};
+  return `<section class="panel" style="margin-bottom:16px"><div class="ph"><h2>${e?"Remarcar visita":"Agendar visita"}</h2>${e?'<button class="dl" data-agfim>Cancelar edição</button>':'<span class="note">Marque o dia e a hora; as visitas pendentes aparecem no painel inicial.</span>'}</div>
+    <form id="agForm" class="agform">
+      <label class="full">Cliente<select id="agCli" required><option value="">Escolha…</option>${[...db.clientes].sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<option value="${c.id}"${c.id===o.cli?" selected":""}>${esc(c.nome)}</option>`).join("")}</select></label>
+      <label>Dia<input id="agDia" type="date" value="${esc(dia)}" required></label>
+      <label>Hora (opcional)<input id="agHora" type="time" value="${esc(o.hora||"")}"></label>
+      <label>Serviço<select id="agTipo">${Object.keys(VALIDADE_MESES).map(t=>`<option${t===o.tipo?" selected":""}>${esc(t)}</option>`).join("")}</select></label>
+      <label>Técnico<select id="agTec">${tecs.map(t=>`<option${t===tec?" selected":""}>${esc(t)}</option>`).join("")}</select></label>
+      <label class="full">Observação (opcional)<input id="agObs" maxlength="300" value="${esc(o.obs||"")}" placeholder="Ex.: levar escada, falar com o gerente"></label>
+      <div class="full"><button class="btn" type="submit">${e?"Salvar alteração":"Agendar visita"}</button></div>
+    </form>
+    ${!e&&sug.length?`<div class="rsug" style="padding:0 16px 16px"><div class="note" style="margin-bottom:8px">Sugestões: certificado vencido ou perto de vencer, sem visita marcada</div>${sug.map(k=>`<button class="dl" data-agsug="${k.cli}|${esc(k.tipo)}"><span style="color:${COR[status(k.venc)]}">●</span> ${esc(cli(k.cli).nome.replace(/ \(.*\)/,""))} · ${esc(k.tipo)}</button>`).join("")}</div>`:""}</section>
+  <section class="panel"><div class="ph"><h2>Visitas agendadas</h2><span class="note">${vis.length} item${vis.length===1?"":"s"}</span></div>
+    <div class="filters" style="padding:12px 16px">${F.map(([k,l])=>`<button data-agf="${k}" aria-pressed="${agFiltro===k}">${l}</button>`).join("")}</div>
+    ${vis.length?vis.map(item).join(""):'<div class="empty">Nenhuma visita neste filtro. Use o formulário acima para agendar.</div>'}</section>`;
+}
+const vis_=id=>(db.visitas||[]).some(v=>v.id===id);
+function renderAgenda(){const a=document.getElementById("app");if(!a)return;a.innerHTML=viewAgenda();wireAgenda()}
+function wireAgenda(){
+  const $=id=>document.getElementById(id), f=$("agForm"); if(!f) return;
+  f.onsubmit=e=>{e.preventDefault();
+    const cid=$("agCli").value; if(!cid) return toast("Escolha o cliente.");
+    const dia=$("agDia").value; if(!dia) return toast("Informe o dia.");
+    const ex=agEdit?(db.agendamentos||[]).find(a=>a.id===agEdit):null;
+    if(!ex&&dia<iso(HOJE)) return toast("O dia da visita não pode estar no passado.");
+    const dados={cli:cid,dia,tipo:$("agTipo").value,tecnico:$("agTec").value,hora:$("agHora").value,obs:$("agObs").value.trim()};
+    if(ex){Object.assign(ex,dados);if(!dados.hora)delete ex.hora;if(!dados.obs)delete ex.obs;ex.status="agendada";toast("Visita remarcada")}
+    else{const n={id:"g"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),status:"agendada",criadoEm:new Date().toISOString(),...dados};if(!n.hora)delete n.hora;if(!n.obs)delete n.obs;(db.agendamentos=db.agendamentos||[]).push(n);toast("Visita agendada")}
+    agEdit=null;agForm=null;save();renderAgenda()};
+}
+function agRegistrar(id){
+  const a=(db.agendamentos||[]).find(x=>x.id===id); if(!a) return;
+  const f=x=>new Date(x-x.getTimezoneOffset()*6e4).toISOString().slice(0,16);
+  const agora=new Date(); agora.setSeconds(0,0); const nowS=f(agora), prog=a.dia+"T"+(a.hora||"08:00"), lim=limitesVisita();
+  let data=prog<=nowS?prog:nowS; if(lim&&data<lim.min) data=nowS;
+  agPre={id:a.id,cli:a.cli,tipo:a.tipo||"",dia:a.dia,hora:a.hora||"",data};
+  tab="visita"; render(); window.scrollTo({top:0});
+}
+function agClick(e){
+  const g=id=>(db.agendamentos||[]).find(a=>a.id===id);
+  const f=e.target.closest("[data-agf]");if(f){agFiltro=f.dataset.agf;renderAgenda();return true}
+  const ed=e.target.closest("[data-agedit]");if(ed){agEdit=ed.dataset.agedit;agForm=null;renderAgenda();window.scrollTo({top:0,behavior:"smooth"});return true}
+  if(e.target.closest("[data-agfim]")){agEdit=null;agForm=null;renderAgenda();return true}
+  const s=e.target.closest("[data-agsug]");if(s){const [c,t]=s.dataset.agsug.split("|");agEdit=null;agForm={cli:c,tipo:t};renderAgenda();window.scrollTo({top:0,behavior:"smooth"});return true}
+  const c=e.target.closest("[data-agcancel]");if(c){confirmar("Cancelar visita","","A visita será marcada como cancelada. Você pode reabrir depois.","Cancelar visita").then(ok=>{if(!ok)return;const a=g(c.dataset.agcancel);if(a){a.status="cancelada";save();renderAgenda();toast("Visita cancelada")}});return true}
+  const r=e.target.closest("[data-agreabrir]");if(r){const a=g(r.dataset.agreabrir);if(a){a.status="agendada";save();renderAgenda();toast("Visita reaberta")}return true}
+  const x=e.target.closest("[data-agdel]");if(x){confirmar("Excluir agendamento","","O agendamento será apagado. Não dá para desfazer.","Excluir").then(ok=>{if(!ok)return;db.agendamentos=(db.agendamentos||[]).filter(a=>a.id!==x.dataset.agdel);save();renderAgenda();toast("Agendamento excluído")});return true}
+  return false}
+
+// ---------- Pendências de visita no painel inicial ----------
+function pendenciasHTML(){
+  if(!isStaff()||OFFLINE) return "";
+  const ags=(db.agendamentos||[]).filter(a=>a.status==="agendada"&&cli(a.cli)&&dias(a.dia)<=7).sort(agOrdem);
+  const semAss=(db.visitas||[]).filter(v=>v.status!=="assinada"&&cli(v.cli)).sort((a,b)=>b.data.localeCompare(a.data));
+  const nS=SAIDA.length, bl=SAIDA.filter(i=>i.bloqueada).length;
+  const atr=ags.filter(a=>dias(a.dia)<0).length, hoje=ags.filter(a=>dias(a.dia)===0).length;
+  const linhaAg=a=>`<div class="pit"><div class="pi"><b>${esc(cli(a.cli).nome.replace(/ \(.*\)/,""))}</b><small>${dias(a.dia)<0?"atrasada · ":dias(a.dia)===0?"hoje · ":""}${fmt(a.dia)}${agHoraTxt(a)} · ${esc(a.tipo||"Visita")}</small></div><button class="dl" data-agreg="${a.id}">Registrar</button></div>`;
+  const linhaOS=v=>`<button class="vlink" data-comp="${v.id}"><span><b>${v.os}</b><small>${esc(cli(v.cli).nome.replace(/ \(.*\)/,""))}</small></span><span class="chip s-a"><i></i>Sem assinatura</span></button>`;
+  const vazio=!ags.length&&!semAss.length&&!nS;
+  const resumo=[atr?atr+" atrasada"+(atr>1?"s":""):"",hoje?hoje+" para hoje":"",semAss.length?semAss.length+" sem assinatura":"",nS?nS+" no celular":""].filter(Boolean).join(" · ");
+  return `<section class="panel pend"><div class="ph"><h2>Pendências de visita</h2><span class="note">${vazio?"tudo em dia":esc(resumo)}</span><button class="dl" data-tab="agenda">Abrir agenda</button></div>
+    ${vazio?'<div class="empty" style="padding:12px 16px">Nenhuma visita pendente. Use a aba Agenda para marcar a próxima.</div>':`<div class="pgrid">
+      <div class="pcol"><div class="ptit">Agendadas · até 7 dias</div>${ags.length?ags.slice(0,4).map(linhaAg).join("")+(ags.length>4?`<span class="note">+ ${ags.length-4} na agenda</span>`:""):'<span class="note">Nenhuma visita agendada.</span>'}</div>
+      <div class="pcol"><div class="ptit">Ordens sem assinatura</div>${semAss.length?semAss.slice(0,4).map(linhaOS).join("")+(semAss.length>4?`<span class="note">+ ${semAss.length-4} no painel de ordens</span>`:""):'<span class="note">Todas assinadas.</span>'}</div>
+      <div class="pcol"><div class="ptit">Salvas no celular</div>${nS?`<span>${nS} visita${nS===1?"":"s"} aguardando envio${bl?` (${bl} com problema)`:""}</span><div><button class="btn sm" data-tab="pendentes">Ver e enviar</button></div>`:'<span class="note">Nada pendente.</span>'}</div></div>`}</section>`;
+}
+
+// ---------- Leads: CRM de prospecção (equipe: administrador e técnico; o cliente nunca lê o tipo 'leads') ----------
+// Estilo do CRM "Prospecção": resumo (quentes, mornos, frios, retornos), ficha com termômetro (checklist de 5 itens), negociação e histórico.
+const LEAD_ETAPAS=["Novo","Contatado","Conversando","Visita técnica","Orçamento","Fechado","Perdido"];
+const LEAD_FECHADAS=["Fechado","Perdido"];
+const LEAD_CHECKS=[["dor","Tem a necessidade","Pragas, exigência sanitária ou certificado vencendo."],["respondeu","Respondeu ao contato","Retornou a mensagem ou atendeu a ligação."],["interesse","Pediu visita ou orçamento","Mostrou interesse concreto em contratar."],["decisor","Falei com quem decide","Dono, gerente ou quem aprova o gasto."],["prazo","Tem urgência ou prazo","Precisa resolver logo (fiscalização, vencimento)."]];
+const LEAD_TEMP={quente:"Quente",morno:"Morno",frio:"Frio"}, LEAD_ORDEM_T={quente:0,morno:1,frio:2};
+let leadFiltroT="todos", leadEtapa="abertos", leadBusca="", leadAberto=null, leadRasc=null, leadConfirma=false;
+const lkChecks=l=>{const s=String(l.checks||"00000").padEnd(5,"0");return Object.fromEntries(LEAD_CHECKS.map((c,i)=>[c[0],s[i]==="1"]))};
+const lkPontos=l=>(String(l.checks||"").match(/1/g)||[]).length;
+const lkAuto=l=>{const p=lkPontos(l);return p>=4?"quente":p>=2?"morno":"frio"};
+const lkTemp=l=>l.tempManual&&LEAD_TEMP[l.tempManual]?l.tempManual:lkAuto(l);
+const lkAberto=l=>!LEAD_FECHADAS.includes(l.etapa);
+const lkSit=l=>{if(!l.proximaData||!lkAberto(l))return null;const n=dias(l.proximaData);return n<0?"atrasado":n===0?"hoje":"futuro"};
+const lkPill=l=>l.etapa==="Fechado"?'<span class="chip s-g"><i></i>Fechado</span>':l.etapa==="Perdido"?'<span class="chip"><i></i>Perdido</span>':`<span class="chip t-${lkTemp(l)}"><i></i>${LEAD_TEMP[lkTemp(l)]}</span>`;
+const lkZap=n=>{const f=foneZap(n);return f?"https://wa.me/"+f:""};
+function leadsFiltrados(){
+  const q=leadBusca.trim().toLowerCase(); let ls=(db.leads||[]).slice();
+  if(leadEtapa==="abertos") ls=ls.filter(lkAberto); else if(leadEtapa!=="todos") ls=ls.filter(l=>l.etapa===leadEtapa);
+  if(leadFiltroT==="follow") ls=ls.filter(l=>["atrasado","hoje"].includes(lkSit(l)));
+  else if(leadFiltroT!=="todos") ls=ls.filter(l=>lkAberto(l)&&lkTemp(l)===leadFiltroT);
+  if(q) ls=ls.filter(l=>[l.empresa,l.contato,l.cidade,l.seg].join(" ").toLowerCase().includes(q));
+  return ls.sort((a,b)=>(lkAberto(b)-lkAberto(a))||(LEAD_ORDEM_T[lkTemp(a)]-LEAD_ORDEM_T[lkTemp(b)])||String(a.proximaData||"9999").localeCompare(String(b.proximaData||"9999"))||String(a.empresa).localeCompare(String(b.empresa)));
+}
+function leadsListaHTML(){
+  const all=db.leads||[];
+  if(!all.length) return `<div class="empty"><b>Nenhum lead ainda.</b><br>Toque em “Novo lead” e cadastre a primeira empresa que você vai abordar.</div>`;
+  const ls=leadsFiltrados();
+  if(!ls.length) return `<div class="empty">Nenhum lead com esse filtro. <button class="dl" data-leadlimpar>Limpar filtros</button></div>`;
+  return ls.map(l=>{const sp=lkSit(l),n=l.proximaData?dias(l.proximaData):0,p=lkPontos(l);
+    const quando=!l.proximaData?"":sp==="atrasado"?`atrasado ${-n} dia${n===-1?"":"s"} (${fmt(l.proximaData)})`:sp==="hoje"?"hoje":fmt(l.proximaData);
+    return `<button class="lcard" data-leadabrir="${esc(l.id)}"><span class="lnome">${esc(l.empresa||"Sem nome")}</span>
+      <span class="ldir">${lkPill(l)}<small>${esc(l.etapa||"Novo")}</small><span class="lpontos" title="${p} de 5 itens do checklist">${LEAD_CHECKS.map((c,i)=>`<i class="${i<p?"on":""}"></i>`).join("")}</span></span>
+      <span class="lmeta">${esc([l.contato,l.seg,l.cidade].filter(Boolean).join(" · ")||"Sem detalhes")}</span>
+      ${l.proximoPasso||l.proximaData?`<span class="lprox"><span>Próximo passo: ${esc(l.proximoPasso||"definir")}</span>${quando?`<b class="${sp||""}">${esc(quando)}</b>`:""}</span>`:""}</button>`}).join("");
+}
+function leadsResumoHTML(){
+  const ab=(db.leads||[]).filter(lkAberto), n=t=>ab.filter(l=>lkTemp(l)===t).length;
+  const follow=ab.filter(l=>["atrasado","hoje"].includes(lkSit(l))).length;
+  const kpi=(id,rot,num,hint,cls)=>`<button class="kpi ${cls}" data-leadft="${id}" aria-pressed="${leadFiltroT===id}"><span class="lbl">${rot}</span><span class="num">${num}</span><span class="hint">${hint}</span></button>`;
+  const neg=ab.filter(l=>lkTemp(l)!=="frio"), valor=neg.reduce((s,l)=>s+(+l.valor||0),0), mens=neg.reduce((s,l)=>s+(+l.mensal||0),0);
+  const fech=(db.leads||[]).filter(l=>l.etapa==="Fechado"), mensF=fech.reduce((s,l)=>s+(+l.mensal||0),0);
+  return `<section class="kpis compacto leadkpis">${kpi("quente","Quentes",n("quente"),"prontos para fechar","k-r")}${kpi("morno","Mornos",n("morno"),"precisam de empurrão","k-a")}${kpi("frio","Frios",n("frio"),"só começaram","k-f")}${kpi("follow","Retornos",follow,"para hoje ou atrasados","k-r")}</section>
+  <div class="lpot"><span>Em negociação (quentes e mornos)</span><b>${BRL(valor)}</b><span>em serviços +</span><b>${BRL(mens)}/mês</b>${fech.length?`<span>· Fechados: ${fech.length} (${BRL(mensF)}/mês)</span>`:""}</div>`;
+}
+function viewLeads(){
+  return `<div class="topbar"><h2 style="font-size:20px">Leads</h2><button class="btn" data-leadnovo>Novo lead</button></div>
+  <div id="leadResumo">${leadsResumoHTML()}</div>
+  <section class="panel"><div class="ph"><h2>Prospecção</h2>
+    <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="leadBusca" type="search" placeholder="Buscar empresa, contato, cidade…" value="${esc(leadBusca)}" aria-label="Buscar lead"></div>
+    <select id="leadEtapa" aria-label="Filtrar por etapa" style="max-width:190px"><option value="abertos"${leadEtapa==="abertos"?" selected":""}>Em aberto</option><option value="todos"${leadEtapa==="todos"?" selected":""}>Todas as etapas</option>${LEAD_ETAPAS.map(e=>`<option${leadEtapa===e?" selected":""}>${e}</option>`).join("")}</select></div>
+    <p class="note" style="padding:10px 16px 0;margin:0">A temperatura sai do checklist de cada lead: 4 ou 5 itens marcados = quente, 2 ou 3 = morno, 0 ou 1 = frio. Dá para ajustar na mão dentro da ficha.</p>
+    <div id="leadLista">${leadsListaHTML()}</div></section>`;
+}
+function leadsAtualizar(){const l=document.getElementById("leadLista");if(l)l.innerHTML=leadsListaHTML();const r=document.getElementById("leadResumo");if(r)r.innerHTML=leadsResumoHTML()}
+function wireLeads(){
+  const b=document.getElementById("leadBusca"); if(b) b.oninput=()=>{leadBusca=b.value;leadsAtualizar()};
+  const e=document.getElementById("leadEtapa"); if(e) e.onchange=()=>{leadEtapa=e.value;leadsAtualizar()};
+}
+const leadNovo=()=>({empresa:"",contato:"",seg:SEGMENTOS[0],cidade:"",whatsapp:"",email:"",origem:"",etapa:"Novo",tempManual:"",checks:"00000",valor:0,mensal:0,proximoPasso:"Primeiro contato pelo WhatsApp",proximaData:iso(HOJE),notas:[]});
+function leadAbrir(id){
+  const l=id==="novo"?null:(db.leads||[]).find(x=>x.id===id); if(id!=="novo"&&!l) return;
+  leadAberto=id; leadConfirma=false; leadRasc=JSON.parse(JSON.stringify(l||leadNovo())); leadRasc.notas=Array.isArray(leadRasc.notas)?leadRasc.notas:[];
+  leadFicha();
+}
+function leadFicha(){
+  const r=leadRasc, novo=leadAberto==="novo", ck=lkChecks(r), zap=lkZap(r.whatsapp);
+  const opt=(arr,v)=>arr.map(x=>`<option${x===v?" selected":""}>${esc(x)}</option>`).join("");
+  const notas=r.notas.slice().reverse().map(n=>{const [d,...t]=String(n).split("|");return `<div class="lnota"><time>${esc(d&&/^\d{4}-\d{2}-\d{2}$/.test(d)?fmt(d):"")}</time>${esc(t.join("|"))}</div>`}).join("");
+  modal(`<div class="sheet">${cab(novo?"Novo lead":esc(r.empresa||"Lead"),"Prospecção")}
+  <form id="fLead" novalidate>
+    <h3 class="full first">Empresa e contato</h3>
+    <label class="full">Empresa<input id="lkEmpresa" value="${esc(r.empresa)}" placeholder="Ex.: Mercado Boa Compra" required></label>
+    <label>Pessoa de contato<input id="lkContato" value="${esc(r.contato)}" placeholder="Nome e cargo"></label>
+    <label>Segmento<select id="lkSeg">${opt(SEGMENTOS.includes(r.seg)?SEGMENTOS:[r.seg,...SEGMENTOS],r.seg)}</select></label>
+    <label>Cidade<input id="lkCidade" value="${esc(r.cidade)}"></label>
+    <label>WhatsApp<input id="lkZap" inputmode="tel" value="${esc(r.whatsapp)}" placeholder="(48) 90000-0000"></label>
+    <label>E-mail<input id="lkEmail" type="email" value="${esc(r.email)}"></label>
+    <label>Como chegou<input id="lkOrigem" value="${esc(r.origem)}" placeholder="Indicação, Instagram, passou na porta…"></label>
+    ${zap?`<p class="note full">Abrir conversa: <a href="${esc(zap)}" target="_blank" rel="noopener">WhatsApp ${esc(r.whatsapp)}</a></p>`:""}
+    <h3 class="full">Termômetro</h3>
+    ${LEAD_CHECKS.map(c=>`<label class="check full"><input type="checkbox" id="lc_${c[0]}" ${ck[c[0]]?"checked":""}><span><b>${c[1]}</b><br><small class="note">${c[2]}</small></span></label>`).join("")}
+    <p class="note full" id="lkTermo"></p>
+    <label class="full">Temperatura<select id="lkTemp"><option value=""${!r.tempManual?" selected":""}>Automática pelo checklist</option><option value="quente"${r.tempManual==="quente"?" selected":""}>Quente (ajuste manual)</option><option value="morno"${r.tempManual==="morno"?" selected":""}>Morno (ajuste manual)</option><option value="frio"${r.tempManual==="frio"?" selected":""}>Frio (ajuste manual)</option></select></label>
+    <h3 class="full">Negociação</h3>
+    <label>Etapa<select id="lkEtapa">${opt(LEAD_ETAPAS,r.etapa)}</select></label><span></span>
+    <label>Valor do serviço (R$)<input id="lkValor" type="number" min="0" step="10" inputmode="decimal" value="${esc(r.valor||0)}"></label>
+    <label>Contrato mensal (R$)<input id="lkMensal" type="number" min="0" step="10" inputmode="decimal" value="${esc(r.mensal||0)}"></label>
+    <label class="full">Próximo passo<input id="lkProx" value="${esc(r.proximoPasso)}" placeholder="Ex.: mandar mensagem, marcar visita técnica"></label>
+    <label>Data do próximo passo<input id="lkData" type="date" value="${esc(r.proximaData)}"></label>
+    <h3 class="full">Histórico</h3>
+    <div class="full lnovanota"><input id="lkNota" placeholder="O que aconteceu? Ex.: liguei, pediu orçamento" aria-label="Nova anotação"><button type="button" class="btn sm" data-leadnota>Anotar</button></div>
+    <div class="full lnotas">${notas||'<p class="note" style="margin:0">Nenhuma anotação ainda.</p>'}</div>
+    ${leadConfirma?`<div class="simu full" style="background:var(--red-bg);color:var(--red);display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between"><span>Excluir <b>${esc(r.empresa||"este lead")}</b> para sempre?</span><span style="display:flex;gap:8px"><button type="button" class="dl" data-leadnao>Cancelar</button><button type="button" class="btn sm" style="background:var(--red)" data-leadsim>Excluir</button></span></div>`:""}
+    <div class="full" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center">
+      <span style="display:flex;gap:8px;flex-wrap:wrap">${novo?"":`<button type="button" class="dl" data-leadexcluir>Excluir lead</button><button type="button" class="dl" data-leadcliente>${r.clienteId&&cli(r.clienteId)?"Abrir cadastro do cliente":"Cadastrar como cliente"}</button>`}</span>
+      <button type="submit" class="btn" id="lkSalvar">${novo?"Cadastrar lead":"Salvar"}</button></div>
+  </form></div>`);
+  leadTermo();
+  const f=document.getElementById("fLead");
+  f.onsubmit=leadSalvar;
+  f.addEventListener("change",e=>{if(e.target.id&&(e.target.id.startsWith("lc_")||e.target.id==="lkTemp")){leadLer();leadTermo()}});
+  const z=document.getElementById("lkZap"); z.oninput=e=>e.target.value=maskTel(e.target.value);
+  document.getElementById("lkNota").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();leadAnotar()}});
+}
+function leadLer(){
+  const v=id=>document.getElementById(id).value, r=leadRasc;
+  Object.assign(r,{empresa:v("lkEmpresa").trim(),contato:v("lkContato").trim(),seg:v("lkSeg"),cidade:v("lkCidade").trim(),whatsapp:v("lkZap").trim(),email:v("lkEmail").trim(),origem:v("lkOrigem").trim(),etapa:v("lkEtapa"),tempManual:v("lkTemp"),valor:+v("lkValor")||0,mensal:+v("lkMensal")||0,proximoPasso:v("lkProx").trim(),proximaData:v("lkData")});
+  r.checks=LEAD_CHECKS.map(c=>document.getElementById("lc_"+c[0]).checked?"1":"0").join("");
+}
+function leadTermo(){
+  const r=leadRasc, el=document.getElementById("lkTermo"); if(!el) return;
+  const auto=lkAuto(r), t=lkTemp(r);
+  el.innerHTML=`${lkPontos(r)} de 5 marcados · sugestão: <span class="chip t-${auto}"><i></i>${LEAD_TEMP[auto]}</span>${r.tempManual?` · ajustado para <span class="chip t-${t}"><i></i>${LEAD_TEMP[t]}</span>`:""}`;
+}
+function leadAnotar(){
+  const i=document.getElementById("lkNota"), t=i.value.trim(); if(!t) return;
+  leadLer(); leadRasc.notas.push(iso(HOJE)+"|"+t.slice(0,600)); if(leadRasc.notas.length>200) leadRasc.notas=leadRasc.notas.slice(-200);
+  leadFicha(); toast("Anotação incluída. Toque em Salvar para gravar.");
+  const n=document.getElementById("lkNota"); if(n) n.focus();
+}
+function leadSalvar(e){
+  if(e) e.preventDefault(); leadLer(); const r=leadRasc;
+  if(!r.empresa){toast("Informe o nome da empresa.");return document.getElementById("lkEmpresa").focus()}
+  const pend=document.getElementById("lkNota").value.trim(); if(pend) r.notas.push(iso(HOJE)+"|"+pend.slice(0,600));
+  const dados={...r}; delete dados.id; dados.atualizadoEm=new Date().toISOString();
+  if(dados.etapa==="Fechado"){if(!dados.fechadoEm) dados.fechadoEm=iso(HOJE)} else delete dados.fechadoEm;
+  if(!dados.tempManual) delete dados.tempManual;
+  if(leadAberto==="novo"){dados.id="l"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);dados.criadoEm=dados.atualizadoEm;(db.leads=db.leads||[]).push(dados);toast("Lead cadastrado")}
+  else{const i=db.leads.findIndex(x=>x.id===leadAberto);if(i<0)return closeModal();dados.id=leadAberto;db.leads[i]=dados;toast("Lead salvo")}
+  save(); leadAberto=null; leadRasc=null; closeModal(); if(tab==="leads") leadsAtualizar();
+}
+function leadExcluir(){
+  db.leads=(db.leads||[]).filter(l=>l.id!==leadAberto); save(); leadAberto=null; leadRasc=null; closeModal(); if(tab==="leads") leadsAtualizar(); toast("Lead excluído");
+}
+function leadParaCliente(){
+  leadLer(); const r=leadRasc;
+  if(r.clienteId&&cli(r.clienteId)){const id=r.clienteId;closeModal();tab="clientes";editando=id;render();return}
+  const id="c"+Date.now().toString(36);
+  const o={id,nome:r.empresa,seg:SEGMENTOS.includes(r.seg)?r.seg:"Outro",cidade:r.cidade,resp:r.contato,tel:r.whatsapp,email:r.email,uf:"SC",obs:"Veio do funil de leads."};
+  o.end=compEnd(o)||"-"; db.clientes.push(o);
+  const i=db.leads.findIndex(x=>x.id===leadAberto); if(i>=0) db.leads[i]={...db.leads[i],...r,clienteId:id,atualizadoEm:new Date().toISOString()};
+  save(); closeModal(); tab="clientes"; editando=id; render(); window.scrollTo({top:0}); toast("Cliente criado a partir do lead. Complete o cadastro.");
+}
+function leadsClick(e){
+  const k=e.target.closest("[data-leadft]");if(k){leadFiltroT=leadFiltroT===k.dataset.leadft?"todos":k.dataset.leadft;leadsAtualizar();return true}
+  const a=e.target.closest("[data-leadabrir]");if(a){leadAbrir(a.dataset.leadabrir);return true}
+  if(e.target.closest("[data-leadnovo]")){leadAbrir("novo");return true}
+  if(e.target.closest("[data-leadlimpar]")){leadFiltroT="todos";leadEtapa="abertos";leadBusca="";renderLeadsTela();return true}
+  return false}
+function renderLeadsTela(){const a=document.getElementById("app");if(!a)return;a.innerHTML=viewLeads();wireLeads()}
+// cliques dentro da ficha do lead (a janela fica fora do #app)
+function leadsModalClick(e){
+  if(!leadRasc) return false;
+  if(e.target.closest("[data-leadnota]")){leadAnotar();return true}
+  if(e.target.closest("[data-leadexcluir]")){leadLer();leadConfirma=true;leadFicha();return true}
+  if(e.target.closest("[data-leadnao]")){leadLer();leadConfirma=false;leadFicha();return true}
+  if(e.target.closest("[data-leadsim]")){leadExcluir();return true}
+  if(e.target.closest("[data-leadcliente]")){leadParaCliente();return true}
+  return false}
+
+// ---------- Escanear documento por foto (Novo certificado) ----------
+// Tira foto de cada página (ou escolhe imagens), melhora a leitura e junta tudo em um PDF no navegador. Nada sai do aparelho até salvar o certificado.
+let SCAN=[];
+const SCAN_MAX=12;
+async function scanLer(file){
+  const bm=await createImageBitmap(file), k=Math.min(1,1800/Math.max(bm.width,bm.height));
+  const cv=document.createElement("canvas"); cv.width=Math.round(bm.width*k); cv.height=Math.round(bm.height*k);
+  cv.getContext("2d").drawImage(bm,0,0,cv.width,cv.height); if(bm.close) bm.close();
+  return {src:cv.toDataURL("image/jpeg",.9),w:cv.width,h:cv.height,rot:0};
+}
+function scanImg(p){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=p.src})}
+// Ajuste de níveis: o branco do papel fica branco e o texto escurece (parece escaneado)
+function scanMelhorar(cv){
+  const x=cv.getContext("2d"), im=x.getImageData(0,0,cv.width,cv.height), p=im.data, h=new Uint32Array(256);
+  for(let i=0;i<p.length;i+=4){const g=((p[i]*299+p[i+1]*587+p[i+2]*114)/1000)|0;p[i]=g;h[g]++}
+  const tot=cv.width*cv.height; let lo=0,hi=255,c=0;
+  for(let i=0;i<256;i++){c+=h[i];if(c>=tot*.02){lo=i;break}}
+  c=0; for(let i=255;i>=0;i--){c+=h[i];if(c>=tot*.35){hi=i;break}}
+  if(hi-lo<30) hi=Math.min(255,lo+30);
+  for(let i=0;i<p.length;i+=4){let v=(p[i]-lo)/(hi-lo);v=v<0?0:v>1?1:v;v=Math.pow(v,1.35)*255;p[i]=p[i+1]=p[i+2]=v}
+  x.putImageData(im,0,0);
+}
+async function scanPaginaCanvas(p,bw){
+  const im=await scanImg(p), girar=p.rot%180!==0, cv=document.createElement("canvas");
+  cv.width=girar?im.height:im.width; cv.height=girar?im.width:im.height;
+  const x=cv.getContext("2d"); x.translate(cv.width/2,cv.height/2); x.rotate(p.rot*Math.PI/180); x.drawImage(im,-im.width/2,-im.height/2);
+  if(bw) scanMelhorar(cv);
+  return cv;
+}
+async function scanPDF(bw){
+  if(typeof window.jspdf==="undefined") throw new Error("O gerador de PDF não carregou. Verifique a internet.");
+  const {jsPDF}=window.jspdf; let doc=null;
+  for(let i=0;i<SCAN.length;i++){
+    const cv=await scanPaginaCanvas(SCAN[i],bw), land=cv.width>cv.height, W=land?297:210, H=land?210:297, M=6;
+    if(!doc) doc=new jsPDF({unit:"mm",format:"a4",orientation:land?"l":"p"}); else doc.addPage("a4",land?"l":"p");
+    const k=Math.min((W-2*M)/cv.width,(H-2*M)/cv.height), w=cv.width*k, h=cv.height*k;
+    doc.addImage(cv.toDataURL("image/jpeg",.78),"JPEG",(W-w)/2,(H-h)/2,w,h);
+  }
+  const blob=doc.output("blob");
+  return new File([blob],"certificado-escaneado.pdf",{type:"application/pdf"});
+}
+function scanDesenhar(){
+  const box=document.getElementById("scanPages"); if(!box) return;
+  box.innerHTML=SCAN.map((p,i)=>`<div class="scp"><img src="${p.src}" alt="Página ${i+1}" style="transform:rotate(${p.rot}deg)${p.rot%180?";width:auto;height:100%":""}"><span class="n">${i+1}</span>
+    <div class="b"><button type="button" class="dl" data-scanrot="${i}" aria-label="Girar página ${i+1}">↻</button><button type="button" class="dl" data-scanrm="${i}" aria-label="Remover página ${i+1}">✕</button></div></div>`).join("");
+  const m=document.getElementById("scanMsg"); if(m) m.textContent=SCAN.length?`${SCAN.length} página${SCAN.length===1?"":"s"}. Ao salvar, viram um único PDF anexado ao certificado.`:"";
+}
+function wireScan(){
+  const $=id=>document.getElementById(id); if(!$("scanBox")) return;
+  SCAN=[]; scanDesenhar();
+  const add=async fs=>{
+    const novos=[...fs].filter(f=>f.type.startsWith("image/")); if(!novos.length) return;
+    if(SCAN.length+novos.length>SCAN_MAX) toast(`No máximo ${SCAN_MAX} páginas por documento.`);
+    for(const f of novos.slice(0,Math.max(0,SCAN_MAX-SCAN.length))){try{SCAN.push(await scanLer(f))}catch(_){toast("Não consegui ler uma das imagens.")}}
+    scanDesenhar();
+  };
+  $("scanCam").onclick=()=>$("scanIn").click(); $("scanGal").onclick=()=>$("scanIn2").click();
+  $("scanIn").onchange=e=>{add(e.target.files);e.target.value=""}; $("scanIn2").onchange=e=>{add(e.target.files);e.target.value=""};
+  $("scanPages").onclick=e=>{const r=e.target.closest("[data-scanrot]");if(r){const p=SCAN[+r.dataset.scanrot];if(p){p.rot=(p.rot+90)%360;scanDesenhar()}return}
+    const x=e.target.closest("[data-scanrm]");if(x){SCAN.splice(+x.dataset.scanrm,1);scanDesenhar()}};
+}
+
+// ---------- Rota do dia (equipe: administrador e técnico; o tipo 'agenda' é liberado a ambos no banco) ----------
 let rotaDia=iso(HOJE), rotaTec="", ROTA=null;
-const tecnicosRota=()=>{const l=USUARIOS.filter(u=>u.ativo&&u.papel!=="cliente").sort((a,b)=>(a.papel==="tecnico"?0:1)-(b.papel==="tecnico"?0:1)).map(u=>u.nome);return l.length?l:(ME?[ME.nome]:[])};
+const tecnicosRota=()=>{const base=USUARIOS.filter(u=>u.ativo&&u.papel!=="cliente").sort((a,b)=>(a.papel==="tecnico"?0:1)-(b.papel==="tecnico"?0:1)).map(u=>u.nome);
+  // o técnico não lê a lista de usuários: usa o próprio nome e os nomes que já aparecem na agenda, nos agendamentos e nas visitas
+  const vistos=[...(db.agenda||[]).map(a=>a.tecnico),...(db.agendamentos||[]).map(a=>a.tecnico),...(db.visitas||[]).map(v=>v.tecnico)].filter(Boolean);
+  const l=isAdmin()?base:[...new Set([ME?ME.nome:"",...vistos].filter(Boolean))];
+  return l.length?l:(ME?[ME.nome]:[])};
 const agDe=(dia,tec)=>(db.agenda||[]).filter(a=>a.dia===dia&&a.tecnico===tec&&cli(a.cli)).sort((a,b)=>a.ordem-b.ordem);
 function endCli(c){const e=c.end||compEnd(c);return c.cidade&&!e.toLowerCase().includes(c.cidade.toLowerCase())?e+" · "+c.cidade+(c.uf?"/"+c.uf:""):e}
 const mapaBusca=c=>"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(endCli(c).replace(/ · /g,", "));
@@ -681,7 +1069,9 @@ function viewRota(){
     <div class="ra"><button class="dl" data-rmov="${a.id}" data-dir="-1" ${i===0?"disabled":""} aria-label="Subir na ordem">↑</button><button class="dl" data-rmov="${a.id}" data-dir="1" ${i===ps.length-1?"disabled":""} aria-label="Descer na ordem">↓</button>
       <a class="dl" target="_blank" rel="noopener" href="${esc(mapaBusca(c))}">Mapa</a><button class="dl" data-rdel="${a.id}">Remover</button></div></li>`};
   const url=rotaCompleta(ps);
-  return `<section class="panel rctl"><div class="ph"><h2>Rota do dia</h2><span class="note">Visível só para o administrador</span></div>
+  const agDia=(db.agendamentos||[]).filter(a=>a.status==="agendada"&&a.dia===rotaDia&&cli(a.cli)&&(!a.tecnico||a.tecnico===rotaTec)&&!ja.has(a.cli));
+  const agHTML=agDia.length?`<div class="rsug"><div class="note" style="margin-bottom:8px">Visitas agendadas para este dia</div>${agDia.map(a=>`<button class="dl" data-ragend="${a.id}">${esc(a.hora||"--:--")} · ${esc(cli(a.cli).nome.replace(/ \(.*\)/,""))}</button>`).join("")}</div>`:"";
+  return `<section class="panel rctl"><div class="ph"><h2>Rota do dia</h2><span class="note">Visível para a equipe (administrador e técnico)</span></div>
     <div class="rform"><label>Técnico<select id="rTec">${tecs.map(t=>`<option ${t===rotaTec?"selected":""}>${esc(t)}</option>`).join("")}</select></label>
     <label>Dia<input id="rDia" type="date" value="${rotaDia}"></label>
     <div class="rq"><button class="dl" data-rquick="0">Hoje</button><button class="dl" data-rquick="1">Amanhã</button></div></div></section>
@@ -695,7 +1085,7 @@ function viewRota(){
       <form id="rAdd" class="rform col"><label>Cliente<select id="rCli" required><option value="">Escolha…</option>${[...db.clientes].sort((a,b)=>a.nome.localeCompare(b.nome)).filter(c=>!ja.has(c.id)).map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select></label>
       <div class="rtwo"><label>Horário (opcional)<input id="rHora" type="time"></label><label>Observação (opcional)<input id="rObs" maxlength="200" placeholder="Ex.: falar com o gerente"></label></div>
       <button class="btn" type="submit">Adicionar à rota</button></form>
-      ${sug.length?`<div class="rsug"><div class="note" style="margin-bottom:8px">Sugestões: certificado vencido ou perto de vencer</div>${sug.map(c=>{const p=piorStatus(c.id);return `<button class="dl" data-radd="${c.id}"><span style="color:${COR[p]}">●</span> ${esc(c.nome.replace(/ \(.*\)/,""))}</button>`}).join("")}</div>`:""}
+      ${agHTML}${sug.length?`<div class="rsug"><div class="note" style="margin-bottom:8px">Sugestões: certificado vencido ou perto de vencer</div>${sug.map(c=>{const p=piorStatus(c.id);return `<button class="dl" data-radd="${c.id}"><span style="color:${COR[p]}">●</span> ${esc(c.nome.replace(/ \(.*\)/,""))}</button>`}).join("")}</div>`:""}
       <p class="note" style="padding:8px 16px 16px">O mapa abre no Google Maps só quando você clica em “Mapa” ou “Abrir rota no mapa”.</p></section>
   </div>`}
 function renderRota(){const a=document.getElementById("app");if(!a)return;a.innerHTML=viewRota();wireRota()}
@@ -730,6 +1120,7 @@ function rotaClick(e){
     if(i<0||j<0||j>=ps.length)return true;const t=ps[i].ordem;ps[i].ordem=ps[j].ordem;ps[j].ordem=t;save();renderRota();return true}
   const x=e.target.closest("[data-rdel]");if(x){db.agenda=db.agenda.filter(a=>a.id!==x.dataset.rdel);save();renderRota();return true}
   const q=e.target.closest("[data-rquick]");if(q){const t=new Date(HOJE);t.setDate(t.getDate()+ +q.dataset.rquick);rotaDia=iso(t);renderRota();return true}
+  const sa=e.target.closest("[data-ragend]");if(sa){const a=(db.agendamentos||[]).find(x=>x.id===sa.dataset.ragend);if(a)rotaAdd(a.cli,a.hora||"",[a.tipo,a.obs].filter(Boolean).join(" · ").slice(0,200));return true}
   const s=e.target.closest("[data-radd]");if(s){rotaAdd(s.dataset.radd,"","");return true}
   return false}
 
@@ -787,7 +1178,7 @@ function painelOS(){
 function compHTML(v,extra,previa){const c=cli(v.cli);const ok=v.status==="assinada";
   return `<div class="sheet"><div class="sh-h"><img src="${LOGO}" alt="Agrocel"><div><b>${previa?"Ordem de serviço · prévia":"Ordem de serviço "+v.os}</b><span>Termo de compromisso e comprovante de execução</span></div><button class="x" data-close aria-label="Fechar">✕</button></div>
   ${extra||""}
-  <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>${docRot(c.cnpj)}</dt><dd class="mono">${esc(c.cnpj)}</dd><dt>Data e hora</dt><dd>${fmtHora(v.data)}</dd><dt>Técnico</dt><dd>${esc(v.tecnico)}</dd><dt>Serviço</dt><dd>${esc(v.tipo)} · ${esc(v.praga)}</dd><dt>Produtos</dt><dd>${esc(v.prod)}</dd><dt>Contato</dt><dd>${esc(c.resp||"-")}${c.tel?" · "+esc(c.tel):""}</dd><dt>Áreas tratadas</dt><dd>${esc(v.areas||"-")}</dd></dl>
+  <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>${docRot(c.cnpj)}</dt><dd class="mono">${esc(c.cnpj||"-")}</dd><dt>Data e hora</dt><dd>${fmtHora(v.data)}</dd><dt>Técnico</dt><dd>${esc(v.tecnico)}</dd><dt>Serviço</dt><dd>${esc(v.tipo)} · ${esc(v.praga)}</dd><dt>Produtos</dt><dd>${esc(v.prod)}</dd><dt>Contato</dt><dd>${esc(c.resp||"-")}${c.tel?" · "+esc(c.tel):""}</dd><dt>Áreas tratadas</dt><dd>${esc(v.areas||"-")}</dd></dl>
   ${v.relatorio?`<div><div class="sec-t">Relatório da visita</div><p style="margin:6px 0 0;white-space:pre-wrap">${esc(v.relatorio)}</p></div>`:""}
   <div id="fotosBox"></div>
   ${isStaff()&&!previa?`<label class="dl" style="justify-self:start;cursor:pointer">Adicionar fotos<input id="fFotoAdd" type="file" accept="image/*" multiple hidden></label>`:""}
@@ -880,7 +1271,7 @@ const soNum=t=>String(t||"").replace(/\D/g,"");
 function maskCNPJ(t){const d=soNum(t).slice(0,14);return d.replace(/^(\d{2})(\d)/,"$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1/$2").replace(/(\d{4})(\d)/,"$1-$2")}
 function maskCPF(t){const d=soNum(t).slice(0,11);return d.replace(/^(\d{3})(\d)/,"$1.$2").replace(/^(\d{3})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1-$2")}
 const maskDoc=t=>soNum(t).length>11?maskCNPJ(t):maskCPF(t);
-const docRot=t=>soNum(t).length===11?"CPF":"CNPJ";
+const docRot=t=>soNum(t).length===11?"CPF":soNum(t).length===14?"CNPJ":"CPF/CNPJ";
 function maskCEP(t){const d=soNum(t).slice(0,8);return d.length>5?d.slice(0,5)+"-"+d.slice(5):d}
 function maskTel(t){const d=soNum(t).slice(0,11);if(d.length<3)return d;
   return d.length<=10?`(${d.slice(0,2)}) ${d.slice(2,6)}${d.length>6?"-"+d.slice(6):""}`:`(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`}
@@ -903,8 +1294,9 @@ function viewClientes(){
     <label class="full"><span class="cap">Razão social <span class="note">obrigatório</span></span><input id="qNome" value="${esc(o.nome||"")}" autocomplete="organization"></label>
     <label>Nome fantasia<input id="qFant" value="${esc(o.fantasia||"")}" placeholder="Como o cliente é conhecido"></label>
     <label>Segmento<select id="qSeg">${opt(SEGMENTOS,o.seg)}</select></label>
-    <label><span class="cap">CPF ou CNPJ <span class="note">obrigatório</span></span><input id="qCnpj" inputmode="numeric" value="${esc(o.cnpj||"")}" placeholder="CPF ou CNPJ, só números"></label>
+    <label><span class="cap">CPF ou CNPJ <span class="note">opcional</span></span><input id="qCnpj" inputmode="numeric" value="${esc(o.cnpj||"")}" placeholder="CPF ou CNPJ, só números"></label>
     <label>Inscrição municipal<input id="qIm" value="${esc(o.im||"")}" placeholder="Para a NFS-e"></label>
+    <label>Inscrição estadual<input id="qIe" value="${esc(o.ie||"")}" placeholder="Se o cliente tiver"></label>
     <h3 class="full">Endereço do estabelecimento</h3>
     <label>CEP<input id="qCep" inputmode="numeric" value="${esc(o.cep||"")}" placeholder="00000-000"></label>
     <label>Bairro<input id="qBairro" value="${esc(o.bairro||"")}"></label>
@@ -924,7 +1316,7 @@ function viewClientes(){
   </form></div>
   <section class="panel" style="margin-top:20px"><div class="ph"><h2>Clientes cadastrados</h2><span class="note">${db.clientes.length} empresa${db.clientes.length===1?"":"s"}</span></div>
   <div class="clist">${db.clientes.map(x=>{const p=piorStatus(x.id);return `<div class="cl"><span class="av">${iniciais(x.nome)}</span>
-    <span class="nm"><b>${esc(x.fantasia||x.nome)}</b><small>${esc(x.cnpj)}</small><span class="meta">${esc(x.end||"-")}${x.tel?" · "+esc(x.tel):""}</span></span>
+    <span class="nm"><b>${esc(x.fantasia||x.nome)}</b><small>${esc(x.cnpj||"sem CPF/CNPJ")}</small><span class="meta">${esc(x.end||"-")}${x.tel?" · "+esc(x.tel):""}</span></span>
     <span class="uacts"><button class="dl" data-acesso="${x.id}">Criar acesso</button><button class="dl" data-edit="${x.id}">Editar</button>${isAdmin()?`<button class="dl" data-delcli="${x.id}">Excluir</button>`:""}</span></div>`}).join("")}</div></section>`}
 function wireClientes(){
   const $=id=>document.getElementById(id);
@@ -952,10 +1344,10 @@ function wireClientes(){
     const nome=$("qNome").value.trim();
     if(!nome){msg.className="note full hint-err";msg.textContent="Preencha a razão social.";return $("qNome").focus()}
     const cnpj=$("qCnpj").value.trim();
-    if(!docOK(cnpj)){msg.className="note full hint-err";msg.textContent="CPF ou CNPJ inválido. Confira os números.";return $("qCnpj").focus()}
-    const dup=db.clientes.find(c=>soNum(c.cnpj)===soNum(cnpj)&&c.id!==editando);
+    if(cnpj&&!docOK(cnpj)){msg.className="note full hint-err";msg.textContent="CPF ou CNPJ inválido. Confira os números ou deixe em branco.";return $("qCnpj").focus()}
+    const dup=cnpj&&db.clientes.find(c=>soNum(c.cnpj)===soNum(cnpj)&&c.id!==editando);
     if(dup){msg.className="note full hint-err";msg.textContent=`Este ${docRot(cnpj)} já está cadastrado para ${dup.nome}.`;return $("qCnpj").focus()}
-    const o={nome,fantasia:$("qFant").value.trim(),seg:$("qSeg").value,cnpj:maskDoc(cnpj),im:$("qIm").value.trim(),
+    const o={nome,fantasia:$("qFant").value.trim(),seg:$("qSeg").value,cnpj:maskDoc(cnpj),im:$("qIm").value.trim(),ie:$("qIe").value.trim(),
       cep:$("qCep").value.trim(),rua:$("qRua").value.trim(),num:$("qNum").value.trim(),comp:$("qComp").value.trim(),
       bairro:$("qBairro").value.trim(),cidade:$("qCidade").value.trim(),uf:$("qUf").value,
       resp:$("qResp").value.trim(),tel:$("qTel").value.trim(),email:$("qEmail").value.trim(),obs:$("qObs").value.trim()};
@@ -976,7 +1368,7 @@ function logoPNG(){if(_logo!==null)return Promise.resolve(_logo);
 function docDados(tipo,id){
   if(tipo==="os"){const v=vis(id);if(!v)return null;const c=cli(v.cli);
     return {arq:`ordem-servico-${v.os}.pdf`,titulo:`Ordem de serviço ${v.os}`,sub:"Termo de compromisso e comprovante de execução",
-      linhas:[["Cliente",c.nome],[docRot(c.cnpj),c.cnpj],["Endereço",c.end],["Data e hora",fmtHora(v.data)],["Técnico",v.tecnico],["Serviço",`${v.tipo} · ${v.praga}`],["Produtos",v.prod],["Contato no local",(c.resp||"-")+(c.tel?" · "+c.tel:"")],["Áreas tratadas",v.areas||"-"]],
+      linhas:[["Cliente",c.nome],[docRot(c.cnpj),c.cnpj||"-"],["Endereço",c.end],["Data e hora",fmtHora(v.data)],["Técnico",v.tecnico],["Serviço",`${v.tipo} · ${v.praga}`],["Produtos",v.prod],["Contato no local",(c.resp||"-")+(c.tel?" · "+c.tel:"")],["Áreas tratadas",v.areas||"-"]],
       relatorio:v.relatorio||"",fotosDe:v.id,
       lista:{t:"Orientações e termo de compromisso",itens:TERMO,obs:"Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima."},
       assinatura:v.assinatura||null};}
@@ -986,11 +1378,11 @@ function docDados(tipo,id){
       paradas:ps.map((a,i)=>{const c=cli(a.cli);return {n:i+1,hora:a.hora||"",nome:c.nome,end:endCli(c)||"Endereço não cadastrado",contato:[c.resp,c.tel].filter(Boolean).join(" · "),obs:a.obs||""}})};}
   const b=cob(id);if(!b)return null;const c=cli(b.cli);
   if(tipo==="cobranca") return {arq:`cobranca-${b.id}.pdf`,titulo:`Cobrança ${BRL(b.valor)}`,sub:b.desc,aviso:"Simulação: os códigos abaixo não são pagáveis.",
-    linhas:[["Pagador",c.nome],[docRot(c.cnpj),c.cnpj],["Beneficiário",EMPRESA.nome],["CNPJ do beneficiário",EMPRESA.cnpj],["Valor",BRL(b.valor)],["Vencimento",fmt(b.venc)],["Forma",b.forma],["Situação",LCOB[stCob(b)]]],
+    linhas:[["Pagador",c.nome],[docRot(c.cnpj),c.cnpj||"-"],["Beneficiário",EMPRESA.nome],["CNPJ do beneficiário",EMPRESA.cnpj],["Valor",BRL(b.valor)],["Vencimento",fmt(b.venc)],["Forma",b.forma],["Situação",LCOB[stCob(b)]]],
     blocos:[b.linha?["Boleto · linha digitável",b.linha]:null,b.pix?["Pix copia e cola",b.pix]:null].filter(Boolean)};
   const n=b.nfse;if(!n)return null;
   return {arq:`nfse-${n.numero}.pdf`,titulo:`NFS-e nº ${n.numero}`,sub:"Nota Fiscal de Serviço Eletrônica",aviso:"Simulação: documento sem validade fiscal.",
-    linhas:[["Emitida em",fmtHora(n.emitidaEm)],["Código de verificação",n.cod],["Prestador",EMPRESA.nome],["CNPJ do prestador",EMPRESA.cnpj],["Município",EMPRESA.cidade],["Tomador",c.nome],[docRot(c.cnpj)+" do tomador",c.cnpj],["Endereço do tomador",c.end],["Serviço","7.13 · Dedetização, desinsetização, desratização e congêneres"],["Discriminação",n.desc||b.desc]],
+    linhas:[["Emitida em",fmtHora(n.emitidaEm)],["Código de verificação",n.cod],["Prestador",EMPRESA.nome],["CNPJ do prestador",EMPRESA.cnpj],["Município",EMPRESA.cidade],["Tomador",c.nome],[docRot(c.cnpj)+" do tomador",c.cnpj||"-"],["Endereço do tomador",c.end],["Serviço","7.13 · Dedetização, desinsetização, desratização e congêneres"],["Discriminação",n.desc||b.desc]],
     totais:[["Valor do serviço",BRL(b.valor)],["Alíquota ISS",String(n.aliquota).replace(".",",")+"%"],["ISS",BRL(b.valor*n.aliquota/100)],["Valor líquido",BRL(b.valor)]]};}
 // Baixa as fotos da visita e reduz para JPEG (até 1000 px) para caberem no PDF.
 async function fotosParaPDF(vid){
@@ -1125,7 +1517,7 @@ const cab=(t,sub)=>`<div class="sh-h"><img src="${LOGO}" alt="Agrocel"><div><b>$
 function boletoHTML(b){const c=cli(b.cli);const temB=b.forma.includes("Boleto"),temP=b.forma.includes("Pix");
   return `<div class="sheet">${cab("Cobrança "+BRL(b.valor),esc(b.desc))}
   <div class="simu">Simulação: estes códigos não são pagáveis.</div>
-  <dl class="kv"><dt>Pagador</dt><dd>${esc(c.nome)}</dd><dt>${docRot(c.cnpj)}</dt><dd class="mono">${esc(c.cnpj)}</dd><dt>Beneficiário</dt><dd>${esc(EMPRESA.nome)}</dd><dt>Valor</dt><dd>${BRL(b.valor)}</dd><dt>Vencimento</dt><dd>${fmt(b.venc)}</dd><dt>Situação</dt><dd>${chipCob(b)}</dd></dl>
+  <dl class="kv"><dt>Pagador</dt><dd>${esc(c.nome)}</dd><dt>${docRot(c.cnpj)}</dt><dd class="mono">${esc(c.cnpj||"-")}</dd><dt>Beneficiário</dt><dd>${esc(EMPRESA.nome)}</dd><dt>Valor</dt><dd>${BRL(b.valor)}</dd><dt>Vencimento</dt><dd>${fmt(b.venc)}</dd><dt>Situação</dt><dd>${chipCob(b)}</dd></dl>
   ${temB?`<div class="sec-t">Boleto · linha digitável</div><div class="copyrow"><code id="cLinha">${b.linha}</code><button class="dl" data-copy="cLinha">Copiar</button></div>`:""}
   ${temP?`<div class="sec-t">Pix</div><div class="pixbox">${qrSVG(b.pix)}<div><span class="note">Aponte a câmera do app do banco ou use o Pix copia e cola.</span><div class="copyrow"><code id="cPix">${b.pix}</code><button class="dl" data-copy="cPix">Copiar</button></div></div></div>`:""}
   ${docBtns("cobranca",b.id)}</div>`}
@@ -1144,7 +1536,7 @@ function nfseHTML(b){const c=cli(b.cli),n=b.nfse,iss=b.valor*n.aliquota/100;retu
   <div class="simu">Simulação: documento sem validade fiscal.</div>
   <div class="nf"><div class="nfh"><div><b>NFS-e nº ${n.numero}</b><span class="note">Emitida em ${fmtHora(n.emitidaEm)}</span></div><div><span class="lbl">Código de verificação</span><br><b class="mono" style="font-size:14px">${n.cod}</b></div></div>
   <div class="blk"><span class="lbl">Prestador</span><b>${esc(EMPRESA.nome)}</b><span>CNPJ ${esc(EMPRESA.cnpj)} · ${esc(EMPRESA.cidade)}</span></div>
-  <div class="blk"><span class="lbl">Tomador</span><b>${esc(c.nome)}</b><span>${docRot(c.cnpj)} ${esc(c.cnpj)} · ${esc(c.end)}</span></div>
+  <div class="blk"><span class="lbl">Tomador</span><b>${esc(c.nome)}</b><span>${docRot(c.cnpj)} ${esc(c.cnpj||"-")} · ${esc(c.end)}</span></div>
   <div class="blk"><span class="lbl">Serviço · item 7.13 da LC 116/2003</span><span>${esc(n.desc||b.desc)}</span></div>
   <div class="tot"><div><span class="lbl">Valor</span><br><b>${BRL(b.valor)}</b></div><div><span class="lbl">Alíquota ISS</span><br><b>${String(n.aliquota).replace(".",",")}%</b></div><div><span class="lbl">ISS</span><br><b>${BRL(iss)}</b></div><div><span class="lbl">Valor líquido</span><br><b>${BRL(b.valor)}</b></div></div></div>
   ${docBtns("nfse",b.id)}</div>`}
@@ -1168,7 +1560,7 @@ const DATASETS=[["clientes","Empresas (clientes)","Nome, CPF/CNPJ, endereço, e-
 function tabelas(){const sit=id=>{const p=piorStatus(id);return p?LABEL[p]:"Sem certificados"};
   return {
   clientes:db.clientes.map(c=>{const ks=db.certs.filter(k=>k.cli===c.id).sort((a,b)=>a.venc.localeCompare(b.venc));const prox=ks.find(k=>dias(k.venc)>=0);
-    return {"Empresa":c.nome,"Nome fantasia":c.fantasia||"","CPF/CNPJ":c.cnpj,"Inscrição municipal":c.im||"","Endereço":c.end,"Cidade":c.cidade||"","UF":c.uf||"","CEP":c.cep||"","Responsável":c.resp||"","Telefone":c.tel||"","E-mail":c.email||"","Segmento":c.seg||"","Observações":c.obs||"","Situação":sit(c.id),"Certificados":ks.length,"Próximo vencimento":prox?fmt(prox.venc):"","Valor em aberto (R$)":(db.cobrancas||[]).filter(b=>b.cli===c.id&&b.status!=="paga").reduce((t,b)=>t+b.valor,0)}}),
+    return {"Empresa":c.nome,"Nome fantasia":c.fantasia||"","CPF/CNPJ":c.cnpj,"Inscrição estadual":c.ie||"","Inscrição municipal":c.im||"","Endereço":c.end,"Cidade":c.cidade||"","UF":c.uf||"","CEP":c.cep||"","Responsável":c.resp||"","Telefone":c.tel||"","E-mail":c.email||"","Segmento":c.seg||"","Observações":c.obs||"","Situação":sit(c.id),"Certificados":ks.length,"Próximo vencimento":prox?fmt(prox.venc):"","Valor em aberto (R$)":(db.cobrancas||[]).filter(b=>b.cli===c.id&&b.status!=="paga").reduce((t,b)=>t+b.valor,0)}}),
   certificados:db.certs.map(k=>({"Empresa":cli(k.cli).nome,"CPF/CNPJ":cli(k.cli).cnpj,"Serviço":k.tipo,"Praga-alvo":k.praga,"Produtos":k.prod,"Execução":fmt(k.exec),"Validade":fmt(k.venc),"Situação":LABEL[status(k.venc)],"Dias para vencer":dias(k.venc)})),
   visitas:(db.visitas||[]).map(v=>({"OS":v.os,"Empresa":cli(v.cli).nome,"Data e hora":fmtHora(v.data),"Técnico":v.tecnico,"Serviço":v.tipo,"Praga-alvo":v.praga,"Produtos":v.prod,"Áreas tratadas":v.areas||"","Assinatura":v.status==="assinada"?"Assinada":"Pendente","Assinado por":v.assinatura?.nome||"","Assinado em":v.assinatura?fmtHora(v.assinatura.em):"","Código":v.assinatura?.cod||""})),
   cobrancas:(db.cobrancas||[]).map(b=>({"Empresa":cli(b.cli).nome,"CPF/CNPJ":cli(b.cli).cnpj,"Descrição":b.desc,"Valor (R$)":b.valor,"Vencimento":fmt(b.venc),"Forma":b.forma,"Situação":LCOB[stCob(b)],"Pago em":b.pagoEm?fmt(b.pagoEm):"","NFS-e":b.nfse?.numero||""})),
@@ -1212,7 +1604,7 @@ const V = {
 const T3 = V.txt(300), T1 = V.txt(1000);
 // campo: [validador, obrigatório?, esquema aninhado?]
 const ESQ = {
-  clientes: {id:[V.id,1], nome:[T3,1], fantasia:[T3], seg:[V.txt(100)], cnpj:[V.rx(/^[\d./-]{0,20}$/)], im:[V.txt(60)], cep:[V.rx(/^[\d-]{0,10}$/)],
+  clientes: {id:[V.id,1], nome:[T3,1], fantasia:[T3], seg:[V.txt(100)], cnpj:[V.rx(/^[\d./-]{0,20}$/)], im:[V.txt(60)], ie:[V.txt(60)], cep:[V.rx(/^[\d-]{0,10}$/)],
     rua:[T3], num:[V.txt(30)], comp:[V.txt(100)], bairro:[T3], cidade:[T3], uf:[V.txt(10)], resp:[T3], tel:[V.rx(/^[\d() +-]{0,25}$/)], email:[T3], obs:[T1], end:[V.txt(600)]},
   certs: {id:[V.id,1], cli:[V.id,1], tipo:[T3,1], praga:[T3], prod:[T1], exec:[V.data], venc:[V.data,1], pdf:[V.rx(RE_PATH)], visita:[V.id]},
   docs: {id:[V.id,1], cli:[V.id,1], nome:[T3,1], data:[V.data], pdf:[V.rx(RE_PATH)]},
@@ -1224,6 +1616,10 @@ const ESQ = {
     nfse:[null,0,{numero:V.rx(/^\d{1,10}$/), emitidaEm:V.hora, aliquota:V.num, cod:V.rx(/^[\w-]{4,20}$/), desc:T3}]},
   proprios: {id:[V.id,1], nome:[T3,1], venc:[V.data,1]},
   agenda: {id:[V.id,1], cli:[V.id,1], dia:[V.data,1], hora:[V.rx(/^\d{2}:\d{2}$/)], tecnico:[T3,1], obs:[T1], ordem:[V.num,1]},
+  agendamentos: {id:[V.id,1], cli:[V.id,1], dia:[V.data,1], hora:[V.rx(/^\d{2}:\d{2}$/)], tecnico:[T3], tipo:[T3], obs:[T1], status:[V.em(["agendada","realizada","cancelada"]),1], visita:[V.id], criadoEm:[V.hora]},
+  leads: {id:[V.id,1], empresa:[T3,1], contato:[T3], seg:[V.txt(100)], cidade:[T3], whatsapp:[V.rx(/^[\d() +-]{0,25}$/)], email:[T3], origem:[T3], etapa:[V.em(["Novo","Contatado","Conversando","Visita técnica","Orçamento","Fechado","Perdido"]),1],
+    tempManual:[V.em(["quente","morno","frio"])], checks:[V.rx(/^[01]{5}$/)], valor:[V.num], mensal:[V.num], proximoPasso:[T3], proximaData:[V.data],
+    notas:[v => Array.isArray(v) && v.length <= 200 && v.every(t => typeof t === "string" && t.length <= 700)], clienteId:[V.id], fechadoEm:[V.data], criadoEm:[V.hora], atualizadoEm:[V.hora]},
   fotos: {id:[V.id,1], cli:[V.id,1], visita:[V.id], path:[V.rx(RE_PATH),1], nome:[T3], em:[V.hora]},
 };
 function limparItem(t, o){
@@ -1437,7 +1833,7 @@ async function carregarRegistros(){
   REGS = out; REGS_OK = true;
 }
 const fmtReg = r => new Date(r.em).toLocaleString("pt-BR", {day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit"});
-const TIPO_REG = {clientes:"Cliente", certs:"Certificado", visitas:"Ordem de serviço", cobrancas:"Cobrança", docs:"Documento", proprios:"Documento da empresa", fotos:"Foto", agenda:"Rota do dia", usuarios:"Usuário", acesso:"Acesso"};
+const TIPO_REG = {clientes:"Cliente", certs:"Certificado", visitas:"Ordem de serviço", cobrancas:"Cobrança", docs:"Documento", proprios:"Documento da empresa", fotos:"Foto", agenda:"Rota do dia", agendamentos:"Agendamento de visita", leads:"Lead", usuarios:"Usuário", acesso:"Acesso"};
 function regsFiltrados(){
   const q = regBusca.trim().toLowerCase();
   return REGS.filter(r => (!regAcao || r.acao === regAcao) && (!q || (r.usuario_nome + " " + r.resumo + " " + r.acao + " " + (r.campos || "")).toLowerCase().includes(q)));
@@ -1607,6 +2003,7 @@ function avisoSaidaHTML(){
   return `<div id="saidaAviso" class="simu" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px"><span>${n} visita${n === 1 ? "" : "s"} salva${n === 1 ? "" : "s"} no celular, aguardando envio${bloq ? ` (${bloq} com problema)` : ""}.</span><button class="btn sm" data-tab="pendentes">Ver e enviar</button></div>`;
 }
 function atualizarAviso(){
+  if(tab === "painel" && ME && document.querySelector(".pend")){document.querySelector(".pend").outerHTML = pendenciasHTML(); return}
   const el = document.getElementById("saidaAviso"); if(!el) return;
   if(!SAIDA.length){el.remove(); return}
   el.outerHTML = avisoSaidaHTML();
@@ -1628,6 +2025,7 @@ async function enviarItem(it){
   if(ja) return ja.os;
   const v = {...it.v, os: proxOS()};
   db.visitas.push(v);
+  if(it.agend){const ag = (db.agendamentos || []).find(a => a.id === it.agend); if(ag){ag.status = "realizada"; ag.visita = v.id}}
   it.fotos.forEach(f => {if(!db.fotos.some(x => x.id === f.id)) db.fotos.push({id: f.id, cli: v.cli, visita: v.id, path: f.path, nome: f.nome, em: f.em})});
   if(it.cert) db.certs.push({id: it.cert.id, cli: v.cli, tipo: v.tipo, praga: v.praga, prod: v.prod, exec: v.data.slice(0, 10), venc: it.cert.venc, pdf: "", visita: v.id});
   if(it.cob){
@@ -1728,7 +2126,7 @@ function limitesVisita(){
 function viewVisita(){
   const a = new Date(); a.setSeconds(0, 0); const local = new Date(a - a.getTimezoneOffset() * 6e4).toISOString().slice(0, 16); const lim = limitesVisita();
   if(!db.clientes.length) return `${avisoSaidaHTML()}<div class="card"><h2 style="font-size:20px;margin-bottom:8px">Registrar visita</h2><p class="note">${OFFLINE ? "Este aparelho ainda não tem a lista de clientes. Abra o app uma vez com internet para baixá-la." : "Cadastre um cliente antes de registrar a visita (aba Clientes)."}</p></div>`;
-  return `${avisoSaidaHTML()}<div class="card"><div class="steps"><span>1 · Serviço e cobrança</span><span>2 · Orientações</span><span>3 · Assinatura do cliente</span></div>
+  return `${avisoSaidaHTML()}${agBanner()}<div class="card"><div class="steps"><span>1 · Serviço e cobrança</span><span>2 · Orientações</span><span>3 · Assinatura do cliente</span></div>
   <form id="fVis">
     <h3 class="full first">Dados da visita <span class="note mono">${OFFLINE ? "número definido ao enviar" : proxOS()}</span></h3>
     <label class="full">Cliente<select id="vCliente">${db.clientes.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select></label>
@@ -1779,6 +2177,12 @@ function wireVisita(){
   if(limitesVisita()){const renovar = () => {const l = limitesVisita(); $("vData").min = l.min; $("vData").max = l.max}; ["focus", "input"].forEach(ev => $("vData").addEventListener(ev, renovar))}
   const modo_ = () => document.querySelector("[name=vModo]:checked").value;
   const sug = () => {$("vVenc").value = addMeses(($("vData").value || iso(HOJE)).slice(0, 10), VALIDADE_MESES[$("vTipo").value])}; sug(); $("vTipo").onchange = sug; $("vData").onchange = sug;
+  if(agPre){
+    if(db.clientes.some(c => c.id === agPre.cli)) $("vCliente").value = agPre.cli;
+    if(agPre.tipo && VALIDADE_MESES[agPre.tipo]) $("vTipo").value = agPre.tipo;
+    $("vData").value = agPre.data; sug();
+  }
+  if($("agLimpar")) $("agLimpar").onclick = () => {agPre = null; render()};
   if($("vVencCob")){const x = new Date(HOJE); x.setDate(x.getDate() + 10); $("vVencCob").value = iso(x)}
   document.querySelectorAll("[name=vModo]").forEach(r => r.onchange = () => {const ag = modo_() === "agora"; $("vSign").hidden = !ag; if(ag) pad = makePad($("pad"))});
   FOTOS_SEL = []; desenharFotos();
@@ -1808,10 +2212,11 @@ function wireVisita(){
     const fotos = [];
     for(const f of FOTOS_SEL){const b = await reduzir(f); fotos.push({id: "f" + selo + fotos.length, nome: f.name, blob: b, em: new Date().toISOString()})}
     const valor = $("vValor") ? parseValor($("vValor").value) : 0;
-    const it = {idLocal: "s" + selo, userId: ME.id, criadoEm: Date.now(), v, fotos, tentativas: 0, retido: depois,
+    const it = {idLocal: "s" + selo, userId: ME.id, criadoEm: Date.now(), v, fotos, tentativas: 0, retido: depois, agend: agPre ? agPre.id : undefined,
       cert: $("vCert").checked && $("vVenc").value ? {id: "k" + selo, venc: $("vVenc").value} : null,
       cob: valor > 0 && $("vForma") && !$("vForma").value.startsWith("Não") ? {id: "b" + selo, valor, venc: $("vVencCob").value || iso(HOJE), forma: $("vForma").value, gerar: $("vGerar").checked} : null};
     let guardada = true; try{await OFF.salvarSaida(it)}catch(_){guardada = false}
+    if(guardada) agPre = null;
     if(depois){
       if(!guardada){bt.disabled = false; return toast("Não consegui guardar a visita neste aparelho. Tente de novo.")}
       await recarregarSaida(); tab = "pendentes"; render();
@@ -1955,6 +2360,10 @@ document.addEventListener("click",e=>{
   const pol=e.target.closest("[data-politica]"); if(pol){e.preventDefault();abrirPolitica(pol.dataset.politica);return}
   if(e.target.closest("[data-enviartodos]")){enviarPendentes(true);return}
   const dsc=e.target.closest("[data-descartar]"); if(dsc){descartarSaida(dsc.dataset.descartar);return}
+  const agr=e.target.closest("[data-agreg]"); if(agr){agRegistrar(agr.dataset.agreg);return}
+  if(leadsModalClick(e))return;
+  if(tab==="leads"&&isStaff()&&leadsClick(e))return;
+  if(tab==="agenda"&&isStaff()&&agClick(e))return;
   const t=e.target.closest("[data-tab]"); if(t){tab=t.dataset.tab;if(tab==="registros")REGS_OK=false;render();return}
   const f=e.target.closest("[data-f]"); if(f){filtro=filtro===f.dataset.f?null:f.dataset.f;render();return}
   const pf=e.target.closest("[data-pdf]"); if(pf){pf.disabled=true;salvarPDF(pf.dataset.pdf,pf.dataset.id).finally(()=>pf.disabled=false);return}
@@ -1975,7 +2384,7 @@ document.addEventListener("click",e=>{
   const ux=e.target.closest("[data-uexcluir]"); if(ux){excluirUsuario(ux.dataset.uexcluir);return}
   const dp=e.target.closest("[data-delprop]"); if(dp){db.proprios=db.proprios.filter(p=>p.id!==dp.dataset.delprop);save();render();return}
   const cy=e.target.closest("[data-copy]"); if(cy){copiar(cy);return}
-  if(tab==="rota"&&isAdmin()&&rotaClick(e))return;
+  if(tab==="rota"&&isStaff()&&rotaClick(e))return;
   const rm=e.target.closest("[data-relm]"); if(rm){relMeses=+rm.dataset.relm;render();return}
   const fb=e.target.closest("[data-fcob]"); if(fb){filtroCob=fb.dataset.fcob;render();return}
   const cp=e.target.closest("[data-comp]"); if(cp){openComp(cp.dataset.comp);return}

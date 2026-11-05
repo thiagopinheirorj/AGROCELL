@@ -1,10 +1,19 @@
 AGROCEL CERTIFICADOS · HISTÓRICO DE VERSÕES
-Versão atual: 0.6.1 (29/10/2026)
+Versão atual: 0.7.0 (05/11/2026)
 
 Regra: a cada nova versão publicada, este arquivo ganha uma entrada no topo.
 Novidade = sobe o 2º número (0.5.0). Correção ou ajuste = sobe o 3º número (0.4.2).
 
 ------------------------------------------------------------
+0.7.0 · 05/11/2026 · Novidade
+- Nova aba "Agenda": marque a visita (cliente, dia, hora, serviço, técnico e observação), veja as próximas por dia, remarque, cancele e avise o cliente pelo WhatsApp. Um toque em "Registrar visita" já abre a ordem de serviço com o cliente e o serviço preenchidos; ao enviar a OS, a visita agendada vira "realizada". Aparecem sugestões de quem está com certificado vencido ou perto de vencer.
+- Painel inicial: o topo ficou menor e ganhou o quadro "Pendências de visita", com as visitas agendadas dos próximos 7 dias (e as atrasadas), as ordens sem assinatura e as visitas salvas no celular.
+- A "Rota do dia" agora é de toda a equipe: técnico e administrador montam e enviam a rota. A rota também sugere as visitas agendadas para o dia.
+- Cliente: CPF ou CNPJ deixou de ser obrigatório (se preencher, os dígitos continuam sendo conferidos). Novo campo Inscrição estadual, ao lado da Inscrição municipal.
+- Novo certificado: dá para escanear o documento com a câmera do celular. Tire uma foto de cada página (ou escolha imagens), o app melhora a leitura e junta tudo em um PDF que fica anexado ao certificado.
+- Nova aba "Leads" (administrador e técnico): CRM de prospecção com resumo (quentes, mornos, frios e retornos), ficha com termômetro de 5 itens, etapas até fechar, valor do serviço, contrato mensal, histórico de anotações e botão para cadastrar o lead como cliente.
+- Banco: tipos novos 'agendamentos' e 'leads', e 'agenda', 'agendamentos' e 'leads' liberados ao técnico. Rode supabase/migracao-0.7.0.sql no teste e depois no real antes de publicar.
+
 0.6.1 · 29/10/2026 · Ajuste
 - O técnico só consegue registrar visita de hoje até 3 dias atrás, e nunca com data no futuro. O campo de data já bloqueia as datas fora do prazo e o botão avisa se tentar. O administrador continua sem esse limite.
 

@@ -49,8 +49,8 @@ O acesso é feito com e-mail e senha. Existem três perfis:
 | Perfil | O que pode fazer |
 |---|---|
 | **Cliente** | Ver apenas os próprios certificados, ordens de serviço, fotos, relatórios e cobranças; assinar ordens pendentes |
-| **Técnico** | Cadastrar clientes e criar o acesso deles, registrar visitas e laudos com relatório e fotos, emitir certificados com PDF |
-| **Administrador** | Acesso total: cobranças, NFS-e, exportação, avisos, documentos da empresa e cadastro de técnicos, administradores e clientes (aba **Usuários**) |
+| **Técnico** | Cadastrar clientes e criar o acesso deles, agendar e registrar visitas e laudos com relatório e fotos, montar a rota do dia, acompanhar os leads (CRM de prospecção), emitir certificados com PDF (inclusive escaneando o documento pela câmera) |
+| **Administrador** | Acesso total: cobranças, NFS-e, relatórios, exportação, avisos, documentos da empresa e cadastro de técnicos, administradores e clientes (aba **Usuários**) |
 
 Primeiro acesso: na tela de login, use **Primeiro acesso do sistema** para criar o administrador. Isso só funciona enquanto não existe nenhum administrador. Depois, o administrador cadastra os demais usuários com uma senha provisória, e cada pessoa troca a senha em **Minha conta**.
 
@@ -61,6 +61,7 @@ Primeiro acesso: na tela de login, use **Primeiro acesso do sistema** para criar
 - Contadores de vencidos, que vencem em 30 dias e em dia, que também funcionam como filtros
 - Lista de clientes com busca por nome ou CNPJ; clientes com pendência aparecem em vermelho no topo
 - Linha do tempo com os próximos vencimentos
+- Topo compacto e quadro **Pendências de visita** (visitas agendadas dos próximos 7 dias e atrasadas, ordens sem assinatura e visitas salvas no celular)
 - Controle dos documentos da própria empresa (ART, alvarás)
 
 **Cores de status**
@@ -72,16 +73,31 @@ Primeiro acesso: na tela de login, use **Primeiro acesso do sistema** para criar
 | 🟢 Em dia | vence em mais de 30 dias |
 
 **Cadastro de clientes**
-- Ficha completa: razão social, nome fantasia, segmento, CNPJ e inscrição municipal
+- Ficha completa: razão social, nome fantasia, segmento, CPF ou CNPJ (opcional), inscrição estadual e inscrição municipal
 - Endereço com CEP, rua, número, complemento, bairro, cidade e UF
 - Contato: responsável no local, telefone/WhatsApp e e-mail que recebe os avisos
 - Anotações do técnico (acesso ao local, horários, cuidados)
-- Máscara automática de CNPJ, CEP e telefone, com validação dos dígitos do CNPJ e aviso de CNPJ repetido
+- Máscara automática de CPF/CNPJ, CEP e telefone, com validação dos dígitos (quando preenchido) e aviso de documento repetido
 - Edição da ficha pelo painel ou pela lista de clientes
 
 **Cadastro de certificados**
 - Validade sugerida pelo tipo de serviço: desinsetização 12 meses, desratização 3 meses, higienização de reservatório 6 meses
-- Anexo do PDF assinado
+- Anexo do PDF assinado, ou **escaneando o documento pela câmera**: uma foto por página, com melhora de leitura (fundo branco e texto escuro), girar e remover páginas; o app junta tudo em um PDF (até 12 páginas, 10 MB)
+
+**Agenda de visitas** (administrador e técnico)
+- Marca visita futura com cliente, dia, hora, serviço, técnico e observação; lista por dia (próximas, hoje, 7 dias, realizadas e canceladas)
+- Remarcar, cancelar, reabrir e avisar o cliente pelo WhatsApp
+- **Registrar visita** abre a ordem de serviço já com cliente e serviço; ao enviar a OS, o agendamento vira "realizado"
+- Sugere clientes com certificado vencido ou perto de vencer, sem visita marcada
+
+**Rota do dia** (administrador e técnico)
+- Escolhe o técnico e o dia, monta as paradas com endereço e contato, muda a ordem, abre o mapa e gera o PDF para enviar
+- Sugere as visitas agendadas para o dia
+
+**Leads (CRM de prospecção, administrador e técnico)**
+- Resumo com quentes, mornos, frios e retornos para hoje ou atrasados; potencial em negociação (serviço e contrato mensal)
+- Ficha do lead: empresa e contato, termômetro de 5 itens (define quente, morno ou frio, com ajuste manual), etapas (Novo até Fechado ou Perdido), próximo passo com data e histórico de anotações
+- **Cadastrar como cliente** leva o lead fechado para o cadastro de clientes
 
 **Registro de visita técnica (ordem de serviço)**
 - O técnico registra no local: cliente, data e hora, serviço, praga-alvo, produtos e áreas tratadas
