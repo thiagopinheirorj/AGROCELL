@@ -1,8 +1,16 @@
 AGROCEL CERTIFICADOS · HISTÓRICO DE VERSÕES
-Versão atual: 0.7.0 (05/11/2026)
+Versão atual: 1.0.0 (16/11/2026)
 
 Regra: a cada nova versão publicada, este arquivo ganha uma entrada no topo.
 Novidade = sobe o 2º número (0.5.0). Correção ou ajuste = sobe o 3º número (0.4.2).
+
+------------------------------------------------------------
+1.0.0 · 16/11/2026 · Primeira versão comercial
+- Saíram as simulações de boleto, Pix e NFS-e. A aba Cobranças virou um controle do que há a receber: valor, vencimento, forma de pagamento e "marcar como pago". Boleto, Pix e nota fiscal são emitidos pelo banco e pelo sistema da prefeitura, fora do app. Formas de pagamento: Pix, boleto, dinheiro, cartão, transferência ou "não cobrar".
+- Termo de uso atualizado (versão 2): a seção 5 explica que cobranças e notas são emitidas fora do sistema.
+- Os dados podem ficar no servidor da própria empresa, em vez da nuvem: nova pasta "instalador" com o passo a passo para Windows (Docker Desktop) e Linux. O mesmo app descobre sozinho onde gravar, e a tela de entrada mostra "Os dados deste sistema ficam ...". O instalador agenda um backup diário do banco e dos arquivos, com cópia opcional para uma pasta de nuvem (OneDrive, Google Drive).
+- Segurança (varredura de 16/11/2026): política de segurança de conteúdo no app (só scripts e conexões do próprio site e HTTPS), número da OS protegido contra HTML indevido, e limpeza de permissões sobrando no banco (migração 0.8.0).
+- Novo arquivo config.js (vazio = nuvem). O app guardado no celular passa a conferir esse arquivo na rede antes de usar a cópia.
 
 ------------------------------------------------------------
 0.7.0 · 05/11/2026 · Novidade

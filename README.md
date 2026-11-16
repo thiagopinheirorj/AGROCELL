@@ -8,11 +8,11 @@ O app acompanha a validade de cada certificado emitido (desinsetização, desrat
 
 ![Registro de visita com assinatura do cliente](docs/registrar-visita.png)
 
-![Cobranças e NFS-e](docs/cobrancas.png)
+![Cobranças](docs/cobrancas.png)
 
 ![Cadastro de clientes](docs/cadastro-cliente.png)
 
-> **Os dados ficam no banco (Supabase), não neste repositório.** As capturas de tela abaixo usam dados fictícios. Boleto, Pix e NFS-e continuam sendo simulação.
+> **Os dados ficam no banco (Supabase), não neste repositório.** As capturas de tela abaixo usam dados fictícios.
 
 ## Visita técnica sem internet
 
@@ -50,7 +50,7 @@ O acesso é feito com e-mail e senha. Existem três perfis:
 |---|---|
 | **Cliente** | Ver apenas os próprios certificados, ordens de serviço, fotos, relatórios e cobranças; assinar ordens pendentes |
 | **Técnico** | Cadastrar clientes e criar o acesso deles, agendar e registrar visitas e laudos com relatório e fotos, montar a rota do dia, acompanhar os leads (CRM de prospecção), emitir certificados com PDF (inclusive escaneando o documento pela câmera) |
-| **Administrador** | Acesso total: cobranças, NFS-e, relatórios, exportação, avisos, documentos da empresa e cadastro de técnicos, administradores e clientes (aba **Usuários**) |
+| **Administrador** | Acesso total: cobranças, relatórios, exportação, avisos, documentos da empresa e cadastro de técnicos, administradores e clientes (aba **Usuários**) |
 
 Primeiro acesso: na tela de login, use **Primeiro acesso do sistema** para criar o administrador. Isso só funciona enquanto não existe nenhum administrador. Depois, o administrador cadastra os demais usuários com uma senha provisória, e cada pessoa troca a senha em **Minha conta**.
 
@@ -110,19 +110,14 @@ Primeiro acesso: na tela de login, use **Primeiro acesso do sistema** para criar
 - O responsável assina com o dedo no celular ou tablet do técnico, ou confirma depois na própria área do cliente
 - O comprovante registra nome, data, hora e um código de verificação
 
-**Cobranças (boleto e Pix)** · *simulação*
-- Valor e forma de pagamento definidos ao registrar a visita
-- Geração de boleto (linha digitável) e Pix (QR Code e copia e cola)
-- Situação de cada cobrança: a gerar, aguardando pagamento, em atraso ou pago
+**Cobranças (controle do que há a receber)**
+- Valor, vencimento e forma de pagamento (Pix, boleto, dinheiro, cartão, transferência) definidos ao registrar a visita
+- Situação de cada cobrança: aguardando pagamento, em atraso ou pago; botão "Marcar como pago"
 - Totais a receber, em atraso e recebidos no mês
-
-**NFS-e** · *simulação*
-- Emissão a partir da cobrança, com serviço do item 7.13 da LC 116/2003
-- Cálculo do ISS pela alíquota informada
-- Nota com prestador, tomador, valores e código de verificação
+- Boleto, Pix e nota fiscal são emitidos fora do app (banco e sistema da prefeitura)
 
 **Impressão e PDF**
-- NFS-e, cobrança e ordem de serviço saem em PDF com o logo, o rodapé da empresa e a assinatura do cliente
+- Cobrança e ordem de serviço saem em PDF com o logo, o rodapé da empresa e a assinatura do cliente
 - Botão de imprimir quando o navegador permite
 
 **Exportação de dados**
@@ -144,10 +139,18 @@ Primeiro acesso: na tela de login, use **Primeiro acesso do sistema** para criar
 
 O app usa a chave pública (anon) do projeto, que pode ficar no código; a proteção dos dados é feita pelas regras de acesso do banco.
 
+## Onde os dados ficam: nuvem ou servidor da empresa
+
+O mesmo app funciona de dois jeitos. Por padrão os dados ficam na **nuvem** (Supabase, São Paulo). Quem preferir guardar tudo **no servidor da própria empresa** usa a pasta `instalador/`: um script para Windows (`instalar.ps1`, com Docker Desktop) ou Linux (`instalar.sh`) sobe o banco, o login, os arquivos e o app em um computador da empresa, aplica as mesmas regras de acesso e agenda um backup diário (banco + fotos e PDFs), com cópia opcional para uma pasta de nuvem como OneDrive ou Google Drive. O arquivo `config.js` diz ao app onde gravar (vazio = nuvem); a tela de entrada mostra "Os dados deste sistema ficam …". Detalhes em [instalador/README.md](instalador/README.md).
+
 ## Estrutura
 
 ```
 index.html                 app completo (HTML, CSS e JavaScript)
+config.js                  onde os dados ficam (vazio = nuvem; o instalador grava o servidor próprio)
+sw.js                      cópia do app no aparelho (offline)
+supabase/                  esquema do banco, migrações e função de usuários
+instalador/                instalação no servidor da empresa (Docker) e backup
 assets/logo-agrocel.png    logomarca
 assets/exemplos/           certificados de exemplo em PDF
 docs/painel.png            captura de tela
@@ -160,9 +163,10 @@ docs/painel.png            captura de tela
 - [ ] E-mail de convite e de recuperação de senha
 - [ ] Envio automático dos e-mails de aviso
 - [ ] Avisos por WhatsApp
-- [ ] Integração real de boleto/Pix com o banco ou plataforma de cobrança
-- [ ] Emissão real de NFS-e (prefeitura ou API de notas)
+- [ ] Integração de boleto/Pix com o banco ou plataforma de cobrança (opcional, futuro)
+- [ ] Emissão de NFS-e por API de notas (opcional, futuro)
 - [ ] Geração do certificado e da ordem de serviço em PDF direto pelo app
+- [x] Instalação no servidor da própria empresa (pasta instalador/)
 - [ ] Versão para várias empresas de controle de pragas
 
 ## Autor

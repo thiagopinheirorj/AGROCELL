@@ -1,0 +1,7 @@
+# Gerados pelo instalador em cada servidor. Nunca vão para o repositório.
+.env
+kong.yml
+app/
+dados/
+backups/
+functions/usuarios/
