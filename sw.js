@@ -33,8 +33,8 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // config.js (onde os dados ficam) sempre tenta a rede primeiro, para o instalador poder trocar o servidor.
-  if (/\/config\.js$/.test(url.pathname)) {
+  // config.js (onde os dados ficam) e versao.txt (versão do rodapé) sempre tentam a rede primeiro, para não ficar versão antiga guardada.
+  if (/\/(config\.js|versao\.txt)$/.test(url.pathname)) {
     e.respondWith(fetch(req).then((r) => { if (r.ok) { const cp = r.clone(); caches.open(VERSAO).then((c) => c.put(req, cp)); } return r; }).catch(() => caches.match(req)));
     return;
   }

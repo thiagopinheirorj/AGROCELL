@@ -125,9 +125,10 @@ Primeiro acesso: na tela de login, use **Primeiro acesso do sistema** para criar
 - CSV das empresas, pronto para abrir no Excel
 - Backup completo em JSON
 
-**Avisos por e-mail**
+**Avisos de vencimento**
 - Dois avisos por certificado: 30 e 15 dias antes do vencimento
-- Enviados ao responsável técnico e ao cliente
+- Destinatários previstos: o responsável técnico e o cliente
+- A aba **Avisos por e-mail** mostra os avisos previstos para os próximos 90 dias. Por enquanto eles aparecem só na tela: o envio automático ainda não está ativo
 
 **Área do cliente**
 - Cada cliente vê apenas os próprios certificados, com status e data de validade

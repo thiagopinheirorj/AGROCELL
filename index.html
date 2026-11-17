@@ -363,6 +363,7 @@ form h3 .note{font-weight:500}
 .rsug{padding:0 16px 8px;display:flex;flex-wrap:wrap;gap:6px}.rsug .note{width:100%}
 .rgrid{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
 @media (max-width:900px){.rform{grid-template-columns:minmax(0,1fr)}.rgrid{grid-template-columns:minmax(0,1fr)}.rp{grid-template-columns:30px minmax(0,1fr)}.ra{grid-column:2;justify-content:flex-start}.rtwo{grid-template-columns:minmax(0,1fr)}}
+.rodape{text-align:center;font-size:12px;color:var(--muted);padding:18px 16px 26px}
 </style>
 </head>
 <body>
@@ -388,6 +389,7 @@ form h3 .note{font-weight:500}
 <div class="demo gut" id="offBar" hidden><div class="wrap">Sem conexão com a internet. As visitas registradas agora ficam salvas neste aparelho e são enviadas sozinhas quando a internet voltar.</div></div>
 <main class="gut"><div class="wrap" id="app"></div></main>
 <div class="modal" id="modal" hidden></div>
+<footer class="rodape" id="rodape" hidden></footer>
 <div class="toast" id="toast" hidden></div>
 
 <script src="config.js"></script>
@@ -2345,6 +2347,8 @@ document.getElementById("btnConta").onclick=modalConta;
 document.getElementById("btnPriv").onclick=()=>abrirPolitica("privacidade");
 document.querySelector("#live span").textContent="Monitorando · "+HOJE.toLocaleDateString("pt-BR");
 document.getElementById("app").innerHTML='<div class="empty">Carregando…</div>';
+// Versão mostrada no rodapé: lida de versao.txt (o mesmo arquivo do histórico de versões). Se não der para ler, o rodapé fica escondido.
+fetch("versao.txt",{cache:"no-store"}).then(r=>r.ok?r.text():Promise.reject()).then(t=>{const m=t.match(/Versão atual:\s*([^\s(]+)\s*\(([^)]+)\)/);if(!m)return;const f=document.getElementById("rodape");f.textContent="Agrocel Certificados · versão "+m[1]+" de "+m[2];f.hidden=false}).catch(()=>{});
 iniciar();
 if("serviceWorker" in navigator && (location.protocol === "https:" || ["127.0.0.1", "localhost"].includes(location.hostname))) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
