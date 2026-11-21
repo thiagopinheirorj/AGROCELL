@@ -1,8 +1,14 @@
 AGROCEL CERTIFICADOS · HISTÓRICO DE VERSÕES
-Versão atual: 1.1.0 (16/11/2026)
+Versão atual: 1.2.0 (21/11/2026)
 
 Regra: a cada nova versão publicada, este arquivo ganha uma entrada no topo.
 Novidade = sobe o 2º número (0.5.0). Correção ou ajuste = sobe o 3º número (0.4.2).
+
+------------------------------------------------------------
+1.2.0 · 21/11/2026 · Novidade
+- Visita: campo "Houve incidência de:" com ratos, baratas, moscas ou outras. Ao marcar ratos, escolhe-se as estações de E01 a E100. A incidência aparece na OS e no PDF.
+- OS editável: a OS gerada (botão "Editar OS") e a visita salva no celular (botão "Editar", em Pendentes) podem ser corrigidas. Depois que o cliente assina, a OS fica travada.
+- Leads: botão "Montar proposta de fechamento". Analisa a negociação e gera um texto editável, para copiar no WhatsApp, salvar em PDF ou preparar um e-mail. Dá para anexar até 6 fotos, que saem no PDF.
 
 ------------------------------------------------------------
 1.1.0 · 16/11/2026 · Novidade

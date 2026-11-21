@@ -364,6 +364,7 @@ form h3 .note{font-weight:500}
 .rgrid{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
 @media (max-width:900px){.rform{grid-template-columns:minmax(0,1fr)}.rgrid{grid-template-columns:minmax(0,1fr)}.rp{grid-template-columns:30px minmax(0,1fr)}.ra{grid-column:2;justify-content:flex-start}.rtwo{grid-template-columns:minmax(0,1fr)}}
 .rodape{text-align:center;font-size:12px;color:var(--muted);padding:18px 16px 26px}
+.check input[type=checkbox]{cursor:pointer}
 </style>
 </head>
 <body>
@@ -920,7 +921,7 @@ function leadFicha(){
     <div class="full lnotas">${notas||'<p class="note" style="margin:0">Nenhuma anotação ainda.</p>'}</div>
     ${leadConfirma?`<div class="simu full" style="background:var(--red-bg);color:var(--red);display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between"><span>Excluir <b>${esc(r.empresa||"este lead")}</b> para sempre?</span><span style="display:flex;gap:8px"><button type="button" class="dl" data-leadnao>Cancelar</button><button type="button" class="btn sm" style="background:var(--red)" data-leadsim>Excluir</button></span></div>`:""}
     <div class="full" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center">
-      <span style="display:flex;gap:8px;flex-wrap:wrap">${novo?"":`<button type="button" class="dl" data-leadexcluir>Excluir lead</button><button type="button" class="dl" data-leadcliente>${r.clienteId&&cli(r.clienteId)?"Abrir cadastro do cliente":"Cadastrar como cliente"}</button>`}</span>
+      <span style="display:flex;gap:8px;flex-wrap:wrap">${novo?"":`<button type="button" class="dl" data-leadexcluir>Excluir lead</button><button type="button" class="dl" data-leadproposta>Montar proposta de fechamento</button><button type="button" class="dl" data-leadcliente>${r.clienteId&&cli(r.clienteId)?"Abrir cadastro do cliente":"Cadastrar como cliente"}</button>`}</span>
       <button type="submit" class="btn" id="lkSalvar">${novo?"Cadastrar lead":"Salvar"}</button></div>
   </form></div>`);
   leadTermo();
@@ -969,6 +970,150 @@ function leadParaCliente(){
   const i=db.leads.findIndex(x=>x.id===leadAberto); if(i>=0) db.leads[i]={...db.leads[i],...r,clienteId:id,atualizadoEm:new Date().toISOString()};
   save(); closeModal(); tab="clientes"; editando=id; render(); window.scrollTo({top:0}); toast("Cliente criado a partir do lead. Complete o cadastro.");
 }
+// ---------- Proposta de fechamento (modelo do app, sem IA): análise, texto editável, WhatsApp, PDF e e-mail ----------
+// O texto usa Cialdini (interesse, autoridade, reciprocidade, escassez, compromisso), Voss (ancoragem e pergunta calibrada)
+// e Carnegie (começar pelo interesse do cliente). Anotações internas do lead NÃO entram no texto para o cliente.
+let PROPOSTA = null, PROPOSTA_PDF = null; // rascunho aberto e dados para o PDF
+const DIAS_PROPOSTA = 15;
+function propostaValidadePadrao(){const x = new Date(HOJE); x.setDate(x.getDate() + DIAS_PROPOSTA); return iso(x)}
+function propostaAnalise(r){
+  const ck = lkChecks(r), itens = [];
+  if(!r.valor) itens.push(["Sem valor definido. Preencha o valor do serviço antes de usar a proposta.", "alerta"]);
+  if(!ck.decisor) itens.push(["Ainda não falou com quem decide. Peça para incluir essa pessoa na próxima conversa.", "alerta"]);
+  if(!ck.respondeu) itens.push(["Não há resposta registrada do cliente. Confirme que a mensagem chegou.", "alerta"]);
+  if(!ck.interesse) itens.push(["Sem pedido de visita ou orçamento registrado. Confirme se há interesse concreto.", ""]);
+  if(!ck.prazo) itens.push(["Sem urgência definida. A data de início e a validade ajudam a decidir.", ""]);
+  if(!(r.notas || []).length) itens.push(["Sem anotações. A proposta sai genérica; registre o que foi conversado.", ""]);
+  return itens;
+}
+function gerarPropostaTexto(r, validade){
+  const primeiro = (r.contato || "").trim().split(/\s+/)[0] || "";
+  const linhas = [
+    primeiro ? `Olá, ${primeiro}!` : "Olá!",
+    "",
+    `Obrigado pela conversa. Pelo que ouvi, para a ${r.empresa || "sua empresa"} o mais importante é manter o estabelecimento livre de pragas e em dia com a fiscalização sanitária, sem susto e sem perder mercadoria.`,
+    "",
+    "Uma infestação costuma custar mais do que o serviço: pode haver perda de mercadoria, multa e desgaste da imagem do negócio. A prevenção custa pouco perto disso.",
+    "",
+    "A Agrocel cuida disso com método: visita técnica, ordem de serviço assinada pelo responsável no local e certificado com data de validade, para você comprovar o serviço na fiscalização.",
+    "",
+    "Para começar sem compromisso, faço um diagnóstico gratuito do local e te mostro os pontos de atenção antes de qualquer contratação.",
+    ""
+  ];
+  if(r.valor > 0 || r.mensal > 0){
+    linhas.push("Proposta:");
+    if(r.valor > 0) linhas.push(`• Serviço: ${BRL(r.valor)}`);
+    if(r.mensal > 0) linhas.push(`• Contrato mensal: ${BRL(r.mensal)} por mês`);
+    linhas.push(`• Validade desta proposta: ${fmt(validade)}`, "");
+  }
+  linhas.push(
+    `Se fecharmos até ${fmt(validade)}, consigo encaixar o início na primeira semana da próxima agenda.`,
+    "",
+    "Como você imagina o melhor horário para começarmos: esta semana ou na próxima?",
+    "",
+    "Fico à disposição para qualquer dúvida.",
+    "",
+    "Agrocel – Soluções no campo e na cidade"
+  );
+  return linhas.join("\n");
+}
+// Fotos anexadas à proposta (até 6): reduzidas para JPEG de até 1000 px e colocadas no PDF depois do texto.
+// As fotos não são guardadas no histórico do lead (ficam só no rascunho e no PDF gerado).
+async function fotoParaProposta(file){
+  const bm = await createImageBitmap(file);
+  const k = Math.min(1, 1000 / Math.max(bm.width, bm.height));
+  const cv = document.createElement("canvas"); cv.width = Math.round(bm.width * k); cv.height = Math.round(bm.height * k);
+  const cx = cv.getContext("2d"); cx.fillStyle = "#fff"; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage(bm, 0, 0, cv.width, cv.height);
+  return {d: cv.toDataURL("image/jpeg", .8), w: cv.width, h: cv.height};
+}
+function desenharPropostaFotos(){
+  const box = document.getElementById("pFotoLista"); if(!box || !PROPOSTA) return;
+  const f = PROPOSTA.fotos || [];
+  box.innerHTML = f.map((p, i) => `<div style="position:relative"><img src="${p.d}" alt="Foto ${i + 1}" style="width:100%;border-radius:8px;display:block"><button type="button" class="dl" data-pfoto="${i}" aria-label="Remover foto ${i + 1}" style="position:absolute;top:4px;right:4px;padding:2px 7px">✕</button></div>`).join("");
+  document.getElementById("pFotoCont").textContent = f.length ? `${f.length} foto${f.length === 1 ? "" : "s"} (máximo 6)` : "Nenhuma foto";
+}
+function wireFotosProposta(){
+  PROPOSTA.fotos = PROPOSTA.fotos || [];
+  document.getElementById("pFotoAdd").onclick = () => document.getElementById("pFotos").click();
+  document.getElementById("pFotos").onchange = async e => {
+    const novas = [...e.target.files].filter(f => f.type.startsWith("image/")); e.target.value = "";
+    for(const f of novas){
+      if(PROPOSTA.fotos.length >= 6){toast("No máximo 6 fotos na proposta."); break}
+      PROPOSTA.fotos.push(await fotoParaProposta(f));
+    }
+    desenharPropostaFotos();
+  };
+  document.getElementById("pFotoLista").onclick = e => {const b = e.target.closest("[data-pfoto]"); if(b){PROPOSTA.fotos.splice(+b.dataset.pfoto, 1); desenharPropostaFotos()}};
+  desenharPropostaFotos();
+}
+function leadPropostaModal(){
+  if(!leadRasc) return;
+  if(leadAberto === "novo") return toast("Salve o lead antes de montar a proposta.");
+  leadLer();
+  const r = leadRasc, validade = propostaValidadePadrao();
+  if(!PROPOSTA || PROPOSTA.leadId !== leadAberto) PROPOSTA = {leadId: leadAberto, titulo: "Proposta de controle de pragas", validade, texto: gerarPropostaTexto(r, validade), fotos: []};
+  const analise = propostaAnalise(r);
+  const recentes = (r.notas || []).slice(-3).reverse().map(n => {const [d, ...t] = String(n).split("|"); return `<li><small>${esc(d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? fmt(d) : "")}</small> ${esc(t.join("|"))}</li>`}).join("");
+  modal(`<div class="sheet">${cab("Proposta de fechamento", esc(r.empresa || "Lead"))}
+    <div class="docaviso"><b>Análise da negociação</b>
+      <p style="margin:6px 0">${lkPontos(r)} de 5 marcados · temperatura ${esc(LEAD_TEMP[lkTemp(r)])} · etapa ${esc(r.etapa)}</p>
+      ${analise.length ? `<ul style="margin:4px 0 0 18px">${analise.map(([t]) => `<li>${esc(t)}</li>`).join("")}</ul>` : "<p style=\"margin:0\">Termômetro completo. Pode gerar a proposta.</p>"}
+      ${recentes ? `<p style="margin:8px 0 2px"><b>Últimas anotações</b> (uso interno, não entram no texto)</p><ul style="margin:0 0 0 18px">${recentes}</ul>` : ""}
+    </div>
+    <p class="note">Edite o texto à vontade antes de usar. Não cole anotações internas, e confira se o diagnóstico gratuito é realmente oferecido.</p>
+    <label class="full">Título<input id="pTitulo" value="${esc(PROPOSTA.titulo)}"></label>
+    <label class="full">Texto da proposta<textarea id="pTexto" style="min-height:340px">${esc(PROPOSTA.texto)}</textarea></label>
+    <label>Validade<input id="pValidade" type="date" value="${esc(PROPOSTA.validade)}"></label>
+    <div class="full" style="display:grid;gap:8px"><span style="font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">Fotos da proposta <span class="note" style="text-transform:none;letter-spacing:0;font-weight:500">opcional · saem no PDF, depois do texto</span></span>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button type="button" class="btn ghost sm" id="pFotoAdd">Adicionar fotos</button><span class="note" id="pFotoCont">Nenhuma foto</span></div>
+      <input id="pFotos" type="file" accept="image/*" multiple hidden>
+      <div id="pFotoLista" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px"></div></div>
+    <p class="note full">Prova social: se tiver um cliente do mesmo ramo que aprovou o serviço, cite-o no texto. Isso convence mais do que qualquer argumento.</p>
+    <div class="full" style="display:flex;gap:10px;flex-wrap:wrap">
+      <button type="button" class="btn" id="pCopiar">Copiar para WhatsApp</button>
+      <button type="button" class="btn ghost" id="pPdf">Salvar em PDF</button>
+      <button type="button" class="btn ghost" id="pEmail">Preparar e-mail</button>
+      <button type="button" class="btn ghost" id="pRegerar">Gerar de novo</button>
+      <button type="button" class="btn ghost" id="pHist">Guardar no histórico</button>
+      <button type="button" class="dl" id="pVoltar">Voltar à ficha</button>
+    </div>
+  </div>`);
+  const sincronizar = () => {PROPOSTA.titulo = document.getElementById("pTitulo").value; PROPOSTA.texto = document.getElementById("pTexto").value; PROPOSTA.validade = document.getElementById("pValidade").value || validade};
+  ["pTitulo", "pTexto", "pValidade"].forEach(id => document.getElementById(id).addEventListener("input", sincronizar));
+  document.getElementById("pCopiar").onclick = async () => {
+    sincronizar();
+    try{await navigator.clipboard.writeText(PROPOSTA.texto); toast("Texto copiado")}catch(_){toast("Não consegui copiar. Selecione o texto e copie.")}
+    const fone = foneZap(r.whatsapp);
+    if(fone) window.open(`https://wa.me/${fone}?text=${encodeURIComponent(PROPOSTA.texto)}`, "_blank", "noopener");
+  };
+  document.getElementById("pPdf").onclick = async () => {
+    sincronizar();
+    PROPOSTA_PDF = {titulo: PROPOSTA.titulo, texto: PROPOSTA.texto, validade: PROPOSTA.validade, valor: r.valor, mensal: r.mensal, empresa: r.empresa, contato: r.contato, fotosPre: PROPOSTA.fotos || []};
+    await salvarPDF("proposta", leadAberto);
+  };
+  document.getElementById("pEmail").onclick = () => {
+    sincronizar();
+    if(!r.email) return toast("Cadastre o e-mail do lead para preparar a mensagem.");
+    const assunto = encodeURIComponent(PROPOSTA.titulo + " · " + (r.empresa || ""));
+    location.href = `mailto:${encodeURIComponent(r.email)}?subject=${assunto}&body=${encodeURIComponent(PROPOSTA.texto)}`;
+    toast("Abriu o e-mail com o texto. Se quiser o PDF, salve-o e anexe.");
+  };
+  document.getElementById("pRegerar").onclick = async () => {
+    if(!await confirmar("Gerar a proposta de novo", "", "O texto atual será substituído pelo texto gerado a partir dos dados do lead.", "Gerar", null)) return;
+    PROPOSTA.texto = gerarPropostaTexto(leadRasc, validade); PROPOSTA.validade = validade;
+    leadPropostaModal();
+  };
+  document.getElementById("pHist").onclick = () => {
+    sincronizar();
+    const entrada = {em: new Date().toISOString(), titulo: PROPOSTA.titulo, texto: PROPOSTA.texto, validade: PROPOSTA.validade, valor: r.valor, mensal: r.mensal};
+    leadRasc.propostas = [...(leadRasc.propostas || []), entrada].slice(-50);
+    const i = db.leads.findIndex(x => x.id === leadAberto);
+    if(i >= 0){db.leads[i] = {...db.leads[i], propostas: leadRasc.propostas}; save()}
+    toast("Proposta guardada no histórico do lead");
+  };
+  document.getElementById("pVoltar").onclick = () => {sincronizar(); leadFicha()};
+  wireFotosProposta();
+}
 function leadsClick(e){
   const k=e.target.closest("[data-leadft]");if(k){leadFiltroT=leadFiltroT===k.dataset.leadft?"todos":k.dataset.leadft;leadsAtualizar();return true}
   const a=e.target.closest("[data-leadabrir]");if(a){leadAbrir(a.dataset.leadabrir);return true}
@@ -983,6 +1128,7 @@ function leadsModalClick(e){
   if(e.target.closest("[data-leadexcluir]")){leadLer();leadConfirma=true;leadFicha();return true}
   if(e.target.closest("[data-leadnao]")){leadLer();leadConfirma=false;leadFicha();return true}
   if(e.target.closest("[data-leadsim]")){leadExcluir();return true}
+  if(e.target.closest("[data-leadproposta]")){leadPropostaModal();return true}
   if(e.target.closest("[data-leadcliente]")){leadParaCliente();return true}
   return false}
 
@@ -1182,7 +1328,7 @@ function painelOS(){
 function compHTML(v,extra,previa){const c=cli(v.cli);const ok=v.status==="assinada";
   return `<div class="sheet"><div class="sh-h"><img src="${LOGO}" alt="Agrocel"><div><b>${previa?"Ordem de serviço · prévia":"Ordem de serviço "+v.os}</b><span>Termo de compromisso e comprovante de execução</span></div><button class="x" data-close aria-label="Fechar">✕</button></div>
   ${extra||""}
-  <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>${docRot(c.cnpj)}</dt><dd class="mono">${esc(c.cnpj||"-")}</dd><dt>Data e hora</dt><dd>${fmtHora(v.data)}</dd><dt>Técnico</dt><dd>${esc(v.tecnico)}</dd><dt>Serviço</dt><dd>${esc(v.tipo)} · ${esc(v.praga)}</dd><dt>Produtos</dt><dd>${esc(v.prod)}</dd><dt>Contato</dt><dd>${esc(c.resp||"-")}${c.tel?" · "+esc(c.tel):""}</dd><dt>Áreas tratadas</dt><dd>${esc(v.areas||"-")}</dd></dl>
+  <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>${docRot(c.cnpj)}</dt><dd class="mono">${esc(c.cnpj||"-")}</dd><dt>Data e hora</dt><dd>${fmtHora(v.data)}</dd><dt>Técnico</dt><dd>${esc(v.tecnico)}</dd><dt>Serviço</dt><dd>${esc(v.tipo)} · ${esc(v.praga)}</dd>${v.incid?`<dt>Incidência</dt><dd>${esc(incidTexto(v.incid))}</dd>`:""}<dt>Produtos</dt><dd>${esc(v.prod)}</dd><dt>Contato</dt><dd>${esc(c.resp||"-")}${c.tel?" · "+esc(c.tel):""}</dd><dt>Áreas tratadas</dt><dd>${esc(v.areas||"-")}</dd></dl>
   ${v.relatorio?`<div><div class="sec-t">Relatório da visita</div><p style="margin:6px 0 0;white-space:pre-wrap">${esc(v.relatorio)}</p></div>`:""}
   <div id="fotosBox"></div>
   ${isStaff()&&!previa?`<label class="dl" style="justify-self:start;cursor:pointer">Adicionar fotos<input id="fFotoAdd" type="file" accept="image/*" multiple hidden></label>`:""}
@@ -1190,6 +1336,7 @@ function compHTML(v,extra,previa){const c=cli(v.cli);const ok=v.status==="assina
   ${ok?`<div class="sig"><img src="${v.assinatura.img}" alt="Assinatura de ${esc(v.assinatura.nome)}"><div><b>${esc(v.assinatura.nome)}</b><span>Assinado eletronicamente em ${fmtHora(v.assinatura.em)}</span><span class="mono">Código de verificação ${v.assinatura.cod}</span></div></div>${previa?"":docBtns("os",v.id)}`
   :previa?`<p class="note">Aguardando a assinatura do cliente.</p>`:`<div class="signform"><label>Nome de quem assina<input id="sNome" autocomplete="name"></label><div class="padwrap"><canvas id="pad" aria-label="Quadro de assinatura"></canvas><span class="padhint">Assine aqui com o dedo</span><button type="button" class="clear" id="padClear">Limpar</button></div><button class="btn" id="sOk">Confirmar e assinar</button></div>`}
   ${isStaff()&&!previa?`<div><button class="btn ghost" data-zap="${v.id}">Enviar pelo WhatsApp</button><p class="note" style="margin:6px 0 0">Abre o WhatsApp com a mensagem pronta e a OS em PDF anexada. É só escolher o contato e enviar.</p></div>`:""}
+  ${isStaff()&&!previa&&!ok?`<button class="dl" data-editvis="${v.id}" style="justify-self:start">Editar OS</button>`:""}
   ${isAdmin()&&!previa?`<button class="dl" data-delvis="${v.id}" style="justify-self:start">Excluir ordem de serviço</button>`:""}
   </div>`}
 // ---------- Enviar a OS pelo WhatsApp (gratuito: menu de compartilhar do celular ou link wa.me) ----------
@@ -1370,9 +1517,13 @@ function logoPNG(){if(_logo!==null)return Promise.resolve(_logo);
       try{_logo={d:cv.toDataURL("image/png"),w:im.naturalWidth,h:im.naturalHeight}}catch(_){_logo=false}res(_logo)};
     im.onerror=()=>{_logo=false;res(_logo)};im.src=LOGO})}
 function docDados(tipo,id){
+  if(tipo==="proposta"){const p=PROPOSTA_PDF;if(!p)return null;
+    return {arq:"proposta-"+String(p.empresa||"cliente").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\w]+/g,"-").toLowerCase()+".pdf",titulo:p.titulo||"Proposta de fechamento",sub:"Agrocel · controle de pragas",
+      linhas:[["Cliente",p.empresa||"-"],["Responsável",p.contato||"-"],["Serviço",p.valor?BRL(p.valor):"A combinar"],["Contrato mensal",p.mensal?BRL(p.mensal)+" por mês":"-"],["Validade",p.validade?fmt(p.validade):"-"]],
+      relatorio:p.texto||"",fotosPre:p.fotosPre||[]};}
   if(tipo==="os"){const v=vis(id);if(!v)return null;const c=cli(v.cli);
     return {arq:`ordem-servico-${v.os}.pdf`,titulo:`Ordem de serviço ${v.os}`,sub:"Termo de compromisso e comprovante de execução",
-      linhas:[["Cliente",c.nome],[docRot(c.cnpj),c.cnpj||"-"],["Endereço",c.end],["Data e hora",fmtHora(v.data)],["Técnico",v.tecnico],["Serviço",`${v.tipo} · ${v.praga}`],["Produtos",v.prod],["Contato no local",(c.resp||"-")+(c.tel?" · "+c.tel:"")],["Áreas tratadas",v.areas||"-"]],
+      linhas:[["Cliente",c.nome],[docRot(c.cnpj),c.cnpj||"-"],["Endereço",c.end],["Data e hora",fmtHora(v.data)],["Técnico",v.tecnico],["Serviço",`${v.tipo} · ${v.praga}`],...(v.incid?[["Incidência",incidTexto(v.incid)]]:[]),["Produtos",v.prod],["Contato no local",(c.resp||"-")+(c.tel?" · "+c.tel:"")],["Áreas tratadas",v.areas||"-"]],
       relatorio:v.relatorio||"",fotosDe:v.id,
       lista:{t:"Orientações e termo de compromisso",itens:TERMO,obs:"Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima."},
       assinatura:v.assinatura||null};}
@@ -1401,7 +1552,7 @@ async function fotosParaPDF(vid){
   return out}
 async function gerarPDF(tipo,id){
   const D=docDados(tipo,id);if(!D)return;
-  const fotos=D.fotosDe?await fotosParaPDF(D.fotosDe):[];
+  const fotos=D.fotosPre?D.fotosPre:(D.fotosDe?await fotosParaPDF(D.fotosDe):[]);
   if(typeof window.jspdf==="undefined")return toast("Não foi possível carregar o gerador de PDF. Verifique a internet.");
   const {jsPDF}=window.jspdf,doc=new jsPDF({unit:"mm",format:"a4"}),W=210,M=18;let y=0;
   doc.setFillColor(0,65,7);doc.rect(0,0,W,30,"F");
@@ -1562,6 +1713,7 @@ const ESQ = {
   certs: {id:[V.id,1], cli:[V.id,1], tipo:[T3,1], praga:[T3], prod:[T1], exec:[V.data], venc:[V.data,1], pdf:[V.rx(RE_PATH)], visita:[V.id]},
   docs: {id:[V.id,1], cli:[V.id,1], nome:[T3,1], data:[V.data], pdf:[V.rx(RE_PATH)]},
   visitas: {id:[V.id,1], os:[V.rx(/^OS-\d{4}-\d{4}$/),1], cli:[V.id,1], tecnico:[T3], data:[V.hora,1], tipo:[T3], praga:[T3], prod:[T1], areas:[T1], relatorio:[V.txt(5000)],
+    incid:[v => v === undefined || v === null || (typeof v === "object" && !Array.isArray(v) && Array.isArray(v.pragas) && v.pragas.length <= 10 && v.pragas.every(p => typeof p === "string" && p.length <= 60) && (v.outros === undefined || (typeof v.outros === "string" && v.outros.length <= 60)) && (v.estacoes === undefined || (Array.isArray(v.estacoes) && v.estacoes.length <= 200 && v.estacoes.every(e => typeof e === "string" && e.length <= 20))))],
     status:[V.em(["pendente","assinada"]),1],
     assinatura:[null,0,{nome:T3, img:V.rx(/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/, 800000), em:V.hora, cod:V.rx(/^[\w-]{4,20}$/)}]},
   cobrancas: {id:[V.id,1], visita:[V.id], cli:[V.id,1], desc:[T3,1], valor:[V.num,1], venc:[V.data], forma:[V.txt(60)], status:[V.em(["aberta","paga"]),1],
@@ -1571,6 +1723,7 @@ const ESQ = {
   agendamentos: {id:[V.id,1], cli:[V.id,1], dia:[V.data,1], hora:[V.rx(/^\d{2}:\d{2}$/)], tecnico:[T3], tipo:[T3], obs:[T1], status:[V.em(["agendada","realizada","cancelada"]),1], visita:[V.id], criadoEm:[V.hora]},
   leads: {id:[V.id,1], empresa:[T3,1], contato:[T3], seg:[V.txt(100)], cidade:[T3], whatsapp:[V.rx(/^[\d() +-]{0,25}$/)], email:[T3], origem:[T3], etapa:[V.em(["Novo","Contatado","Conversando","Visita técnica","Orçamento","Fechado","Perdido"]),1],
     tempManual:[V.em(["quente","morno","frio"])], checks:[V.rx(/^[01]{5}$/)], valor:[V.num], mensal:[V.num], proximoPasso:[T3], proximaData:[V.data],
+    propostas:[v => Array.isArray(v) && v.length <= 50 && v.every(p => p && typeof p === "object" && typeof p.texto === "string" && p.texto.length <= 8000)],
     notas:[v => Array.isArray(v) && v.length <= 200 && v.every(t => typeof t === "string" && t.length <= 700)], clienteId:[V.id], fechadoEm:[V.data], criadoEm:[V.hora], atualizadoEm:[V.hora]},
   fotos: {id:[V.id,1], cli:[V.id,1], visita:[V.id], path:[V.rx(RE_PATH),1], nome:[T3], em:[V.hora]},
 };
@@ -2026,7 +2179,7 @@ function viewPendentes(){
   return `<div class="card" style="margin-bottom:20px"><h2 style="font-size:20px;margin-bottom:6px">Visitas salvas no celular</h2>
   <p class="note" style="margin-bottom:12px">Ficam guardadas neste aparelho até serem enviadas. Quando houver internet, o envio é automático.${OFFLINE ? " Agora o aparelho está sem conexão." : ""}</p>
   <button class="btn" data-enviartodos${OFFLINE || !l.length ? " disabled" : ""}>Enviar agora</button></div>
-  <section class="panel"><div class="clist">${l.map(it => {const c = db.clientes.find(x => x.id === it.v.cli); return `<div class="cl" style="grid-template-columns:minmax(0,1fr) auto"><span class="nm"><b>${esc(c ? (c.fantasia || c.nome) : "Cliente")} · ${esc(it.v.tipo)}</b><small style="font-family:var(--body)">${esc(fmtHora(it.v.data))} · ${it.fotos.length} foto${it.fotos.length === 1 ? "" : "s"} · ${it.v.status === "assinada" ? "assinada" : "sem assinatura ainda"}${it.retido ? " · salva para enviar depois" : ""}</small>${it.erro ? `<span class="meta" style="color:var(--amber)">${it.bloqueada ? "Precisa de atenção: " : "Ainda não enviada: "}${esc(it.erro)}</span>` : ""}</span><span class="uacts"><button class="dl" data-descartar="${it.idLocal}">Descartar</button></span></div>`}).join("") || '<div class="empty">Nada pendente. Tudo foi enviado.</div>'}</div></section>`;
+  <section class="panel"><div class="clist">${l.map(it => {const c = db.clientes.find(x => x.id === it.v.cli); return `<div class="cl" style="grid-template-columns:minmax(0,1fr) auto"><span class="nm"><b>${esc(c ? (c.fantasia || c.nome) : "Cliente")} · ${esc(it.v.tipo)}</b><small style="font-family:var(--body)">${esc(fmtHora(it.v.data))} · ${it.fotos.length} foto${it.fotos.length === 1 ? "" : "s"} · ${it.v.status === "assinada" ? "assinada" : "sem assinatura ainda"}${it.retido ? " · salva para enviar depois" : ""}</small>${it.erro ? `<span class="meta" style="color:var(--amber)">${it.bloqueada ? "Precisa de atenção: " : "Ainda não enviada: "}${esc(it.erro)}</span>` : ""}</span><span class="uacts"><button class="dl" data-editarsaida="${it.idLocal}">Editar</button><button class="dl" data-descartar="${it.idLocal}">Descartar</button></span></div>`}).join("") || '<div class="empty">Nada pendente. Tudo foi enviado.</div>'}</div></section>`;
 }
 
 // Abrir o app sem internet: usa a pessoa e a lista de clientes guardadas no aparelho.
@@ -2074,7 +2227,143 @@ function limitesVisita(){
   const ini = new Date(HOJE); ini.setDate(ini.getDate() - DIAS_RETROATIVOS);
   return {min: f(ini), max: f(agora)};
 }
+// ---------- Incidência na visita (pragas encontradas e estações com ratos) ----------
+const INCID_TIPOS = ["Ratos", "Baratas", "Moscas", "Outros"];
+let INCID = {pragas: [], outros: "", estacoes: []};
+function incidTexto(i){
+  if(!i) return "";
+  return (i.pragas || []).map(p => {
+    if(p === "Ratos" && i.estacoes && i.estacoes.length) return `Ratos (estações ${i.estacoes.join(", ")})`;
+    if(p === "Outros" && i.outros) return `Outros (${i.outros})`;
+    return p;
+  }).join(" · ");
+}
+function incidResumoHTML(){
+  if(!INCID.pragas.length) return "";
+  const txt = INCID.pragas.map(p => p === "Outros" && INCID.outros ? "Outros (" + INCID.outros + ")" : p).join(", ");
+  const ratos = INCID.pragas.includes("Ratos")
+    ? ` · ${INCID.estacoes.length ? "estações " + INCID.estacoes.join(", ") : "nenhuma estação marcada"} <button type="button" class="dl" data-estacoes>Escolher estações</button>` : "";
+  return `<span class="note">Marcado: ${esc(txt)}${ratos}</span>`;
+}
+function incidParaSalvar(){
+  if(!INCID.pragas.length) return undefined;
+  const o = {pragas: [...INCID.pragas]};
+  if(INCID.pragas.includes("Outros") && INCID.outros) o.outros = INCID.outros;
+  if(INCID.pragas.includes("Ratos") && INCID.estacoes.length) o.estacoes = [...INCID.estacoes];
+  return o;
+}
+const ESTACOES = Array.from({length: 100}, (_, i) => "E" + String(i + 1).padStart(2, "0"));
+function incidBlocoHTML(){
+  return `<div class="full" style="display:grid;gap:8px"><span style="font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">Houve incidência de:</span>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">${INCID_TIPOS.map(p => `<label class="check"><input type="checkbox" class="incidTipo" value="${p}"${INCID.pragas.includes(p) ? " checked" : ""}> ${p}</label>`).join("")}</div>
+      <input id="vIncidOutros" placeholder="Qual outra praga?" maxlength="60"${INCID.pragas.includes("Outros") ? "" : " hidden"} value="${esc(INCID.outros)}">
+      <div id="vIncidResumo">${incidResumoHTML()}</div></div>`;
+}
+function wireIncid(){
+  const $ = id => document.getElementById(id);
+  $("vIncidResumo").onclick = e => {if(e.target.closest("[data-estacoes]")) incidEstacoesModal()};
+  $("vIncidOutros").oninput = e => {INCID.outros = e.target.value.trim(); $("vIncidResumo").innerHTML = incidResumoHTML()};
+  document.querySelectorAll(".incidTipo").forEach(cb => cb.onchange = () => {
+    const p = cb.value;
+    INCID.pragas = cb.checked ? [...new Set([...INCID.pragas, p])] : INCID.pragas.filter(x => x !== p);
+    if(!cb.checked && p === "Ratos") INCID.estacoes = [];
+    $("vIncidOutros").hidden = !INCID.pragas.includes("Outros");
+    $("vIncidResumo").innerHTML = incidResumoHTML();
+    if(cb.checked && p === "Ratos") incidEstacoesModal();
+  });
+}
+function incidEstacoesModal(){
+  modal(`<div class="sheet">${cab("Estações com ratos", "Marque as estações com ocorrência (E01 a E100)")}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;max-height:55vh;overflow:auto">${ESTACOES.map(e => `<label class="check" style="font-size:13px"><input type="checkbox" class="estCb" value="${e}"${INCID.estacoes.includes(e) ? " checked" : ""}> ${e}</label>`).join("")}</div>
+    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><button type="button" class="btn ghost sm" id="estLimpar">Limpar seleção</button><button type="button" class="btn" id="estOk">Confirmar estações</button></div></div>`);
+  document.getElementById("estLimpar").onclick = () => document.querySelectorAll(".estCb").forEach(x => x.checked = false);
+  document.getElementById("estOk").onclick = () => {
+    const marcadas = new Set([...document.querySelectorAll(".estCb")].filter(x => x.checked).map(x => x.value));
+    INCID.estacoes = ESTACOES.filter(e => marcadas.has(e));
+    closeModal();
+    document.getElementById("vIncidResumo").innerHTML = incidResumoHTML();
+  };
+}
+
+// ---------- Editar uma OS já gerada ou uma visita salva no celular (só enquanto não assinada) ----------
+let EDIT = null; // {kind: "enviada", id} ou {kind: "fila", idLocal}
+function editAlvo(){
+  if(!EDIT) return null;
+  if(EDIT.kind === "enviada"){
+    const v = db.visitas.find(x => x.id === EDIT.id); if(!v) return null;
+    return {v, it: null, bloqueada: v.status === "assinada", cert: (db.certs || []).find(k => k.visita === v.id) || null};
+  }
+  const it = SAIDA.find(x => x.idLocal === EDIT.idLocal); if(!it) return null;
+  return {v: it.v, it, bloqueada: false, cert: it.cert || null};
+}
+function abrirEdicao(kind, ref){
+  EDIT = kind === "enviada" ? {kind, id: ref} : {kind, idLocal: ref};
+  const a = editAlvo();
+  if(!a){EDIT = null; return toast("Não encontrei esta visita.")}
+  if(a.bloqueada){EDIT = null; return toast("Esta OS já foi assinada pelo cliente e não pode mais ser editada.")}
+  INCID = {pragas: [...((a.v.incid || {}).pragas || [])], outros: (a.v.incid || {}).outros || "", estacoes: [...((a.v.incid || {}).estacoes || [])]};
+  closeModal(); tab = "visita"; render();
+}
+function viewEditarVisita(a){
+  const v = a.v, c = cli(v.cli), lim = limitesVisita();
+  const titulo = a.it ? "Visita salva no celular" : esc(v.os);
+  return `${avisoSaidaHTML()}<div class="card"><div class="steps"><span>Editar ${titulo}</span></div>
+  <form id="fEdit">
+    <h3 class="full first">Dados da visita <span class="note mono">${titulo}</span></h3>
+    <label class="full">Cliente<input value="${esc(c.nome)}" disabled></label>
+    <label>Técnico responsável<input value="${esc(v.tecnico)}" disabled></label>
+    <label>Data e hora da visita${lim ? ` <span class="note">hoje e até ${DIAS_RETROATIVOS} dias atrás</span>` : ""}<input id="eData" type="datetime-local" value="${esc(v.data.slice(0, 16))}"${lim ? ` min="${lim.min}" max="${lim.max}"` : ""}></label>
+    <label>Tipo de serviço<select id="eTipo">${Object.keys(VALIDADE_MESES).map(t => `<option${t === v.tipo ? " selected" : ""}>${t}</option>`).join("")}</select></label>
+    <label>Praga-alvo<input id="ePraga" value="${esc(v.praga === "-" ? "" : v.praga)}"></label>
+    <label class="full">Produtos usados<input id="eProd" value="${esc(v.prod === "-" ? "" : v.prod)}"></label>
+    <label class="full">Áreas tratadas<input id="eAreas" value="${esc(v.areas || "")}"></label>
+    <label class="full">Relatório da visita<textarea id="eRel">${esc(v.relatorio || "")}</textarea></label>
+    ${incidBlocoHTML()}
+    <label class="check full"><input type="checkbox" id="eCert"${a.cert ? " checked" : ""}> Certificado válido até <input type="date" id="eVenc" class="inl" aria-label="Validade do certificado" value="${a.cert ? esc(a.cert.venc) : ""}"></label>
+    <p class="note full">Fotos e assinatura não mudam aqui. A cobrança é ajustada na aba Cobranças.</p>
+    <div class="full" style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn" type="submit">Salvar alterações</button>
+      <button class="btn ghost" type="button" id="eCancelar">Cancelar</button>
+    </div>
+  </form></div>`;
+}
+function wireEditarVisita(){
+  const $ = id => document.getElementById(id); if(!$("fEdit")) return;
+  wireIncid();
+  $("eCancelar").onclick = () => {const volta = EDIT && EDIT.kind === "fila" ? "pendentes" : "painel"; EDIT = null; tab = volta; render()};
+  $("fEdit").onsubmit = async e => {
+    e.preventDefault();
+    const a = editAlvo(); if(!a) return toast("Esta visita não está mais disponível.");
+    if(a.bloqueada) return toast("Esta OS já foi assinada pelo cliente e não pode mais ser editada.");
+    const data = $("eData").value; if(!data) return toast("Informe a data da visita.");
+    const lim = limitesVisita(); if(lim && (data < lim.min || data > lim.max)) return toast(MSG_DATA_TEC);
+    const incid = incidParaSalvar();
+    const aplicar = v => {
+      v.data = data; v.tipo = $("eTipo").value; v.praga = $("ePraga").value.trim() || "-"; v.prod = $("eProd").value.trim() || "-";
+      v.areas = $("eAreas").value.trim(); v.relatorio = $("eRel").value.trim();
+      if(incid === undefined) delete v.incid; else v.incid = incid;
+    };
+    const venc = $("eCert").checked ? $("eVenc").value : "";
+    if(EDIT.kind === "enviada"){
+      const v = a.v; aplicar(v);
+      if(venc){
+        const k = (db.certs || []).find(x => x.visita === v.id);
+        if(k){k.tipo = v.tipo; k.praga = v.praga; k.prod = v.prod; k.exec = data.slice(0, 10); k.venc = venc}
+        else db.certs.push({id: "k" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), cli: v.cli, tipo: v.tipo, praga: v.praga, prod: v.prod, exec: data.slice(0, 10), venc, pdf: "", visita: v.id});
+      }
+      const id = v.id;
+      if(!await save()) return;
+      EDIT = null; tab = "painel"; render(); openComp(id); toast("OS atualizada");
+    } else {
+      const it = a.it; aplicar(it.v);
+      it.cert = venc ? {id: (it.cert && it.cert.id) || "k" + EDIT.idLocal.slice(1), venc} : null;
+      await OFF.salvarSaida(it).catch(() => {});
+      await recarregarSaida(); EDIT = null; tab = "pendentes"; render(); toast("Visita salva atualizada");
+    }
+  };
+}
 function viewVisita(){
+  if(EDIT){const a = editAlvo(); if(a) return viewEditarVisita(a); EDIT = null}
   const a = new Date(); a.setSeconds(0, 0); const local = new Date(a - a.getTimezoneOffset() * 6e4).toISOString().slice(0, 16); const lim = limitesVisita();
   if(!db.clientes.length) return `${avisoSaidaHTML()}<div class="card"><h2 style="font-size:20px;margin-bottom:8px">Registrar visita</h2><p class="note">${OFFLINE ? "Este aparelho ainda não tem a lista de clientes. Abra o app uma vez com internet para baixá-la." : "Cadastre um cliente antes de registrar a visita (aba Clientes)."}</p></div>`;
   return `${avisoSaidaHTML()}${agBanner()}<div class="card"><div class="steps"><span>1 · Serviço e cobrança</span><span>2 · Orientações</span><span>3 · Assinatura do cliente</span></div>
@@ -2085,6 +2374,7 @@ function viewVisita(){
     <label>Data e hora da visita${lim ? ` <span class="note">hoje e até ${DIAS_RETROATIVOS} dias atrás</span>` : ""}<input id="vData" type="datetime-local" value="${local}"${lim ? ` min="${lim.min}" max="${lim.max}"` : ""}></label>
     <label>Tipo de serviço<select id="vTipo">${Object.keys(VALIDADE_MESES).map(t => `<option>${t}</option>`).join("")}</select></label>
     <label>Praga-alvo<input id="vPraga" placeholder="Ex.: baratas e formigas"></label>
+    ${incidBlocoHTML()}
     <label class="full">Produtos usados<input id="vProd" placeholder="Ex.: Optigard Duo (Lambda-cialotrina + Tiametoxam)"></label>
     <label class="full">Áreas tratadas<input id="vAreas" placeholder="Ex.: cozinha, depósito, perímetro externo"></label>
     <label class="full">Relatório da visita<textarea id="vRel" placeholder="O que foi encontrado, o que foi feito e recomendações ao cliente"></textarea></label>
@@ -2122,6 +2412,7 @@ function desenharFotos(){
   const n = FOTOS_SEL.length; document.getElementById("vFotoCont").textContent = n ? `${n} foto${n === 1 ? "" : "s"}` : "Nenhuma foto";
 }
 function wireVisita(){
+  if(EDIT) return wireEditarVisita();
   const $ = id => document.getElementById(id); if(!$("fVis")) return;
   let pad = makePad($("pad")); $("padClear").onclick = () => pad.clear();
   if(limitesVisita()){const renovar = () => {const l = limitesVisita(); $("vData").min = l.min; $("vData").max = l.max}; ["focus", "input"].forEach(ev => $("vData").addEventListener(ev, renovar))}
@@ -2144,6 +2435,9 @@ function wireVisita(){
   };
   $("vFotoLista").onclick = e => {const b = e.target.closest("[data-fotorm]"); if(b){FOTOS_SEL.splice(+b.dataset.fotorm, 1); desenharFotos()}};
 
+  INCID = {pragas: [], outros: "", estacoes: []};
+  wireIncid();
+
   let acao = "gerar"; $("vBtnSalvar").onclick = () => {acao = "depois"}; $("vBtnOS").onclick = () => {acao = "gerar"};
   $("fVis").onsubmit = async e => {
     e.preventDefault(); const depois = acao === "depois"; acao = "gerar";
@@ -2157,7 +2451,7 @@ function wireVisita(){
     const assina = ag && $("vNome").value.trim() && !pad.isEmpty();
     const bts = [...$("fVis").querySelectorAll("button[type=submit]")], bt = {set disabled(x){bts.forEach(b => b.disabled = x)}}; bt.disabled = true; toast(depois ? "Salvando no celular…" : "Gerando a OS…");
     const sel = $("vCliente").value, selo = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-    const v = {id: "v" + selo, os: null, cli: sel, tecnico: $("vTec").value, data: $("vData").value, tipo: $("vTipo").value, praga: $("vPraga").value || "-", prod: $("vProd").value || "-", areas: $("vAreas").value, relatorio: $("vRel").value.trim(), status: "pendente"};
+    const v = {id: "v" + selo, os: null, cli: sel, tecnico: $("vTec").value, data: $("vData").value, tipo: $("vTipo").value, praga: $("vPraga").value || "-", prod: $("vProd").value || "-", areas: $("vAreas").value, relatorio: $("vRel").value.trim(), status: "pendente", incid: incidParaSalvar()};
     if(assina) assinar(v, $("vNome").value.trim(), pad.data());
     const fotos = [];
     for(const f of FOTOS_SEL){const b = await reduzir(f); fotos.push({id: "f" + selo + fotos.length, nome: f.name, blob: b, em: new Date().toISOString()})}
@@ -2311,6 +2605,8 @@ document.addEventListener("click",e=>{
   const pol=e.target.closest("[data-politica]"); if(pol){e.preventDefault();abrirPolitica(pol.dataset.politica);return}
   if(e.target.closest("[data-enviartodos]")){enviarPendentes(true);return}
   const dsc=e.target.closest("[data-descartar]"); if(dsc){descartarSaida(dsc.dataset.descartar);return}
+  const edv=e.target.closest("[data-editvis]"); if(edv){abrirEdicao("enviada", edv.dataset.editvis);return}
+  const eds=e.target.closest("[data-editarsaida]"); if(eds){abrirEdicao("fila", eds.dataset.editarsaida);return}
   const agr=e.target.closest("[data-agreg]"); if(agr){agRegistrar(agr.dataset.agreg);return}
   if(leadsModalClick(e))return;
   if(tab==="leads"&&isStaff()&&leadsClick(e))return;

@@ -97,11 +97,14 @@ Primeiro acesso: na tela de login, use **Primeiro acesso do sistema** para criar
 **Leads (CRM de prospecção, administrador e técnico)**
 - Resumo com quentes, mornos, frios e retornos para hoje ou atrasados; potencial em negociação (serviço e contrato mensal)
 - Ficha do lead: empresa e contato, termômetro de 5 itens (define quente, morno ou frio, com ajuste manual), etapas (Novo até Fechado ou Perdido), próximo passo com data e histórico de anotações
+- **Montar proposta de fechamento:** analisa a negociação (termômetro, etapa e pontos em aberto) e gera um texto de proposta com base em Cialdini, Voss e Carnegie. O texto pode ser editado antes de usar: copiar para o WhatsApp, salvar em PDF ou preparar um e-mail. Anotações internas não entram no texto. A proposta pode ser guardada no histórico do lead. Dá para anexar até 6 fotos, que saem no PDF depois do texto (as fotos não ficam guardadas no histórico)
 - **Cadastrar como cliente** leva o lead fechado para o cadastro de clientes
 
 **Registro de visita técnica (ordem de serviço)**
 - O técnico registra no local: cliente, data e hora, serviço, praga-alvo, produtos e áreas tratadas
 - Cada visita gera uma ordem de serviço numerada (OS-2026-0001, OS-2026-0002…)
+- **Houve incidência de:** marca as pragas encontradas (ratos, baratas, moscas ou outras). Ao marcar **ratos**, abre a lista de estações **E01 a E100** para marcar as que tiveram ocorrência. A incidência aparece na OS e no PDF
+- **Editar a OS:** a OS gerada (botão **Editar OS**) e a visita salva no celular (botão **Editar**, na aba Pendentes) podem ser corrigidas enquanto não estiverem assinadas. Depois da assinatura, a OS fica travada, porque o cliente assinou aquele conteúdo
 - Orientações pós-aplicação e termo de compromisso exibidos ao cliente
 - Opção de gerar o certificado com a validade já calculada
 
