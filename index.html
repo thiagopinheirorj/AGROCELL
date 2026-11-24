@@ -1976,11 +1976,11 @@ function wireRegistros(){
 
 // ---------- Política de privacidade e termo de uso ----------
 // Texto-base, escrito a partir do que o app realmente faz. Revise com um advogado antes de tratá-lo como definitivo.
-const POLITICA_VERSAO = "2", POLITICA_DATA = "16 de novembro de 2026";
-const CONTATO_PRIVACIDADE = {email: "agrocelrf@hotmail.com", fone: "(48) 3653-1256"};
+const POLITICA_VERSAO = "3", POLITICA_DATA = "21 de novembro de 2026";
+const CONTATO_PRIVACIDADE = {email: "envio.agrocel@gmail.com", fone: "(48) 3653-1256"};
 const TEXTO_PRIVACIDADE = () => `
 <h3>1. Quem é responsável pelos dados</h3>
-<p>A <b>Agrocel – Soluções no campo e na cidade</b>, de Rio Fortuna/SC, é a responsável (controladora) pelos dados tratados neste sistema. Dúvidas e pedidos sobre seus dados: <b>${esc(CONTATO_PRIVACIDADE.email)}</b> ou ${esc(CONTATO_PRIVACIDADE.fone)}.</p>
+<p>A <b>Agrocel – Soluções no campo e na cidade</b>, de Rio Fortuna/SC, é a responsável (controladora) pelos dados tratados neste sistema. O responsável pela empresa e pelas decisões sobre estes dados é <b>Fernando Werner Felippe</b>. Dúvidas e pedidos sobre seus dados: <b>${esc(CONTATO_PRIVACIDADE.email)}</b> ou ${esc(CONTATO_PRIVACIDADE.fone)}.</p>
 <h3>2. Quais dados tratamos</h3>
 <ul>
 <li><b>Quem usa o sistema:</b> nome, e-mail, perfil de acesso e a senha (guardada de forma embaralhada, nunca em texto aberto). Também registramos quando você entra e o que faz no sistema.</li>
@@ -2001,6 +2001,8 @@ const TEXTO_PRIVACIDADE = () => `
 <li><b>Dentro do sistema:</b> o administrador vê tudo; o técnico vê clientes, certificados, visitas e fotos; cada cliente vê <b>somente</b> os dados da própria empresa.</li>
 <li><b>Hospedagem:</b> o banco de dados e os arquivos ficam no Supabase, em servidores no Brasil (São Paulo). A página do aplicativo é entregue pelo GitHub Pages, que não guarda os dados do sistema.</li>
 <li><b>Fontes de letra:</b> a página carrega as fontes de letra do Google Fonts, que pode registrar o endereço de internet (IP) de quem acessa. As demais bibliotecas do aplicativo ficam no próprio site.</li>
+<li><b>E-mail:</b> os avisos de vencimento e as propostas enviados por e-mail saem da conta da Agrocel no Gmail (Google), que atua como prestador de serviço. Para isso, o Google recebe o endereço e o nome do destinatário e o conteúdo da mensagem, e o trata conforme a política de privacidade do próprio Google.</li>
+<li><b>WhatsApp:</b> o botão de enviar pelo WhatsApp abre a conversa no aplicativo do WhatsApp, da Meta, com a mensagem e o PDF da ordem de serviço. Quem envia escolhe o contato e confirma o envio; o aplicativo não envia nada sozinho e não guarda o conteúdo enviado. A partir daí, o tratamento segue a política do WhatsApp.</li>
 <li><b>No seu aparelho:</b> para funcionar sem internet, o aparelho de técnicos e administradores guarda a lista de clientes e as visitas que ainda não foram enviadas. A lista é apagada quando a pessoa sai da conta; as visitas ficam guardadas até serem enviadas.</li>
 <li><b>Autoridades:</b> só quando a lei exigir.</li>
 </ul>
@@ -2089,9 +2091,22 @@ const OFF = {
     return OFF.gravar("perfil", {id: ME.id, nome: ME.nome, email: ME.email, papel: ME.papel, ativo: true, em: Date.now()}).then(() => OFF.gravar("clientes", db.clientes));
   },
   async limparCache(){await OFF.apagar("perfil"); await OFF.apagar("clientes")},
-  salvarSaida(it){return OFF._op("saida", "readwrite", s => s.put(it))},
+  // As fotos vão para o IndexedDB como bytes (ArrayBuffer): em alguns iPhones, arquivos (Blob) guardados ali chegam vazios dias depois.
+  async salvarSaida(it){
+    const fotos = await Promise.all((it.fotos || []).map(async f => {
+      if(f.blob && typeof f.blob.arrayBuffer === "function"){
+        try{const buf = await f.blob.arrayBuffer(); return {...f, blob: undefined, buf, tipo: f.blob.type || "image/jpeg"}}catch(_){return f}
+      }
+      return f;
+    }));
+    return OFF._op("saida", "readwrite", s => s.put({...it, fotos}));
+  },
   removerSaida(id){return OFF._op("saida", "readwrite", s => s.delete(id))},
-  async listarSaida(uid){const todos = await OFF._op("saida", "readonly", s => s.getAll()); return (todos || []).filter(i => i.userId === uid).sort((a, b) => a.criadoEm - b.criadoEm)},
+  async listarSaida(uid){
+    const todos = await OFF._op("saida", "readonly", s => s.getAll());
+    return (todos || []).filter(i => i.userId === uid).sort((a, b) => a.criadoEm - b.criadoEm)
+      .map(i => ({...i, fotos: (i.fotos || []).map(f => f.buf ? {...f, blob: new Blob([f.buf], {type: f.tipo || "image/jpeg"}), buf: undefined} : f)}));
+  },
 };
 async function recarregarSaida(){
   try{SAIDA = ME ? await OFF.listarSaida(ME.id) : []}catch(_){SAIDA = []}
@@ -2123,9 +2138,16 @@ async function enviarItem(it){
   if(navigator.onLine === false) throw new Error("Sem internet.");
   await carregar();
   if(!db.clientes.some(c => c.id === it.v.cli)){const e = new Error("O cliente desta visita não existe mais."); e.permanente = true; throw e}
+  // Foto vazia (arquivo perdido no aparelho) não trava mais a visita: fica de fora e a pessoa é avisada.
+  it.fotosVazias = 0; const boas = [];
   for(const f of it.fotos){
-    if(!f.path){f.path = await subir(f.blob, it.v.cli, true); try{await OFF.salvarSaida(it)}catch(_){}}
+    if(f.path){boas.push(f); continue}
+    let buf = null; try{buf = f.blob ? await f.blob.arrayBuffer() : null}catch(_){}
+    if(!buf || !buf.byteLength){it.fotosVazias++; continue}
+    f.path = await subir(new File([buf], f.nome || "foto.jpg", {type: (f.blob && f.blob.type) || "image/jpeg"}), it.v.cli, true);
+    boas.push(f); try{await OFF.salvarSaida(it)}catch(_){}
   }
+  it.fotos = boas;
   const ja = db.visitas.find(x => x.id === it.v.id);
   if(ja) return ja.os;
   const v = {...it.v, os: proxOS()};
@@ -2143,13 +2165,13 @@ async function enviarItem(it){
 async function enviarPendentes(manual){
   if(enviando || !ME || OFFLINE) return;
   if(navigator.onLine === false){if(manual) toast("Sem internet agora. Tentamos de novo quando a conexão voltar."); return}
-  enviando = true; let ok = 0, falhou = 0;
+  enviando = true; let ok = 0, falhou = 0, vazias = 0;
   try{
     await recarregarSaida();
     for(const it of [...SAIDA]){
       if((it.bloqueada || it.retido) && !manual) continue;
       try{
-        await enviarItem(it); await OFF.removerSaida(it.idLocal); ok++;
+        await enviarItem(it); await OFF.removerSaida(it.idLocal); ok++; vazias += it.fotosVazias || 0;
       }catch(e){
         falhou++; it.erro = String(e.message || e); it.tentativas = (it.tentativas || 0) + 1; if(e.permanente) it.bloqueada = true;
         try{await OFF.salvarSaida(it)}catch(_){}
@@ -2158,7 +2180,7 @@ async function enviarPendentes(manual){
     }
   }finally{enviando = false}
   await recarregarSaida();
-  if(ok) toast(`${ok} visita${ok === 1 ? " enviada" : "s enviadas"}`);
+  if(ok) toast(`${ok} visita${ok === 1 ? " enviada" : "s enviadas"}` + (vazias ? `. ${vazias} foto${vazias === 1 ? " estava vazia e ficou" : "s estavam vazias e ficaram"} de fora: adicione de novo pela OS.` : ""));
   else if(falhou && manual) toast("Não consegui enviar agora. A visita continua salva no celular.");
   if(tab !== "visita") render();
 }
@@ -2454,7 +2476,13 @@ function wireVisita(){
     const v = {id: "v" + selo, os: null, cli: sel, tecnico: $("vTec").value, data: $("vData").value, tipo: $("vTipo").value, praga: $("vPraga").value || "-", prod: $("vProd").value || "-", areas: $("vAreas").value, relatorio: $("vRel").value.trim(), status: "pendente", incid: incidParaSalvar()};
     if(assina) assinar(v, $("vNome").value.trim(), pad.data());
     const fotos = [];
-    for(const f of FOTOS_SEL){const b = await reduzir(f); fotos.push({id: "f" + selo + fotos.length, nome: f.name, blob: b, em: new Date().toISOString()})}
+    let vazias = 0;
+    for(const f of FOTOS_SEL){
+      let b = await reduzir(f); if(!b || !(b.size > 0)) b = f;
+      if(!(b.size > 0)){vazias++; continue}
+      fotos.push({id: "f" + selo + fotos.length, nome: f.name, blob: b, em: new Date().toISOString()});
+    }
+    if(vazias) toast(`${vazias} foto${vazias === 1 ? " veio vazia e não foi anexada" : "s vieram vazias e não foram anexadas"}. Tire de novo, se precisar.`);
     const valor = $("vValor") ? parseValor($("vValor").value) : 0;
     const it = {idLocal: "s" + selo, userId: ME.id, criadoEm: Date.now(), v, fotos, tentativas: 0, retido: depois, agend: agPre ? agPre.id : undefined,
       cert: $("vCert").checked && $("vVenc").value ? {id: "k" + selo, venc: $("vVenc").value} : null,

@@ -1,8 +1,13 @@
 AGROCEL CERTIFICADOS · HISTÓRICO DE VERSÕES
-Versão atual: 1.2.0 (21/11/2026)
+Versão atual: 1.2.1 (24/11/2026)
 
 Regra: a cada nova versão publicada, este arquivo ganha uma entrada no topo.
 Novidade = sobe o 2º número (0.5.0). Correção ou ajuste = sobe o 3º número (0.4.2).
+
+------------------------------------------------------------
+1.2.1 · 24/11/2026 · Correção
+- Visita salva no celular que não subia ("No content provided"): as fotos agora ficam guardadas como bytes no aparelho, o que evita fotos vazias em alguns iPhones. Se uma foto estiver vazia, ela fica de fora e a visita (com a assinatura) é enviada normalmente, com um aviso de quantas fotos ficaram de fora. Ao tirar a foto, o app avisa se ela veio vazia.
+- Política de privacidade (versão 3): contato de privacidade passa a ser envio.agrocel@gmail.com, o responsável (Fernando Werner Felippe) é citado, e entram o Gmail (Google) e o WhatsApp (Meta) entre os serviços usados. Quem já entrou vai ver a política nova e confirmar de novo.
 
 ------------------------------------------------------------
 1.2.0 · 21/11/2026 · Novidade
