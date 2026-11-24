@@ -1448,6 +1448,7 @@ function viewClientes(){
     <label><span class="cap">CPF ou CNPJ <span class="note">opcional</span></span><input id="qCnpj" inputmode="numeric" value="${esc(o.cnpj||"")}" placeholder="CPF ou CNPJ, só números"></label>
     <label>Inscrição municipal<input id="qIm" value="${esc(o.im||"")}" placeholder="Opcional"></label>
     <label>Inscrição estadual<input id="qIe" value="${esc(o.ie||"")}" placeholder="Se o cliente tiver"></label>
+    <label>Número de estações<input id="qEst" type="number" min="1" max="500" inputmode="numeric" value="${esc(o.estacoes||"")}" placeholder="Ex.: 20 (iscas e armadilhas)"></label>
     <h3 class="full">Endereço do estabelecimento</h3>
     <label>CEP<input id="qCep" inputmode="numeric" value="${esc(o.cep||"")}" placeholder="00000-000"></label>
     <label>Bairro<input id="qBairro" value="${esc(o.bairro||"")}"></label>
@@ -1502,6 +1503,7 @@ function wireClientes(){
       cep:$("qCep").value.trim(),rua:$("qRua").value.trim(),num:$("qNum").value.trim(),comp:$("qComp").value.trim(),
       bairro:$("qBairro").value.trim(),cidade:$("qCidade").value.trim(),uf:$("qUf").value,
       resp:$("qResp").value.trim(),tel:$("qTel").value.trim(),email:$("qEmail").value.trim(),obs:$("qObs").value.trim()};
+    const ne=parseInt($("qEst").value,10); o.estacoes=ne>0?Math.min(500,ne):undefined;
     o.end=compEnd(o)||(editando&&cli(editando).end)||"-";
     if(editando){Object.assign(cli(editando),o);save();const n=o.fantasia||o.nome;editando=null;tab="painel";render();toast(`${n} atualizado`)}
     else{const id="c"+Date.now();db.clientes.push({id,...o});save();abertos.add(id);tab="painel";render();toast(`${o.fantasia||nome} cadastrado`)}}}
@@ -1665,7 +1667,7 @@ const DATASETS=[["clientes","Empresas (clientes)","Nome, CPF/CNPJ, endereço, e-
 function tabelas(){const sit=id=>{const p=piorStatus(id);return p?LABEL[p]:"Sem certificados"};
   return {
   clientes:db.clientes.map(c=>{const ks=db.certs.filter(k=>k.cli===c.id).sort((a,b)=>a.venc.localeCompare(b.venc));const prox=ks.find(k=>dias(k.venc)>=0);
-    return {"Empresa":c.nome,"Nome fantasia":c.fantasia||"","CPF/CNPJ":c.cnpj,"Inscrição estadual":c.ie||"","Inscrição municipal":c.im||"","Endereço":c.end,"Cidade":c.cidade||"","UF":c.uf||"","CEP":c.cep||"","Responsável":c.resp||"","Telefone":c.tel||"","E-mail":c.email||"","Segmento":c.seg||"","Observações":c.obs||"","Situação":sit(c.id),"Certificados":ks.length,"Próximo vencimento":prox?fmt(prox.venc):"","Valor em aberto (R$)":(db.cobrancas||[]).filter(b=>b.cli===c.id&&b.status!=="paga").reduce((t,b)=>t+b.valor,0)}}),
+    return {"Empresa":c.nome,"Nome fantasia":c.fantasia||"","CPF/CNPJ":c.cnpj,"Inscrição estadual":c.ie||"","Inscrição municipal":c.im||"","Endereço":c.end,"Cidade":c.cidade||"","UF":c.uf||"","CEP":c.cep||"","Responsável":c.resp||"","Telefone":c.tel||"","E-mail":c.email||"","Segmento":c.seg||"","Observações":c.obs||"","Estações":c.estacoes||"","Situação":sit(c.id),"Certificados":ks.length,"Próximo vencimento":prox?fmt(prox.venc):"","Valor em aberto (R$)":(db.cobrancas||[]).filter(b=>b.cli===c.id&&b.status!=="paga").reduce((t,b)=>t+b.valor,0)}}),
   certificados:db.certs.map(k=>({"Empresa":cli(k.cli).nome,"CPF/CNPJ":cli(k.cli).cnpj,"Serviço":k.tipo,"Praga-alvo":k.praga,"Produtos":k.prod,"Execução":fmt(k.exec),"Validade":fmt(k.venc),"Situação":LABEL[status(k.venc)],"Dias para vencer":dias(k.venc)})),
   visitas:(db.visitas||[]).map(v=>({"OS":v.os,"Empresa":cli(v.cli).nome,"Data e hora":fmtHora(v.data),"Técnico":v.tecnico,"Serviço":v.tipo,"Praga-alvo":v.praga,"Produtos":v.prod,"Áreas tratadas":v.areas||"","Assinatura":v.status==="assinada"?"Assinada":"Pendente","Assinado por":v.assinatura?.nome||"","Assinado em":v.assinatura?fmtHora(v.assinatura.em):"","Código":v.assinatura?.cod||""})),
   cobrancas:(db.cobrancas||[]).map(b=>({"Empresa":cli(b.cli).nome,"CPF/CNPJ":cli(b.cli).cnpj,"Descrição":b.desc,"Valor (R$)":b.valor,"Vencimento":fmt(b.venc),"Forma":b.forma,"Situação":LCOB[stCob(b)],"Pago em":b.pagoEm?fmt(b.pagoEm):""}))}}
@@ -1708,7 +1710,7 @@ const V = {
 const T3 = V.txt(300), T1 = V.txt(1000);
 // campo: [validador, obrigatório?, esquema aninhado?]
 const ESQ = {
-  clientes: {id:[V.id,1], nome:[T3,1], fantasia:[T3], seg:[V.txt(100)], cnpj:[V.rx(/^[\d./-]{0,20}$/)], im:[V.txt(60)], ie:[V.txt(60)], cep:[V.rx(/^[\d-]{0,10}$/)],
+  clientes: {id:[V.id,1], nome:[T3,1], fantasia:[T3], seg:[V.txt(100)], cnpj:[V.rx(/^[\d./-]{0,20}$/)], im:[V.txt(60)], ie:[V.txt(60)], estacoes:[v => v === undefined || (Number.isInteger(v) && v >= 1 && v <= 500)], cep:[V.rx(/^[\d-]{0,10}$/)],
     rua:[T3], num:[V.txt(30)], comp:[V.txt(100)], bairro:[T3], cidade:[T3], uf:[V.txt(10)], resp:[T3], tel:[V.rx(/^[\d() +-]{0,25}$/)], email:[T3], obs:[T1], end:[V.txt(600)]},
   certs: {id:[V.id,1], cli:[V.id,1], tipo:[T3,1], praga:[T3], prod:[T1], exec:[V.data], venc:[V.data,1], pdf:[V.rx(RE_PATH)], visita:[V.id]},
   docs: {id:[V.id,1], cli:[V.id,1], nome:[T3,1], data:[V.data], pdf:[V.rx(RE_PATH)]},
@@ -2274,7 +2276,11 @@ function incidParaSalvar(){
   if(INCID.pragas.includes("Ratos") && INCID.estacoes.length) o.estacoes = [...INCID.estacoes];
   return o;
 }
-const ESTACOES = Array.from({length: 100}, (_, i) => "E" + String(i + 1).padStart(2, "0"));
+const estacoesDe = n => Array.from({length: n}, (_, i) => "E" + String(i + 1).padStart(2, "0"));
+function incidClienteId(){
+  const s = document.getElementById("vCliente"); if(s) return s.value;
+  const a = editAlvo(); return a ? a.v.cli : null;
+}
 function incidBlocoHTML(){
   return `<div class="full" style="display:grid;gap:8px"><span style="font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">Houve incidência de:</span>
       <div style="display:flex;gap:14px;flex-wrap:wrap">${INCID_TIPOS.map(p => `<label class="check"><input type="checkbox" class="incidTipo" value="${p}"${INCID.pragas.includes(p) ? " checked" : ""}> ${p}</label>`).join("")}</div>
@@ -2295,7 +2301,9 @@ function wireIncid(){
   });
 }
 function incidEstacoesModal(){
-  modal(`<div class="sheet">${cab("Estações com ratos", "Marque as estações com ocorrência (E01 a E100)")}
+  const c = cli(incidClienteId()), definido = !!(c && c.estacoes > 0), total = definido ? c.estacoes : 100, ESTACOES = estacoesDe(total);
+  modal(`<div class="sheet">${cab("Estações com ratos", "Marque as estações com ocorrência (E01 a E" + String(total).padStart(2, "0") + ")")}
+    ${definido ? "" : '<p class="note">O número de estações desta empresa ainda não foi informado. Mostrando E01 a E100. Informe o número no cadastro do cliente.</p>'}
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;max-height:55vh;overflow:auto">${ESTACOES.map(e => `<label class="check" style="font-size:13px"><input type="checkbox" class="estCb" value="${e}"${INCID.estacoes.includes(e) ? " checked" : ""}> ${e}</label>`).join("")}</div>
     <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><button type="button" class="btn ghost sm" id="estLimpar">Limpar seleção</button><button type="button" class="btn" id="estOk">Confirmar estações</button></div></div>`);
   document.getElementById("estLimpar").onclick = () => document.querySelectorAll(".estCb").forEach(x => x.checked = false);

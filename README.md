@@ -77,6 +77,7 @@ Primeiro acesso: na tela de login, use **Primeiro acesso do sistema** para criar
 - Endereço com CEP, rua, número, complemento, bairro, cidade e UF
 - Contato: responsável no local, telefone/WhatsApp e e-mail que recebe os avisos
 - Anotações do técnico (acesso ao local, horários, cuidados)
+- **Número de estações** da empresa (iscas e armadilhas): define a lista E01, E02… que aparece no popup de ratos da visita. Se não for informado, o popup mostra E01 a E100
 - Máscara automática de CPF/CNPJ, CEP e telefone, com validação dos dígitos (quando preenchido) e aviso de documento repetido
 - Edição da ficha pelo painel ou pela lista de clientes
 
@@ -103,7 +104,7 @@ Primeiro acesso: na tela de login, use **Primeiro acesso do sistema** para criar
 **Registro de visita técnica (ordem de serviço)**
 - O técnico registra no local: cliente, data e hora, serviço, praga-alvo, produtos e áreas tratadas
 - Cada visita gera uma ordem de serviço numerada (OS-2026-0001, OS-2026-0002…)
-- **Houve incidência de:** marca as pragas encontradas (ratos, baratas, moscas ou outras). Ao marcar **ratos**, abre a lista de estações **E01 a E100** para marcar as que tiveram ocorrência. A incidência aparece na OS e no PDF
+- **Houve incidência de:** marca as pragas encontradas (ratos, baratas, moscas ou outras). Ao marcar **ratos**, abre a lista de estações da empresa (de E01 até o número cadastrado no cliente, ou E01 a E100 se não houver) para marcar as que tiveram ocorrência. A incidência aparece na OS e no PDF
 - **Editar a OS:** a OS gerada (botão **Editar OS**) e a visita salva no celular (botão **Editar**, na aba Pendentes) podem ser corrigidas enquanto não estiverem assinadas. Depois da assinatura, a OS fica travada, porque o cliente assinou aquele conteúdo
 - Orientações pós-aplicação e termo de compromisso exibidos ao cliente
 - Opção de gerar o certificado com a validade já calculada
