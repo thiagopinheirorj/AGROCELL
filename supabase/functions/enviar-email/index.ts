@@ -85,6 +85,13 @@ Deno.serve(async (req) => {
     .eq("usuario_id", u.user.id).eq("acao", "enviou e-mail").gte("em", desde);
   if ((count ?? 0) >= 40) return resp({ erro: "Muitos envios na última hora. Tente de novo mais tarde." }, 429);
 
+  // Histórico: guarda cada tentativa (enviado ou falhou) com quem, quando, para quem, assunto e texto. O PDF não é guardado.
+  const registrar = async (status: "enviado" | "falhou", erro: string | null) =>
+    (await admin.from("emails_enviados").insert({
+      usuario_id: u.user.id, usuario_nome: eu.nome, tipo, ref, cli: d.cli, para: d.email, assunto, texto,
+      anexo: anexo?.nome ?? null, status, erro,
+    }).select("id, em").maybeSingle()).data;
+
   const smtp = new SMTPClient({
     connection: { hostname: c.host, port: c.port, tls: c.tls, auth: c.pass && c.tls ? { username: c.user, password: c.pass } : undefined },
     // Conexão sem criptografia só é aceita em teste local (SMTP_TLS=false). Com o Gmail (porta 465) a conexão é sempre criptografada.
@@ -102,15 +109,17 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("falha no envio:", String(e));
+    await registrar("falhou", String(e).slice(0, 200));
     return resp({ erro: "Não foi possível enviar agora. Tente de novo em alguns minutos." }, 502);
   } finally {
     try { await smtp.close(); } catch (_) { /* ignora */ }
   }
 
-  // O registro de atividade nunca guarda e-mails: só o tipo do envio.
+  const reg = await registrar("enviado", null);
+  // O registro de atividade nunca guarda e-mails: só o tipo do envio. O endereço fica só no histórico de e-mails.
   await admin.from("auditoria").insert({
     usuario_id: u.user.id, usuario_nome: eu.nome, papel: eu.papel, acao: "enviou e-mail", tipo: "email", cli: d.cli,
     resumo: `E-mail enviado (${tipo === "os" ? "ordem de serviço" : tipo === "cobranca" ? "cobrança" : "proposta"})`,
   });
-  return resp({ ok: true });
+  return resp({ ok: true, id: reg?.id ?? null, em: reg?.em ?? new Date().toISOString(), para: d.email });
 });

@@ -94,25 +94,31 @@ Deno.serve(async (req) => {
         await admin.from("avisos_enviados").upsert({ cert_id: it.cert.id, marco: it.marco, para_cliente: false });
         continue;
       }
+      const assunto = `Aviso: o certificado de ${tipo.toLowerCase()} ${quando}`;
+      const texto = `Olá!\n\nO certificado de ${tipo.toLowerCase()} da ${nome} ${quando}, em ${fmt(venc)}.\n\nPara manter a validade e evitar problemas com a fiscalização, vale agendar a próxima aplicação antes dessa data. É só responder este e-mail ou chamar a ${c.nome}.\n\nAtenciosamente,\n${c.nome}\n\n—\nVocê recebe este aviso porque a ${nome} é cliente da ${c.nome}. Se não quiser mais receber, responda este e-mail.`;
+      const guardar = (status: "enviado" | "falhou", erro: string | null) =>
+        admin.from("emails_enviados").insert({ usuario_nome: "Sistema", tipo: "aviso", ref: String(it.cert.id), cli: String(it.cert.cli), para: email, assunto, texto, status, erro });
       try {
-        await smtp.send({
-          from: `${c.nome} <${c.user}>`, to: email, ...(c.responder ? { replyTo: c.responder } : {}),
-          subject: `Aviso: o certificado de ${tipo.toLowerCase()} ${quando}`,
-          content: `Olá!\n\nO certificado de ${tipo.toLowerCase()} da ${nome} ${quando}, em ${fmt(venc)}.\n\nPara manter a validade e evitar problemas com a fiscalização, vale agendar a próxima aplicação antes dessa data. É só responder este e-mail ou chamar a ${c.nome}.\n\nAtenciosamente,\n${c.nome}\n\n—\nVocê recebe este aviso porque a ${nome} é cliente da ${c.nome}. Se não quiser mais receber, responda este e-mail.`,
-        });
+        await smtp.send({ from: `${c.nome} <${c.user}>`, to: email, ...(c.responder ? { replyTo: c.responder } : {}), subject: assunto, content: texto });
         enviadosN++; resumo.push(`• ${nome} · ${tipo} · ${quando} (${fmt(venc)}) · aviso enviado ao cliente`);
         await admin.from("avisos_enviados").upsert({ cert_id: it.cert.id, marco: it.marco, para_cliente: true });
+        await guardar("enviado", null);
       } catch (e) {
         falhas++; console.error("falha no aviso:", it.cert.id, String(e));
+        await guardar("falhou", String(e).slice(0, 200));
       }
     }
-    if (resumo.length && c.responsavel && emailOk(c.responsavel)) try {
-      await smtp.send({
-        from: `${c.nome} <${c.user}>`, to: c.responsavel,
-        subject: `Avisos de vencimento de hoje (${fmt(hoje)})`,
-        content: `Resumo dos avisos de vencimento de hoje:\n\n${resumo.join("\n")}\n\nClientes marcados como SEM E-MAIL precisam de contato por telefone ou WhatsApp, e o e-mail deve ser cadastrado na ficha do cliente.`,
-      });
-    } catch (e) { falhas++; console.error("falha no resumo ao responsável:", String(e)); }
+    if (resumo.length && c.responsavel && emailOk(c.responsavel)) {
+      const assunto = `Avisos de vencimento de hoje (${fmt(hoje)})`;
+      const texto = `Resumo dos avisos de vencimento de hoje:\n\n${resumo.join("\n")}\n\nClientes marcados como SEM E-MAIL precisam de contato por telefone ou WhatsApp, e o e-mail deve ser cadastrado na ficha do cliente.`;
+      try {
+        await smtp.send({ from: `${c.nome} <${c.user}>`, to: c.responsavel, subject: assunto, content: texto });
+        await admin.from("emails_enviados").insert({ usuario_nome: "Sistema", tipo: "resumo", ref: hoje, para: c.responsavel, assunto, texto, status: "enviado" });
+      } catch (e) {
+        falhas++; console.error("falha no resumo ao responsável:", String(e));
+        await admin.from("emails_enviados").insert({ usuario_nome: "Sistema", tipo: "resumo", ref: hoje, para: c.responsavel, assunto, texto, status: "falhou", erro: String(e).slice(0, 200) });
+      }
+    }
   } finally {
     try { await smtp.close(); } catch (_) { /* ignora */ }
   }

@@ -501,12 +501,36 @@ function emailModal(o){
     let anexo = null;
     if(o.anexo){try{anexo = await o.anexo()}catch(_){} if(!anexo){bt.disabled = false; return toast("Não consegui gerar o PDF.")}}
     const r = await chamarFuncao("enviar-email", {tipo: o.tipo, ref: o.ref, assunto, texto, anexo});
-    if(r.ok){toast("E-mail enviado"); return volta()}
+    if(r.ok){
+      const quando = new Date(r.em || Date.now()).toLocaleString("pt-BR");
+      modal(`<div class="sheet">${cab("E-mail enviado", esc(o.sub || ""))}
+        <div class="docaviso"><b>✔ Enviado com sucesso.</b><p style="margin:6px 0 0">Para: <b>${esc(r.para || o.para)}</b><br>Assunto: ${esc(assunto)}<br>Data: ${esc(quando)}</p></div>
+        <p class="note">O envio ficou registrado no histórico de e-mails desta ${o.tipo === "os" ? "ordem de serviço" : o.tipo === "cobranca" ? "cobrança" : "proposta"}.</p>
+        <button type="button" class="btn" id="emOk">Voltar</button></div>`);
+      document.getElementById("emOk").onclick = volta; return;
+    }
     bt.disabled = false;
     if(r.naoConfigurado && o.alternativa){toast("O envio automático ainda não está ativo. Abrindo o seu aplicativo de e-mail."); return o.alternativa(assunto, texto)}
-    toast(r.erro || "Não foi possível enviar agora.");
+    toast((r.erro || "Não foi possível enviar agora.") + (r.erro && !r.semEmail ? " A tentativa ficou no histórico." : ""));
   };
 }
+async function emailsDe(tipo, ref){
+  try{const {data, error} = await sb.from("emails_enviados").select("em,usuario_nome,para,assunto,status,erro").eq("tipo", tipo).eq("ref", String(ref)).order("em", {ascending: false}).limit(10); return error ? null : data}catch(_){return null}
+}
+function emailsHTML(l){
+  if(!l || !l.length) return "";
+  return `<div class="sec-t" style="margin:4px 0">E-mails enviados</div><div class="lnotas">${l.map(x => `<div class="lnota"><time>${esc(new Date(x.em).toLocaleString("pt-BR"))}</time>${x.status === "enviado" ? "✔ Enviado" : "✖ Falhou"} · ${esc(x.usuario_nome)} · para ${esc(x.para)}<br><small>${esc(x.assunto)}${x.status === "falhou" && x.erro ? " · " + esc(x.erro) : ""}</small></div>`).join("")}</div>`;
+}
+async function emailsRender(tipo, ref){
+  if(!document.getElementById("emailsBox")) return;
+  const l = await emailsDe(tipo, ref), box = document.getElementById("emailsBox"); if(box) box.innerHTML = emailsHTML(l);
+}
+// Ao excluir um cadastro, o histórico de e-mails dele também é apagado (LGPD).
+function apagarEmails(filtro){
+  let q = sb.from("emails_enviados").delete(); Object.entries(filtro).forEach(([k, v]) => {q = q.eq(k, String(v))});
+  return q.then(() => {}, () => {});
+}
+function abrirCobranca(b){modal(cobrancaHTML(b)); emailsRender("cobranca", b.id)}
 const mailto = (para, assunto, texto) => {location.href = `mailto:${encodeURIComponent(para)}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(texto)}`};
 function emailOS(id){
   const v = vis(id); if(!v) return; const c = cli(v.cli) || {};
@@ -522,7 +546,7 @@ function emailCobranca(id){
   const assunto = `Cobrança ${BRL(b.valor)} · ${EMPRESA.nome.replace(/ \(exemplo\)/, "")}`;
   const texto = `Olá, ${nome}!\n\nSegue a cobrança referente a ${b.desc}.\n\n• Valor: ${BRL(b.valor)}\n• Vencimento: ${fmt(b.venc)}${b.forma ? "\n• Forma de pagamento: " + b.forma : ""}\n\nO PDF segue em anexo. Qualquer dúvida, estamos à disposição.\n\n${EMPRESA.nome.replace(/ \(exemplo\)/, "")}`;
   emailModal({titulo: "Enviar cobrança por e-mail", sub: b.desc, tipo: "cobranca", ref: b.id, para: c.email, assunto, texto, anexo: () => pdfBase64("cobranca", b.id),
-    voltar: () => modal(cobrancaHTML(b)), alternativa: (a, t) => mailto(c.email, a, t)});
+    voltar: () => abrirCobranca(b), alternativa: (a, t) => mailto(c.email, a, t)});
 }
 async function chamarUsuarios(body){
   const {data, error} = await sb.functions.invoke("usuarios", {body});
@@ -1009,6 +1033,7 @@ function leadSalvar(e){
   save(); leadAberto=null; leadRasc=null; closeModal(); if(tab==="leads") leadsAtualizar();
 }
 function leadExcluir(){
+  apagarEmails({tipo: "proposta", ref: leadAberto});
   db.leads=(db.leads||[]).filter(l=>l.id!==leadAberto); save(); leadAberto=null; leadRasc=null; closeModal(); if(tab==="leads") leadsAtualizar(); toast("Lead excluído");
 }
 function leadParaCliente(){
@@ -1110,6 +1135,7 @@ function leadPropostaModal(){
       ${analise.length ? `<ul style="margin:4px 0 0 18px">${analise.map(([t]) => `<li>${esc(t)}</li>`).join("")}</ul>` : "<p style=\"margin:0\">Termômetro completo. Pode gerar a proposta.</p>"}
       ${recentes ? `<p style="margin:8px 0 2px"><b>Últimas anotações</b> (uso interno, não entram no texto)</p><ul style="margin:0 0 0 18px">${recentes}</ul>` : ""}
     </div>
+    <div id="emailsBox"></div>
     <p class="note">Edite o texto à vontade antes de usar. Não cole anotações internas, e confira se o diagnóstico gratuito é realmente oferecido.</p>
     <label class="full">Título<input id="pTitulo" value="${esc(PROPOSTA.titulo)}"></label>
     <label class="full">Texto da proposta<textarea id="pTexto" style="min-height:340px">${esc(PROPOSTA.texto)}</textarea></label>
@@ -1163,6 +1189,7 @@ function leadPropostaModal(){
   };
   document.getElementById("pVoltar").onclick = () => {sincronizar(); leadFicha()};
   wireFotosProposta();
+  emailsRender("proposta", leadAberto);
 }
 function leadsClick(e){
   const k=e.target.closest("[data-leadft]");if(k){leadFiltroT=leadFiltroT===k.dataset.leadft?"todos":k.dataset.leadft;leadsAtualizar();return true}
@@ -1381,6 +1408,7 @@ function compHTML(v,extra,previa){const c=cli(v.cli);const ok=v.status==="assina
   <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>${docRot(c.cnpj)}</dt><dd class="mono">${esc(c.cnpj||"-")}</dd><dt>Data e hora</dt><dd>${fmtHora(v.data)}</dd><dt>Técnico</dt><dd>${esc(v.tecnico)}</dd><dt>Serviço</dt><dd>${esc(v.tipo)} · ${esc(v.praga)}</dd>${v.incid?`<dt>Incidência</dt><dd>${esc(incidTexto(v.incid))}</dd>`:""}<dt>Produtos</dt><dd>${esc(v.prod)}</dd><dt>Contato</dt><dd>${esc(c.resp||"-")}${c.tel?" · "+esc(c.tel):""}</dd><dt>Áreas tratadas</dt><dd>${esc(v.areas||"-")}</dd></dl>
   ${v.relatorio?`<div><div class="sec-t">Relatório da visita</div><p style="margin:6px 0 0;white-space:pre-wrap">${esc(v.relatorio)}</p></div>`:""}
   <div id="fotosBox"></div>
+  <div id="emailsBox"></div>
   ${isStaff()&&!previa?`<label class="dl" style="justify-self:start;cursor:pointer">Adicionar fotos<input id="fFotoAdd" type="file" accept="image/*" multiple hidden></label>`:""}
   <div class="termo"><b>Orientações e termo de compromisso</b><ul>${TERMO.map(t=>`<li>${t}</li>`).join("")}</ul><p>Declaro que o serviço descrito foi realizado no meu estabelecimento e que recebi as orientações acima.</p></div>
   ${ok?`<div class="sig"><img src="${v.assinatura.img}" alt="Assinatura de ${esc(v.assinatura.nome)}"><div><b>${esc(v.assinatura.nome)}</b><span>Assinado eletronicamente em ${fmtHora(v.assinatura.em)}</span><span class="mono">Código de verificação ${v.assinatura.cod}</span></div></div>${previa?"":docBtns("os",v.id)}`
@@ -1439,7 +1467,7 @@ function makePad(cv){const ctx=cv.getContext("2d");let drawing=false,empty=true,
 function assinar(v,nome,img){v.status="assinada";v.assinatura={nome,img,em:new Date().toISOString(),cod:Math.random().toString(16).slice(2,10).toUpperCase().padEnd(8,"0")}}
 function openComp(id,extra){const v=vis(id);if(!v)return;const m=document.getElementById("modal");
   m.innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-label="Ordem de serviço ${esc(v.os)}">${compHTML(v,extra)}</div>`;m.hidden=false;document.body.style.overflow="hidden";
-  fotosRender(v);prepararZap(v);
+  fotosRender(v);prepararZap(v);emailsRender("os", v.id);
   const add=document.getElementById("fFotoAdd");
   if(add)add.onchange=async()=>{const fs=[...add.files];if(!fs.length)return;toast("Enviando fotos…");
     try{await anexarFotos(v,fs);fotosRender(v);toast(`${fs.length} foto${fs.length===1?"":"s"} adicionada${fs.length===1?"":"s"}`)}catch(err){toast("Não foi possível enviar: "+(err.message||err))}};
@@ -1708,10 +1736,10 @@ function cobrancaHTML(b){const c=cli(b.cli);
   return `<div class="sheet">${cab("Cobrança "+BRL(b.valor),esc(b.desc))}
   <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>${docRot(c.cnpj)}</dt><dd class="mono">${esc(c.cnpj||"-")}</dd><dt>Prestador</dt><dd>${esc(EMPRESA.nome)}</dd><dt>Valor</dt><dd>${BRL(b.valor)}</dd><dt>Vencimento</dt><dd>${fmt(b.venc)}</dd><dt>Forma de pagamento</dt><dd>${esc(b.forma||"-")}</dd><dt>Situação</dt><dd>${chipCob(b)}</dd>${b.pagoEm?`<dt>Pago em</dt><dd>${fmt(b.pagoEm)}</dd>`:""}</dl>
   ${docBtns("cobranca",b.id)}
-  ${isStaff()?`<div><button class="btn ghost" data-emailcob="${b.id}">Enviar por e-mail</button></div>`:""}</div>`}
+  ${isStaff()?`<div><button class="btn ghost" data-emailcob="${b.id}">Enviar por e-mail</button></div><div id="emailsBox"></div>`:""}</div>`}
 function acaoCob(act,id){const b=cob(id);if(!b)return;
-  if(act==="excluir"){excluirItem("cobrança",`${BRL(b.valor)} · ${esc(b.desc)}`,"A cobrança será apagada.",async()=>{db.cobrancas=db.cobrancas.filter(x=>x.id!==id)});return}
-  if(act==="ver"){modal(cobrancaHTML(b));return}
+  if(act==="excluir"){excluirItem("cobrança",`${BRL(b.valor)} · ${esc(b.desc)}`,"A cobrança será apagada.",async()=>{db.cobrancas=db.cobrancas.filter(x=>x.id!==id); apagarEmails({tipo: "cobranca", ref: id})});return}
+  if(act==="ver"){abrirCobranca(b);return}
   if(act==="pagar"){b.status="paga";b.pagoEm=iso(HOJE);save();render();toast(`Pagamento de ${BRL(b.valor)} registrado`);return}}
 
 // ---------- Exportação ----------
@@ -1938,6 +1966,7 @@ async function excluirCliente(id){
     for(const u of users){const r = await chamarUsuarios({acao: "excluir_usuario", id: u.id}); if(r.erro) throw new Error(r.erro)}
     TABELAS.forEach(t => {db[t] = db[t].filter(o => t === "clientes" ? o.id !== id : o.cli !== id)});
     if(!await save()) return;
+    await apagarEmails({cli: id});
     await carregarUsuarios(); editando = null; render(); toast("Cliente excluído");
   }catch(e){toast("Não foi possível excluir: " + (e.message || e)); try{await carregar(); await carregarUsuarios(); render()}catch(_){}}
 }
@@ -1958,6 +1987,7 @@ async function excluirVisita(id){
     db.certs.forEach(k => {if(k.visita === id) delete k.visita});
     db.cobrancas.forEach(b => {if(b.visita === id) delete b.visita});
     if(!await save()) return;
+    await apagarEmails({tipo: "os", ref: id});
     closeModal(); render(); toast("Ordem de serviço excluída");
   }catch(e){toast("Não foi possível excluir: " + (e.message || e)); try{await carregar(); render()}catch(_){}}
 }
@@ -2030,7 +2060,7 @@ function wireRegistros(){
 
 // ---------- Política de privacidade e termo de uso ----------
 // Texto-base, escrito a partir do que o app realmente faz. Revise com um advogado antes de tratá-lo como definitivo.
-const POLITICA_VERSAO = "3", POLITICA_DATA = "21 de novembro de 2026";
+const POLITICA_VERSAO = "4", POLITICA_DATA = "24 de novembro de 2026";
 const CONTATO_PRIVACIDADE = {email: "envio.agrocel@gmail.com", fone: "(48) 3653-1256"};
 const TEXTO_PRIVACIDADE = () => `
 <h3>1. Quem é responsável pelos dados</h3>
@@ -2041,6 +2071,7 @@ const TEXTO_PRIVACIDADE = () => `
 <li><b>Clientes da Agrocel:</b> razão social, nome fantasia, CNPJ, endereço, e-mail e telefone, e o nome do responsável no local.</li>
 <li><b>Serviços:</b> ordens de serviço, certificados, relatórios e fotos das visitas, e a assinatura desenhada na tela, com nome, data, hora e código de verificação.</li>
 <li><b>Financeiro:</b> valores, vencimentos e situação das cobranças.</li>
+<li><b>E-mails enviados pelo sistema:</b> guardamos um histórico com o endereço do destinatário, o assunto, o texto, a data, quem enviou e se o envio deu certo. Os PDFs enviados não ficam guardados. O histórico é apagado junto com o cadastro a que se refere.</li>
 </ul>
 <h3>3. Para que usamos e em que base legal</h3>
 <ul>

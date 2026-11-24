@@ -248,3 +248,33 @@ create table if not exists public.avisos_enviados (
 );
 alter table public.avisos_enviados enable row level security;
 revoke all on table public.avisos_enviados from anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Migração 1.5.0 (histórico de e-mails enviados). Em um banco que já existe, rode supabase/migracao-1.5.0.sql.
+-- ---------------------------------------------------------------------------
+create table if not exists public.emails_enviados (
+  id bigint generated always as identity primary key,
+  em timestamptz not null default now(),
+  usuario_id uuid,
+  usuario_nome text not null,
+  tipo text not null check (tipo in ('os','cobranca','proposta','aviso','resumo')),
+  ref text,
+  cli text,
+  para text not null,
+  assunto text not null,
+  texto text not null,
+  anexo text,
+  status text not null check (status in ('enviado','falhou')),
+  erro text
+);
+create index if not exists emails_enviados_ref_idx on public.emails_enviados (tipo, ref, em desc);
+create index if not exists emails_enviados_cli_idx on public.emails_enviados (cli);
+alter table public.emails_enviados enable row level security;
+revoke all on table public.emails_enviados from anon, authenticated;
+grant select, delete on table public.emails_enviados to authenticated;
+drop policy if exists emails_ler on public.emails_enviados;
+create policy emails_ler on public.emails_enviados for select to authenticated
+  using (app_priv.papel() in ('admin','tecnico'));
+drop policy if exists emails_apagar on public.emails_enviados;
+create policy emails_apagar on public.emails_enviados for delete to authenticated
+  using (app_priv.papel() = 'admin');
