@@ -144,6 +144,21 @@ Primeiro acesso: na tela de login, use **Primeiro acesso do sistema** para criar
 
 O app usa a chave pública (anon) do projeto, que pode ficar no código; a proteção dos dados é feita pelas regras de acesso do banco.
 
+## Envio de e-mail e avisos de vencimento
+
+- **Botão Enviar por e-mail** na ordem de serviço, na cobrança e na proposta de fechamento: o servidor envia pelo Gmail da empresa, com o PDF em anexo. O e-mail do destinatário vem sempre do cadastro (do cliente ou do lead), nunca do pedido. Cada pessoa pode enviar até 40 e-mails por hora, e o registro de atividade guarda o envio sem guardar e-mails.
+- **Avisos automáticos de vencimento:** todo dia às 8h (Brasília), o cliente recebe um aviso 30 dias e outro 15 dias antes do vencimento de cada certificado. O responsável recebe um resumo do dia, que cita os clientes sem e-mail cadastrado. Certificados já renovados e vencidos não geram aviso, e nenhum aviso é repetido.
+- Sem a configuração abaixo, o botão apenas abre o aplicativo de e-mail da pessoa, com o texto pronto.
+
+**Como ativar (nuvem, Supabase):**
+1. Na conta Google do e-mail de envio: ativar a verificação em duas etapas e criar uma **senha de app**.
+2. Supabase > Edge Functions > Secrets: `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `EMAIL_RESPONSAVEL` (quem recebe o resumo), `CRON_SECRET` (texto longo e aleatório) e, se quiser, `EMAIL_REMETENTE_NOME`, `EMAIL_RESPONDER_PARA` e `EMAIL_COPIA_RESPONSAVEL` (cópia oculta nos envios manuais).
+3. Rodar `supabase/migracao-1.4.0.sql` (tabela de controle dos avisos).
+4. Publicar as funções `enviar-email` (com verificação de login ligada) e `avisos-vencimento` (com verificação de login **desligada**; a proteção é o `CRON_SECRET`).
+5. Rodar `supabase/agendar-avisos.sql` (agenda a rotina diária; exige as extensões `pg_cron` e `pg_net`).
+
+Limites: o Gmail de conta pessoal aceita algumas centenas de envios por dia. A rotina envia no máximo 80 avisos por execução; o que sobrar vai no dia seguinte.
+
 ## Onde os dados ficam: nuvem ou servidor da empresa
 
 O mesmo app funciona de dois jeitos. Por padrão os dados ficam na **nuvem** (Supabase, São Paulo). Quem preferir guardar tudo **no servidor da própria empresa** usa a pasta `instalador/`: um script para Windows (`instalar.ps1`, com Docker Desktop) ou Linux (`instalar.sh`) sobe o banco, o login, os arquivos e o app em um computador da empresa, aplica as mesmas regras de acesso e agenda um backup diário (banco + fotos e PDFs), com cópia opcional para uma pasta de nuvem como OneDrive ou Google Drive. O arquivo `config.js` diz ao app onde gravar (vazio = nuvem); a tela de entrada mostra "Os dados deste sistema ficam …". Detalhes em [instalador/README.md](instalador/README.md).

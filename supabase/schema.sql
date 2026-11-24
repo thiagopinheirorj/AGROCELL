@@ -234,3 +234,17 @@ revoke all on table public.registros, public.perfis, public.auditoria from anon;
 -- Migração 0.7.0 (agendamento de visitas, rota do dia para a equipe e aba Leads).
 -- Em um banco que já existe, rode o arquivo supabase/migracao-0.7.0.sql (primeiro no teste, depois no real).
 -- ---------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------
+-- Migração 1.4.0 (avisos automáticos de vencimento por e-mail).
+-- Em um banco que já existe, rode o arquivo supabase/migracao-1.4.0.sql (primeiro no teste, depois no real).
+-- ---------------------------------------------------------------------------
+create table if not exists public.avisos_enviados (
+  cert_id text not null,
+  marco integer not null check (marco in (15, 30)),
+  enviado_em timestamptz not null default now(),
+  para_cliente boolean not null default false,
+  primary key (cert_id, marco)
+);
+alter table public.avisos_enviados enable row level security;
+revoke all on table public.avisos_enviados from anon, authenticated;

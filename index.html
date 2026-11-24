@@ -474,6 +474,56 @@ async function entrar(session){
   return null;
 }
 async function sair(){await sb.auth.signOut(); OFF.limparCache().catch(() => {}); SAIDA = []; OFFLINE = false; ME = null; REGS = []; REGS_OK = false; db = novoDB(); snap = new Map(); USUARIOS = []; tab = "painel"; closeModal(); render()}
+// ---------- Enviar por e-mail (pelo Gmail da Agrocel, via função do servidor) ----------
+// O servidor pega o e-mail do destinatário no cadastro (cliente ou lead): o app não escolhe para quem enviar.
+async function chamarFuncao(nome, body){
+  const {data, error} = await sb.functions.invoke(nome, {body});
+  if(error){let m = error.message, j = null; try{j = await error.context.json(); if(j && j.erro) m = j.erro}catch(_){} return {...(j || {}), erro: m}}
+  return data || {};
+}
+async function pdfBase64(tipo, id){
+  const r = await gerarPDF(tipo, id); if(!r) return null;
+  return {nome: r.arq, base64: r.doc.output("datauristring").split(",")[1]};
+}
+function emailModal(o){
+  modal(`<div class="sheet">${cab(o.titulo, esc(o.sub || ""))}
+    <p class="note">Será enviado para <b>${esc(o.para)}</b>, a partir do e-mail da Agrocel.${o.anexo ? ` O PDF segue em anexo.` : ""}</p>
+    <label class="full">Assunto<input id="emAssunto" value="${esc(o.assunto)}" maxlength="200"></label>
+    <label class="full">Mensagem<textarea id="emTexto" style="min-height:240px">${esc(o.texto)}</textarea></label>
+    <div class="full" style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn" id="emEnviar">Enviar e-mail</button><button type="button" class="btn ghost" id="emCancelar">Cancelar</button></div></div>`);
+  const volta = () => o.voltar ? o.voltar() : closeModal();
+  document.getElementById("emCancelar").onclick = volta;
+  document.getElementById("emEnviar").onclick = async () => {
+    if(OFFLINE || navigator.onLine === false) return toast("Sem internet. Tente de novo quando houver conexão.");
+    const bt = document.getElementById("emEnviar"), assunto = document.getElementById("emAssunto").value.trim(), texto = document.getElementById("emTexto").value.trim();
+    if(!assunto || !texto) return toast("Escreva o assunto e a mensagem.");
+    bt.disabled = true; toast("Enviando…");
+    let anexo = null;
+    if(o.anexo){try{anexo = await o.anexo()}catch(_){} if(!anexo){bt.disabled = false; return toast("Não consegui gerar o PDF.")}}
+    const r = await chamarFuncao("enviar-email", {tipo: o.tipo, ref: o.ref, assunto, texto, anexo});
+    if(r.ok){toast("E-mail enviado"); return volta()}
+    bt.disabled = false;
+    if(r.naoConfigurado && o.alternativa){toast("O envio automático ainda não está ativo. Abrindo o seu aplicativo de e-mail."); return o.alternativa(assunto, texto)}
+    toast(r.erro || "Não foi possível enviar agora.");
+  };
+}
+const mailto = (para, assunto, texto) => {location.href = `mailto:${encodeURIComponent(para)}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(texto)}`};
+function emailOS(id){
+  const v = vis(id); if(!v) return; const c = cli(v.cli) || {};
+  if(!c.email) return toast("Cadastre o e-mail do cliente para enviar a OS por e-mail.");
+  const assunto = `Ordem de serviço ${v.os} · ${EMPRESA.nome.replace(/ \(exemplo\)/, "")}`, texto = msgZap(v, c);
+  emailModal({titulo: "Enviar OS por e-mail", sub: v.os, tipo: "os", ref: v.id, para: c.email, assunto, texto, anexo: () => pdfBase64("os", v.id),
+    voltar: () => openComp(v.id), alternativa: (a, t) => mailto(c.email, a, t)});
+}
+function emailCobranca(id){
+  const b = cob(id); if(!b) return; const c = cli(b.cli) || {};
+  if(!c.email) return toast("Cadastre o e-mail do cliente para enviar a cobrança por e-mail.");
+  const nome = (c.resp || "").trim() || c.fantasia || c.nome;
+  const assunto = `Cobrança ${BRL(b.valor)} · ${EMPRESA.nome.replace(/ \(exemplo\)/, "")}`;
+  const texto = `Olá, ${nome}!\n\nSegue a cobrança referente a ${b.desc}.\n\n• Valor: ${BRL(b.valor)}\n• Vencimento: ${fmt(b.venc)}${b.forma ? "\n• Forma de pagamento: " + b.forma : ""}\n\nO PDF segue em anexo. Qualquer dúvida, estamos à disposição.\n\n${EMPRESA.nome.replace(/ \(exemplo\)/, "")}`;
+  emailModal({titulo: "Enviar cobrança por e-mail", sub: b.desc, tipo: "cobranca", ref: b.id, para: c.email, assunto, texto, anexo: () => pdfBase64("cobranca", b.id),
+    voltar: () => modal(cobrancaHTML(b)), alternativa: (a, t) => mailto(c.email, a, t)});
+}
 async function chamarUsuarios(body){
   const {data, error} = await sb.functions.invoke("usuarios", {body});
   if(error){let m = error.message; try{const j = await error.context.json(); if(j.erro) m = j.erro}catch(_){} return {erro:m}}
@@ -1049,7 +1099,7 @@ function wireFotosProposta(){
 function leadPropostaModal(){
   if(!leadRasc) return;
   if(leadAberto === "novo") return toast("Salve o lead antes de montar a proposta.");
-  leadLer();
+  if(document.getElementById("lkEmpresa")) leadLer(); // só relê a ficha quando ela está na tela (ao voltar do envio ou de "Gerar de novo" ela não está)
   const r = leadRasc, validade = propostaValidadePadrao();
   if(!PROPOSTA || PROPOSTA.leadId !== leadAberto) PROPOSTA = {leadId: leadAberto, titulo: "Proposta de controle de pragas", validade, texto: gerarPropostaTexto(r, validade), fotos: []};
   const analise = propostaAnalise(r);
@@ -1072,7 +1122,7 @@ function leadPropostaModal(){
     <div class="full" style="display:flex;gap:10px;flex-wrap:wrap">
       <button type="button" class="btn" id="pCopiar">Copiar para WhatsApp</button>
       <button type="button" class="btn ghost" id="pPdf">Salvar em PDF</button>
-      <button type="button" class="btn ghost" id="pEmail">Preparar e-mail</button>
+      <button type="button" class="btn ghost" id="pEmail">Enviar por e-mail</button>
       <button type="button" class="btn ghost" id="pRegerar">Gerar de novo</button>
       <button type="button" class="btn ghost" id="pHist">Guardar no histórico</button>
       <button type="button" class="dl" id="pVoltar">Voltar à ficha</button>
@@ -1093,10 +1143,10 @@ function leadPropostaModal(){
   };
   document.getElementById("pEmail").onclick = () => {
     sincronizar();
-    if(!r.email) return toast("Cadastre o e-mail do lead para preparar a mensagem.");
-    const assunto = encodeURIComponent(PROPOSTA.titulo + " · " + (r.empresa || ""));
-    location.href = `mailto:${encodeURIComponent(r.email)}?subject=${assunto}&body=${encodeURIComponent(PROPOSTA.texto)}`;
-    toast("Abriu o e-mail com o texto. Se quiser o PDF, salve-o e anexe.");
+    if(!r.email) return toast("Cadastre o e-mail do lead e salve a ficha para enviar a proposta.");
+    PROPOSTA_PDF = {titulo: PROPOSTA.titulo, texto: PROPOSTA.texto, validade: PROPOSTA.validade, valor: r.valor, mensal: r.mensal, empresa: r.empresa, contato: r.contato, fotosPre: PROPOSTA.fotos || []};
+    emailModal({titulo: "Enviar proposta por e-mail", sub: r.empresa || "", tipo: "proposta", ref: leadAberto, para: r.email, assunto: PROPOSTA.titulo + " · " + (r.empresa || ""), texto: PROPOSTA.texto,
+      anexo: () => pdfBase64("proposta", leadAberto), voltar: leadPropostaModal, alternativa: (a, t) => mailto(r.email, a, t)});
   };
   document.getElementById("pRegerar").onclick = async () => {
     if(!await confirmar("Gerar a proposta de novo", "", "O texto atual será substituído pelo texto gerado a partir dos dados do lead.", "Gerar", null)) return;
@@ -1336,6 +1386,7 @@ function compHTML(v,extra,previa){const c=cli(v.cli);const ok=v.status==="assina
   ${ok?`<div class="sig"><img src="${v.assinatura.img}" alt="Assinatura de ${esc(v.assinatura.nome)}"><div><b>${esc(v.assinatura.nome)}</b><span>Assinado eletronicamente em ${fmtHora(v.assinatura.em)}</span><span class="mono">Código de verificação ${v.assinatura.cod}</span></div></div>${previa?"":docBtns("os",v.id)}`
   :previa?`<p class="note">Aguardando a assinatura do cliente.</p>`:`<div class="signform"><label>Nome de quem assina<input id="sNome" autocomplete="name"></label><div class="padwrap"><canvas id="pad" aria-label="Quadro de assinatura"></canvas><span class="padhint">Assine aqui com o dedo</span><button type="button" class="clear" id="padClear">Limpar</button></div><button class="btn" id="sOk">Confirmar e assinar</button></div>`}
   ${isStaff()&&!previa?`<div><button class="btn ghost" data-zap="${v.id}">Enviar pelo WhatsApp</button><p class="note" style="margin:6px 0 0">Abre o WhatsApp com a mensagem pronta e a OS em PDF anexada. É só escolher o contato e enviar.</p></div>`:""}
+  ${isStaff()&&!previa?`<div><button class="btn ghost" data-emailos="${v.id}">Enviar por e-mail</button></div>`:""}
   ${isStaff()&&!previa&&!ok?`<button class="dl" data-editvis="${v.id}" style="justify-self:start">Editar OS</button>`:""}
   ${isAdmin()&&!previa?`<button class="dl" data-delvis="${v.id}" style="justify-self:start">Excluir ordem de serviço</button>`:""}
   </div>`}
@@ -1656,7 +1707,8 @@ const cab=(t,sub)=>`<div class="sh-h"><img src="${LOGO}" alt="Agrocel"><div><b>$
 function cobrancaHTML(b){const c=cli(b.cli);
   return `<div class="sheet">${cab("Cobrança "+BRL(b.valor),esc(b.desc))}
   <dl class="kv"><dt>Cliente</dt><dd>${esc(c.nome)}</dd><dt>${docRot(c.cnpj)}</dt><dd class="mono">${esc(c.cnpj||"-")}</dd><dt>Prestador</dt><dd>${esc(EMPRESA.nome)}</dd><dt>Valor</dt><dd>${BRL(b.valor)}</dd><dt>Vencimento</dt><dd>${fmt(b.venc)}</dd><dt>Forma de pagamento</dt><dd>${esc(b.forma||"-")}</dd><dt>Situação</dt><dd>${chipCob(b)}</dd>${b.pagoEm?`<dt>Pago em</dt><dd>${fmt(b.pagoEm)}</dd>`:""}</dl>
-  ${docBtns("cobranca",b.id)}</div>`}
+  ${docBtns("cobranca",b.id)}
+  ${isStaff()?`<div><button class="btn ghost" data-emailcob="${b.id}">Enviar por e-mail</button></div>`:""}</div>`}
 function acaoCob(act,id){const b=cob(id);if(!b)return;
   if(act==="excluir"){excluirItem("cobrança",`${BRL(b.valor)} · ${esc(b.desc)}`,"A cobrança será apagada.",async()=>{db.cobrancas=db.cobrancas.filter(x=>x.id!==id)});return}
   if(act==="ver"){modal(cobrancaHTML(b));return}
@@ -2642,6 +2694,8 @@ document.addEventListener("click",e=>{
   if(e.target.closest("[data-enviartodos]")){enviarPendentes(true);return}
   const dsc=e.target.closest("[data-descartar]"); if(dsc){descartarSaida(dsc.dataset.descartar);return}
   const edv=e.target.closest("[data-editvis]"); if(edv){abrirEdicao("enviada", edv.dataset.editvis);return}
+  const eml=e.target.closest("[data-emailos]"); if(eml){emailOS(eml.dataset.emailos);return}
+  const emc=e.target.closest("[data-emailcob]"); if(emc){emailCobranca(emc.dataset.emailcob);return}
   const eds=e.target.closest("[data-editarsaida]"); if(eds){abrirEdicao("fila", eds.dataset.editarsaida);return}
   const agr=e.target.closest("[data-agreg]"); if(agr){agRegistrar(agr.dataset.agreg);return}
   if(leadsModalClick(e))return;

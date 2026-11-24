@@ -5,3 +5,4 @@ supabase/seed-teste.mjs
 supabase/teste-offline.mjs
 supabase/testes-de-acesso.mjs
 docs/rotina-de-seguranca.*
+supabase/teste-email/
